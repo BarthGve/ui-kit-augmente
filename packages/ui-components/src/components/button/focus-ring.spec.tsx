@@ -1,11 +1,38 @@
-// Explicit `.ts`: the alias alone resolves to the tracked `cunningham-tokens.js`,
-// which is stale (two themes only).
-import { tokens } from ":/cunningham-tokens.ts";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-// Vitest stubs stylesheets (even `?raw`), so the source is read from disk.
+// Vitest stubs stylesheets (even `?raw`), so the sources are read from disk.
 const baseScss = readFileSync(resolve(__dirname, "_base.scss"), "utf8");
+// The shipped stylesheet, not `cunningham-tokens.ts`: the generated TS computes
+// every theme's `contextuals` from the default palette, while the CSS resolves
+// them against each theme's own globals. (The tracked `cunningham-tokens.js` is
+// stale too: two themes only.)
+const tokensCss = readFileSync(
+  resolve(__dirname, "../../cunningham-tokens.css"),
+  "utf8",
+);
+
+const declarations = (selector: string) => {
+  // Theme blocks hold flat declarations only: the first `}` closes the block.
+  const body = tokensCss.split(`${selector}{`)[1]?.split("}")[0];
+  if (!body) throw new Error(`No ${selector} block in cunningham-tokens.css`);
+  return Object.fromEntries(
+    [...body.matchAll(/(--c--[\w-]+):\s*([^;]+);/g)].map(([, k, v]) => [
+      k,
+      v.trim(),
+    ]),
+  );
+};
+const root = declarations(":root ");
+
+// Resolves a custom property as the browser would inside the theme: the
+// theme's own value first, `:root` otherwise, following `var()` chains.
+const resolveVar = (theme: Record<string, string>, name: string): string => {
+  const value = theme[name] ?? root[name];
+  if (value === undefined) throw new Error(`Undefined ${name}`);
+  const ref = value.match(/^var\((--[\w-]+)\)$/);
+  return ref ? resolveVar(theme, ref[1]) : value;
+};
 
 const THEMES = [
   "default",
@@ -61,13 +88,20 @@ const focusVisibleBlocks = (scss: string) => {
 
 describe("Button focus ring", () => {
   describe.each(THEMES)("theme %s", (theme) => {
-    const { contextuals } = tokens.themes[theme];
+    const vars =
+      theme === "default" ? root : declarations(`.cunningham-theme--${theme}`);
+    const surface = resolveVar(
+      vars,
+      "--c--contextuals--background--surface--primary",
+    );
 
     it.each(COLORS)(
       "%s ring contrasts at least 3:1 with the surface",
       (color) => {
-        const ring = contextuals.border.semantic[color].primary;
-        const surface = contextuals.background.surface.primary;
+        const ring = resolveVar(
+          vars,
+          `--c--contextuals--border--semantic--${color}--primary`,
+        );
         expect(contrast(ring, surface)).toBeGreaterThanOrEqual(3);
       },
     );
