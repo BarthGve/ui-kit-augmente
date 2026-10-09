@@ -102,3 +102,38 @@ export const StackedModals = {
     );
   },
 };
+
+/** `role="alertdialog"`, named and described by nodes inside the modal. */
+export const AlertDialogRole = {
+  render: () => {
+    const modal = useModal({ isOpenDefault: true });
+    return (
+      <>
+        <Button onClick={modal.open}>Open alert dialog</Button>
+        <Modal
+          size={ModalSize.SMALL}
+          role="alertdialog"
+          aria-labelledby="edge-cases-alert-title"
+          aria-describedby="edge-cases-alert-message"
+          title={<span id="edge-cases-alert-title">Delete this file?</span>}
+          rightActions={
+            <>
+              <Button variant="secondary" onClick={modal.close}>
+                Cancel
+              </Button>
+              <Button onClick={modal.close}>Delete</Button>
+            </>
+          }
+          {...modal}
+        >
+          <div
+            id="edge-cases-alert-message"
+            className="c__modal__content__text"
+          >
+            The file will be deleted permanently.
+          </div>
+        </Modal>
+      </>
+    );
+  },
+};
