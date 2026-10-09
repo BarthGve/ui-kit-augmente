@@ -44,6 +44,7 @@ The shipped baseline (docs/onboarding.md) is in scope by definition. To build:
 | Filters update (#259) | 3 | Several states and filtering logic |
 | Share update (#203) | 3 | Modal with invitations and access, already complex |
 | Waffle and user menu update (#278, #241) | 2 | Visual update, plus label translations |
+| Alert modal (owner request, 2026-10-09) | 2 | Modal with `alertdialog` semantics and `Alert` severities, built on `Modal` |
 
 Scale: 1 trivial CRUD · 2 form + persistence + list · 3 business logic / several states · 4 integrations, payments, roles · 5 real-time, migrations, external systems. A 5 is a graveyard candidate — keep it only if it IS the core value.
 
@@ -77,3 +78,9 @@ Strict respect of the existing product's constraints (tokens, RGAA accessibility
 **Entre dans le périmètre :** each ticket that delivers or changes a component also updates the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP): the component's page, its catalogue entry and the canvas index. Checked by hand through a line in the ticket's PR description, verified by `/dm-review`.
 **Sorti du cimetière ?** oui — the graveyard item "Documentation site outside the existing Storybook" stays excluded for any documentation aimed at the users of the components (Storybook remains the only official documentation). The artifact is a deliberate exception: a private, internal design-review reference kept by the fork owner, used as a visual reference during development. It is neither published nor shipped with the packages. What changed since the exclusion: the owner asked for this reference to follow every delivery.
 **Stories :** s01 to s25 (shared rule, see the shared text of docs/stories.md); s15 as soon as its design check is confirmed.
+
+### 2026-10-09 — v0.1.0 — alert-modal
+**Entre dans le périmètre :** an alert modal (story s26-alert-modal), requested by the owner: a modal exposing `role="alertdialog"` with the four `Alert` severities, built on the existing `Modal`.
+**Sorti du cimetière ?** non — the graveyard is unchanged.
+**Stories :** s26.
+

@@ -453,3 +453,24 @@ s02-fix-dropdown-menu.
 
 ### Agentic notes
 ui-kit #309 (long text) and the remaining points of #183 (focus contrast 1.11:1 measured on `#F3F3F4` over `#FFFFFF`; trigger `aria-expanded`). Second slice of the original s02. Files: `components/dropdown-menu/index.scss` (label has `flex: 1` and no `min-width: 0` or wrapping; `.c__dropdown-menu--tiny` fixes `height: 16px`; `[data-focused]` background at lines ~104-108), `DropdownMenu.tsx` (the trigger wrapper `div.c__dropdown-menu-trigger` is not the interactive element) and the nine consumer files above. Risk: the trigger lives in the callers, so the change touches nine files; decide at planning whether `DropdownMenu` can inject the attributes into its child or whether each caller is edited. Docs#2618 labels are plain words and should already wrap, so reproduce before fixing: the real defect may be a width problem in the share consumer.
+
+## Story s26-alert-modal — Alert modal
+**As a** user of a La Suite application **I want** an alert modal that interrupts me with an important message and asks me to acknowledge or decide **so that** I do not miss a critical warning, error or confirmation.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] `AlertModal` opens as a modal dialog exposing `role="alertdialog"`, named by its title and described by its message (`aria-labelledby`, `aria-describedby`), so assistive technology announces it on open (test on the rendered DOM).
+- [ ] It supports the four severities of `Alert` (`info`, `success`, `warning`, `error`), each with its icon and semantic colour read from tokens, no literal colour.
+- [ ] Focus moves into the modal on open (to the primary action, or to the dismiss action when there is none), is trapped while open, and returns to the element that opened it on close (tests).
+- [ ] Actions: at least one dismiss action; an optional primary action; Escape and the dismiss action call `onClose`; a click outside does not close it by default (an opt-in prop allows it).
+- [ ] All visible text (default labels) comes from the five locale files (`yarn check-locales`); title and message are caller-provided.
+- [ ] Existing `Modal`, `MessageModal`, `ConfirmationModal` and `DeleteConfirmationModal` behave as before (their specs pass unchanged).
+
+### Dependencies
+None.
+
+### Agentic notes
+Requested by the owner on 2026-10-09. Build on the existing `Modal` (`components/modal/`, size and layout variants, `ModalProvider`, pre-built `MessageModal` / `ConfirmationModal` / `DeleteConfirmationModal`) and reuse the severity icons and tokens of `Alert` (`components/alert/`): do not duplicate them. Research must check first whether an alert modal is only a new pre-built variant of `Modal` (probable: complexity 2) or needs `alertdialog` support the current `Modal` lacks (react-aria-components `AlertDialog`). No `role="alertdialog"` exists in `src/` today. Keep it presentational. Same shared rules as the other component stories: artifact update, one changeset (minor), Storybook story, tests.
+
