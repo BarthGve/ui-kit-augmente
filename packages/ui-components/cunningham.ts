@@ -5,6 +5,7 @@ import {
 import { tokens as alertTokens } from "./src/components/alert/tokens";
 import { tokens as buttonTokens } from "./src/components/button/tokens";
 import { tokens as calendarTokens } from "./src/components/calendar/tokens";
+import { tokens as cardTokens } from "./src/components/card/tokens";
 import { tokens as checkboxTokens } from "./src/components/forms/checkbox/tokens";
 import { tokens as datePickerTokens } from "./src/components/forms/date-picker/tokens";
 import { tokens as fieldTokens } from "./src/components/forms/field/tokens";
@@ -23,6 +24,7 @@ const componentTokenDefaults = {
   alert: alertTokens(defaultTokenRefs),
   button: buttonTokens(defaultTokenRefs),
   calendar: calendarTokens(defaultTokenRefs),
+  card: cardTokens(defaultTokenRefs),
   "forms-checkbox": checkboxTokens(defaultTokenRefs),
   "forms-datepicker": datePickerTokens(defaultTokenRefs),
   "forms-field": fieldTokens(defaultTokenRefs),

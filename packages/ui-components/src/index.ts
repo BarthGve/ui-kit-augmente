@@ -321,6 +321,14 @@ export {
 } from "./components/badge";
 
 export {
+  Card,
+} from "./components/card";
+
+export type {
+  CardProps,
+} from "./components/card";
+
+export {
   HeaderBanner,
 } from "./components/header-banner";
 

@@ -1,0 +1,28 @@
+.c__card {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  background-color: var(--c--components--card--background-color);
+  color: var(--c--components--card--color);
+  border: var(--c--components--card--border-width) solid
+    var(--c--components--card--border-color);
+  border-radius: var(--c--components--card--border-radius);
+  box-shadow: var(--c--components--card--box-shadow);
+
+  &__header,
+  &__body,
+  &__footer {
+    padding: var(--c--components--card--padding);
+  }
+
+  &__header {
+    font-weight: var(--c--components--card--header-font-weight);
+    border-bottom: var(--c--components--card--border-width) solid
+      var(--c--components--card--border-color);
+  }
+
+  &__footer {
+    border-top: var(--c--components--card--border-width) solid
+      var(--c--components--card--border-color);
+  }
+}
