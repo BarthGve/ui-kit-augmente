@@ -7,39 +7,43 @@
 
 Stories are ordered by dependency: fixes first, then variants of existing components, then new components, then the Gantt in three slices.
 
-## Story s01-fix-button-focus-contrast — Readable focus ring on the primary brand button
-**As a** keyboard user of a La Suite application **I want** a visible focus ring on the primary brand button **so that** I can see where I am.
+## Story s01-fix-button-focus-contrast — Readable focus ring on every button
+**As a** keyboard user of a La Suite application **I want** a visible focus ring on every button **so that** I can see where I am.
 
 ### Complexity
-1
+2
 
 ### Acceptance criteria
-- [ ] The focus ring of the primary brand `Button` has a contrast ratio of at least 3:1 against the button and against the page background, in light and dark themes (checked by a test on the computed tokens).
-- [ ] The other `Button` variants and sizes keep their current focus appearance (existing tests still pass).
+- [ ] Every `Button` variant (primary, secondary, tertiary, bordered) in every colour (brand, neutral, warning, error, success, info) draws the same two-part focus ring: an inner gap painted with the surface token `contextuals.background.surface.primary` (no literal `#fff` left in `button/_base.scss`) and an outer ring in the colour's border token.
+- [ ] In each of the six themes (`default`, `dark`, `dsfr-light`, `dsfr-dark`, `anct-light`, `anct-dark`) and for each of the six colours, the outer ring has a contrast ratio of at least 3:1 against the inner gap and against the page surface. A Vitest test computes it from `src/cunningham-tokens.ts`. The ring is measured against the colours adjacent to it, not against the button fill (the gap separates them).
+- [ ] The widths of the gap and of the ring, the sizes, and the non-focus appearance of every variant are unchanged (existing tests still pass).
 - [ ] The accessibility check reports no new violation on the `Button` stories.
 
 ### Dependencies
 None.
 
 ### Agentic notes
-ui-kit #184. Files: `components/button/` (`tokens.ts`, `index.scss`). The fix goes through a token, not a hard-coded colour.
+ui-kit #184. Files: `components/button/_base.scss` (mixin `button-variant`, four `&:focus-visible` blocks), `components/button/index.spec.tsx`. The research (docs/research/s01-fix-button-focus-contrast.md) showed the premise was half false: the ring already contrasts at 5.36:1 (light) and 3.47:1 (dark) against the page; all 36 theme × colour combinations are at 3:1 or more. What was really wrong is the literal `#fff` gap (a white halo on dark surfaces) and the absence of any test. Decision taken at research: fix all variants and colours at once (same mixin, same defect) and measure the ring against its adjacent colours; the ring cannot contrast with a button of the same hue, which is why a gap exists. `ProConnectButton` is out of scope. The fix goes through the surface token, not a hard-coded colour.
 
-## Story s02-fix-dropdown-menu — Accessible dropdown menu that copes with long text
-**As a** keyboard and screen-reader user **I want** the dropdown menu to be fully operable and to handle long labels **so that** I can use it in every application.
+## Story s02-fix-dropdown-menu — Operable and announced dropdown menu
+**As a** keyboard and screen-reader user **I want** the dropdown menu to be operable and to announce its items and selection **so that** I can use it in every application.
 
 ### Complexity
-2
+3
 
 ### Acceptance criteria
-- [ ] Every item of `DropdownMenu` is reachable and activatable with the keyboard (arrows, Enter, Escape) and exposes the correct roles and states (checked by tests and the accessibility check).
-- [ ] An option whose label is longer than the menu width is truncated or wrapped without overflowing the menu or hiding adjacent options.
-- [ ] Selected options are announced to assistive technology.
+- [ ] The open menu exposes `role="menu"` and is no longer wrapped in a `role="dialog"`; a test queries the roles in the rendered DOM.
+- [ ] Every item is reachable with the arrow keys, activated with Enter, and Escape calls `onOpenChange(false)`; Tab leaves the menu instead of being trapped (tests).
+- [ ] An item that is selected (through `selectedValues` or `isChecked`) exposes its checked state to assistive technology (for example `aria-checked` on a `menuitemradio` or `menuitemcheckbox`), and the decorative check icon is hidden from assistive technology.
+- [ ] The accessible name of an item includes its `subText` when it has one (the name is no longer overridden by the label alone).
+- [ ] `onSelectValue`, `callback`, `keepOpen` and `onOpenChange` keep their current behaviour for every existing consumer (`ContextMenu`, `Filter`, `HelpMenu` and the Share dropdowns still pass their stories and tests).
+- [ ] A Vitest spec for `DropdownMenu` covers the five points above (none exists today).
 
 ### Dependencies
 None.
 
 ### Agentic notes
-ui-kit #183 (accessibility) and #309 (long text). Files: `components/dropdown-menu/`. `ContextMenu` and `HelpMenu` reuse it: run their stories and tests too.
+ui-kit #183 (accessibility). First slice of the original s02, split after research (docs/research/s02-fix-dropdown-menu.md): long labels, the focus indicator and the trigger state moved to s25. Files: `components/dropdown-menu/DropdownMenu.tsx` (`Popover` without `isNonModal` renders a dialog in react-aria-components 1.16.0; `aria-label={getAriaLabel(option)}` overrides the content), `components/menu/MenuItemBody.tsx` (`Checkmark2` has no accessibility attributes). Trap: switching to `selectionMode` changes `onAction` into selection events; keep `onSelectValue`, `callback` and `keepOpen` working. `ContextMenu`, `Filter`, `HelpMenu` and the Share dropdowns reuse these components: run their stories and tests, and the e2e specs that query `getByRole("menuitem", { name })` and the `.c__dropdown-menu-item__check` class.
 
 ## Story s03-fix-tree-dnd — Drag and drop works again in the tree view
 **As a** user organising items in a tree **I want** to move a node by drag and drop **so that** I can restructure my content.
@@ -430,3 +434,22 @@ s23-gantt-move-resize.
 
 ### Agentic notes
 Risk: drawing the links and cycle detection. Do not move dependent tasks automatically in this slice. Last slice of the PRD's Gantt.
+
+## Story s25-dropdown-menu-long-labels — Dropdown menu with long labels, readable focus and announced trigger
+**As a** user of a La Suite application **I want** the dropdown menu to cope with long labels, to show a readable focus and to announce whether it is open **so that** I can use it in every language and with a keyboard.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] A Storybook story reproduces the defect of suitenumerique/docs#2618 (French share-link labels) before the fix, and shows the same labels fixed after.
+- [ ] In the default variant, the menu width adapts to the longest label up to 300px, and a longer label wraps onto several lines without overflowing the menu or hiding adjacent options.
+- [ ] In the `tiny` variant (fixed 16px row), a longer label is truncated with an ellipsis and its full text remains in the accessible name.
+- [ ] The focused item shows a focus indicator whose colour has a contrast ratio of at least 3:1 against the menu surface, in each of the six themes (a Vitest test computes it from `src/cunningham-tokens.ts`); the focus style stays shared with `ContextMenu` and `Filter` rows and does not regress them.
+- [ ] The interactive trigger of every `DropdownMenu` usage (`FeedbackForm`, `language-picker`, `FilePreview`, `HelpMenu`, `AccessRoleDropdown`, `ShareMembersActions`, `ShareLinkSettings`, `ShareMemberItem`, `ShareInvitationItem`) exposes `aria-expanded` matching its open state and `aria-haspopup="menu"` (a test per consumer).
+
+### Dependencies
+s02-fix-dropdown-menu.
+
+### Agentic notes
+ui-kit #309 (long text) and the remaining points of #183 (focus contrast 1.11:1 measured on `#F3F3F4` over `#FFFFFF`; trigger `aria-expanded`). Second slice of the original s02. Files: `components/dropdown-menu/index.scss` (label has `flex: 1` and no `min-width: 0` or wrapping; `.c__dropdown-menu--tiny` fixes `height: 16px`; `[data-focused]` background at lines ~104-108), `DropdownMenu.tsx` (the trigger wrapper `div.c__dropdown-menu-trigger` is not the interactive element) and the nine consumer files above. Risk: the trigger lives in the callers, so the change touches nine files; decide at planning whether `DropdownMenu` can inject the attributes into its child or whether each caller is edited. Docs#2618 labels are plain words and should already wrap, so reproduce before fixing: the real defect may be a width problem in the share consumer.
