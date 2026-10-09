@@ -54,6 +54,18 @@
     }
   }
 
+  // Reads the forms-checkbox small size (no radio token); the dot keeps the
+  // default 2/3 ratio (1rem in 1.5rem).
+  &.c__checkbox--small input {
+    width: var(--c--components--forms-checkbox--small-size);
+    height: var(--c--components--forms-checkbox--small-size);
+
+    &::before {
+      width: calc(var(--c--components--forms-checkbox--small-size) * 2 / 3);
+      height: calc(var(--c--components--forms-checkbox--small-size) * 2 / 3);
+    }
+  }
+
   &.c__checkbox--disabled {
     pointer-events: none;
     input {

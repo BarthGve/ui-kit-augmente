@@ -49,6 +49,19 @@ You can use the following props to change the state of the Input component by us
 <Canvas of={Stories.Success} sourceState="shown"/>
 <Canvas of={Stories.Error} sourceState="shown"/>
 
+## Size
+
+Use `size="small"` for dense layouts (`"medium"` is the default). The small size
+keeps the label, the texts, the states and the focus ring, and its clickable area
+stays at least 24x24 px.
+
+<Canvas of={Stories.Small} />
+<Canvas of={Stories.SmallWithLabel} />
+<Canvas of={Stories.SmallDisabled} />
+<Canvas of={Stories.SmallGroup} />
+<Canvas of={Stories.SmallGroupError} />
+<Canvas of={Stories.SmallGroupSuccess} />
+
 ## Group
 
 Here is how you can leverage the `RadioGroup` component to create a group of radio buttons.
@@ -80,6 +93,8 @@ Here are available custom design tokens.
 | accent-color     	| Color of the checkmark  	|
 
 The design tokens `font-size`, `font-weight`, `color`, `width`, `height` are shared with [Checkbox](?path=/story/components-forms-checkbox-doc--page)
+
+The small size also reads the Checkbox tokens `small-size` (box size; the checked dot is 2/3 of it) and `small-font-size` (label font size): the radio has no token of its own.
 
 See also [Field](?path=/story/components-forms-field-doc--page)
 

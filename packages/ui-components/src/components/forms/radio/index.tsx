@@ -11,12 +11,21 @@ export type RadioOnlyProps = {
   label?: ReactNode;
 };
 
-export type RadioProps = InputHTMLAttributes<HTMLInputElement> &
+// The inherited numeric HTML `size` is replaced by the control size.
+export type RadioProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> &
   RefAttributes<HTMLInputElement> &
   FieldProps &
-  RadioOnlyProps;
+  RadioOnlyProps & {
+    size?: "medium" | "small";
+  };
 
-export const Radio = ({ className, label, ref, ...props }: RadioProps) => {
+export const Radio = ({
+  className,
+  label,
+  ref,
+  size = "medium",
+  ...props
+}: RadioProps) => {
   const {
     compact,
     fullWidth,
@@ -33,6 +42,7 @@ export const Radio = ({ className, label, ref, ...props }: RadioProps) => {
       className={classNames("c__checkbox", "c__radio", className, {
         "c__checkbox--disabled": props.disabled,
         "c__checkbox--full-width": props.fullWidth,
+        "c__checkbox--small": size === "small",
       })}
     >
       <Field compact={true} {...props}>
