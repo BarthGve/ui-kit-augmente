@@ -60,11 +60,18 @@ t02 notes (2026-10-09):
 - **scope:** announce the selected state and keep full accessible names.
 
 Tasks:
-1. [ ] Choose how the selected state is exposed and let the t01 tests decide: either `selectionMode` with `selectedKeys` on the React Aria `Menu`, or `aria-checked` on `menuitemradio`/`menuitemcheckbox` items set explicitly. Record the choice in `docs/decisions/003-dropdown-menu-selection-semantics.md` (ADR, with the rejected option) because it changes the interaction model of a shared component.
-2. [ ] Keep `onAction` → `onSelectValue`, `callback`, `keepOpen` unchanged for every consumer; if `selectionMode` is chosen, map `onSelectionChange` back to the same three calls.
-3. [ ] In `menu/MenuItemBody.tsx`, hide the check and chevron icons from assistive technology (`aria-hidden`), without changing the class `c__dropdown-menu-item__check` that `e2e/context-menu/context-menu-checked.spec.tsx` queries.
-4. [ ] In `DropdownMenu.tsx`, make the item name include `subText`: stop overriding the content with `aria-label={getAriaLabel(option)}` where it hides `subText`, but keep the `opensInNewWindow` suffix (`components.menu.newWindowLabelSuffix`). Update the e2e queries `getByRole("menuitem", { name })` only where the name legitimately changed.
-5. [ ] The t01 target tests are green and the characterisation tests still pass.
+1. [x] Choose how the selected state is exposed and let the t01 tests decide: either `selectionMode` with `selectedKeys` on the React Aria `Menu`, or `aria-checked` on `menuitemradio`/`menuitemcheckbox` items set explicitly. Record the choice in `docs/decisions/003-dropdown-menu-selection-semantics.md` (ADR, with the rejected option) because it changes the interaction model of a shared component.
+2. [x] Keep `onAction` → `onSelectValue`, `callback`, `keepOpen` unchanged for every consumer; if `selectionMode` is chosen, map `onSelectionChange` back to the same three calls.
+3. [x] In `menu/MenuItemBody.tsx`, hide the check and chevron icons from assistive technology (`aria-hidden`), without changing the class `c__dropdown-menu-item__check` that `e2e/context-menu/context-menu-checked.spec.tsx` queries.
+4. [x] In `DropdownMenu.tsx`, make the item name include `subText`: stop overriding the content with `aria-label={getAriaLabel(option)}` where it hides `subText`, but keep the `opensInNewWindow` suffix (`components.menu.newWindowLabelSuffix`). Update the e2e queries `getByRole("menuitem", { name })` only where the name legitimately changed.
+5. [x] The t01 target tests are green and the characterisation tests still pass.
+
+t03 notes (2026-10-09):
+- Choice (ADR 003): per-item `menuitemcheckbox` + `aria-checked` through the public `render` prop of React Aria `MenuItem`, not `selectionMode`. Plain props cannot set `role`/`aria-checked` (`filterDOMProps` drops them, `useMenuItem` computes the role), and `selectionMode` would retype every item (including "Remove access" and FilePreview's action-id items) and move the initial focus to the selected item. Checkable = `isChecked` defined, or `value` when `selectedValues` is passed. `onAction` is untouched.
+- Names: `aria-label` is dropped, so the name comes from the content (label + subText); with `opensInNewWindow` it is `label subText (new window)`. The leading icon container is also `aria-hidden` (beyond the plan's check/chevron): a Material icon renders its ligature (`print`, `file_download`) as text, which would otherwise enter the name.
+- Spec: the three t03 tests flipped to `it`; the checked test now also pins Reader `aria-checked="false"` and a plain item staying `menuitem`; added "value without selectedValues stays menuitem", a `subText` + `opensInNewWindow` name, and a Material icon on the subText item.
+- e2e: Share queries for role choices (Editor/Reader/Admin/Private) moved to `menuitemcheckbox`; `share-modal-restrict` used `exact: true` on a name that now has its subText, changed to a prefix regex. Chromium (headless shell 1243, throwaway config, dm-port): 206/211; the 5 failures are the "opens … in a new tab" tests (4 HelpMenu known from t02, plus `pdf-preview-links` which does not use DropdownMenu), all `newPage.url()` empty.
+- The changeset was added in this ticket (patch), at the request of the execution brief; t04 task 3 is left unticked.
 
 ### t04-consumers-regression-and-delivery
 - **size:** S

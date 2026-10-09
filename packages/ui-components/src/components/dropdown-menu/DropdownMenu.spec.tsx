@@ -3,13 +3,17 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { it, vi } from "vitest";
 import { CunninghamProvider } from ":/components/provider";
+import { Icon } from ":/components/icon";
 import { DropdownMenu } from "./DropdownMenu";
 import { DropdownMenuItem } from "./types";
 
 const setup = ({
   shouldCloseOnInteractOutside,
+  selectedValues = ["editor"],
 }: {
   shouldCloseOnInteractOutside?: (element: Element) => boolean;
+  /** `null`: the caller does not pass `selectedValues` at all. */
+  selectedValues?: string[] | null;
 } = {}) => {
   const onOpenChange = vi.fn();
   const onSelectValue = vi.fn();
@@ -25,7 +29,13 @@ const setup = ({
     { label: "Pinned", isChecked: true },
     { label: "Editor", value: "editor" },
     { label: "Reader", value: "reader" },
-    { label: "Share", subText: "Anyone with the link" },
+    {
+      label: "Share",
+      subText: "Anyone with the link",
+      // A Material icon renders its ligature name as text.
+      icon: <Icon name="share" />,
+    },
+    { label: "Guide", subText: "v2", opensInNewWindow: true },
     { label: "Stay open", keepOpen: true, callback: callbacks.keepOpen },
     { type: "separator" },
     { label: "Locked", isDisabled: true, callback: callbacks.disabled },
@@ -45,7 +55,7 @@ const setup = ({
         <DropdownMenu
           options={options}
           isOpen={isOpen}
-          selectedValues={["editor"]}
+          selectedValues={selectedValues ?? undefined}
           shouldCloseOnInteractOutside={shouldCloseOnInteractOutside}
           onSelectValue={onSelectValue}
           onOpenChange={(open) => {
@@ -183,34 +193,43 @@ describe("<DropdownMenu/>", () => {
   });
 
   describe("selected state and names", () => {
-    // fixed by t03: flip to a plain `it`
-    it.fails(
-      "exposes the checked state of a selectedValues item and an isChecked item",
-      () => {
-        setup();
-        for (const name of ["Editor", "Pinned"]) {
-          const el = item(name);
-          expect(el.getAttribute("role")).toMatch(/^menuitem(radio|checkbox)$/);
-          expect(el).toHaveAttribute("aria-checked", "true");
-        }
-        expect(item("Reader")).not.toHaveAttribute("aria-checked", "true");
-      },
-    );
+    it("exposes the checked state of a selectedValues item and an isChecked item", () => {
+      setup();
+      for (const name of ["Editor", "Pinned"]) {
+        const el = item(name);
+        expect(el.getAttribute("role")).toMatch(/^menuitem(radio|checkbox)$/);
+        expect(el).toHaveAttribute("aria-checked", "true");
+      }
+      expect(item("Reader")).toHaveAttribute("role", "menuitemcheckbox");
+      expect(item("Reader")).toHaveAttribute("aria-checked", "false");
+      expect(item("Rename")).toHaveAttribute("role", "menuitem");
+      expect(item("Rename")).not.toHaveAttribute("aria-checked");
+    });
 
-    // fixed by t03: flip to a plain `it`
-    it.fails("hides the check icon from assistive technology", () => {
+    // A `value` used as an action id (FilePreview, ShareMembersActions) is not
+    // a choice: without `selectedValues` the item stays a plain menuitem.
+    it("keeps a value item a plain menuitem when selectedValues is not passed", () => {
+      setup({ selectedValues: null });
+      expect(item("Editor")).toHaveAttribute("role", "menuitem");
+      expect(item("Editor")).not.toHaveAttribute("aria-checked");
+      expect(item("Pinned")).toHaveAttribute("aria-checked", "true");
+    });
+
+    it("hides the check and chevron icons from assistive technology", () => {
       setup();
       const icon = item("Editor").querySelector("svg");
       expect(icon).toHaveAttribute("aria-hidden", "true");
+      const chevron = item("More").querySelector("svg");
+      expect(chevron).toHaveAttribute("aria-hidden", "true");
     });
 
-    // fixed by t03: flip to a plain `it`
-    it.fails("includes the subText in the item name", () => {
+    it("includes the subText in the item name", () => {
       setup();
       expect(
-        screen.getByRole("menuitem", {
-          name: /Share.*Anyone with the link/,
-        }),
+        screen.getByRole("menuitem", { name: "Share Anyone with the link" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: "Guide v2 (new window)" }),
       ).toBeInTheDocument();
     });
   });
