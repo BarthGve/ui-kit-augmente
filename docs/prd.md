@@ -84,3 +84,8 @@ Strict respect of the existing product's constraints (tokens, RGAA accessibility
 **Sorti du cimetière ?** non — the graveyard is unchanged.
 **Stories :** s26.
 
+### 2026-10-09 — v0.1.0 — shadcn-gap
+**Entre dans le périmètre :** all components of shadcn/ui (https://ui.shadcn.com/docs/components) that ui-kit lacks, at the owner's request: Slider, Sheet, Drawer, Empty, Input OTP, Button Group, Input Group, Toggle, Hover Card, Kbd, Collapsible, Carousel, Aspect Ratio, Menubar, Navigation Menu, Sidebar, Scroll Area, Resizable, Item, Typography, Chart, Bubble, Message, Message Scroller, Marker, Questionnaire, Direction, Native Select, Attachment (stories s27 to s55). Already covered by an existing or planned story, so not duplicated: Accordion (s11), Breadcrumb (s12), Card (s10), Skeleton (s09), Combobox (s19), Alert Dialog (s26), Toggle Group (s13), Progress (s15), Command (`quick-search`), Dialog (`modal`), Spinner (`loader`).
+**Sorti du cimetière ?** oui, partiellement — "Data-visualisation components other than Timeline and Gantt (charts, maps)": charts re-enter the perimeter (story s47-chart, needs an ADR for a charting library); maps stay excluded. "Redesign of tokens" stays excluded: s46-typography does not touch the token scale.
+**Stories :** s27 to s55 (complexities 1 to 4; most in backlog behind the current queue).
+
