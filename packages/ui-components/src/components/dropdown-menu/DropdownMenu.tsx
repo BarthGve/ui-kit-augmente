@@ -5,6 +5,7 @@ import {
   Separator,
   SubmenuTrigger,
 } from "react-aria-components";
+import { useInteractOutside } from "react-aria";
 import { MenuItemAction, MenuItemSeparator } from "../menu/types";
 import { MenuItemBody } from "../menu/MenuItemBody";
 import { DropdownMenuItem } from "./types";
@@ -45,7 +46,8 @@ export const DropdownMenu = ({
   variant = "default",
 }: PropsWithChildren<DropdownMenuProps>) => {
   const id = useId();
-  const triggerRef = useRef(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLElement>(null);
   const { t } = useCunningham();
   const menuClassName = `c__dropdown-menu${
     variant === "tiny" ? " c__dropdown-menu--tiny" : ""
@@ -53,6 +55,26 @@ export const DropdownMenu = ({
   const onOpenChangeHandler = (isOpen: boolean) => {
     onOpenChange?.(isOpen);
   };
+
+  // `isNonModal` (no dialog wrapper, Tab can leave) also drops React Aria's
+  // outside-click dismissal: restore it. The trigger is excluded because
+  // every caller toggles `isOpen` from it; submenus are portaled outside the
+  // root popover (any open submenu counts: fine while one menu is open at a
+  // time).
+  const shouldCloseOnOutside = (element: Element) =>
+    !triggerRef.current?.contains(element) &&
+    !element.closest?.('[data-trigger="SubmenuTrigger"]') &&
+    (shouldCloseOnInteractOutside?.(element) ?? true);
+
+  useInteractOutside({
+    ref: popoverRef,
+    isDisabled: !isOpen,
+    onInteractOutside: (e) => {
+      if (shouldCloseOnOutside(e.target as Element)) {
+        onOpenChangeHandler(false);
+      }
+    },
+  });
 
   const getAriaLabel = (option: MenuItemAction): string => {
     if (option.opensInNewWindow) {
@@ -150,14 +172,16 @@ export const DropdownMenu = ({
       </div>
 
       <Popover
+        ref={popoverRef}
         triggerRef={triggerRef}
         style={{
           marginTop: "0px",
         }}
         isOpen={isOpen}
+        isNonModal
         shouldFlip
         containerPadding={16}
-        shouldCloseOnInteractOutside={shouldCloseOnInteractOutside}
+        shouldCloseOnInteractOutside={shouldCloseOnOutside}
         onOpenChange={onOpenChangeHandler}
       >
         <div className={menuClassName}>
