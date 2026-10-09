@@ -1,6 +1,7 @@
 import "./index.scss";
 
 export {
+  AlertModal,
   Button,
   Calendar,
   CalendarRange,
@@ -64,6 +65,8 @@ export {
 } from "./cunningham";
 
 export type {
+  AlertModalProps,
+  AlertModalSeverity,
   AlertProps,
   BaseOption,
   BaseProps,
