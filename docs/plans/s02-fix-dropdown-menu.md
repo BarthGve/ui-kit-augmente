@@ -24,10 +24,15 @@ Acceptance criteria (docs/stories.md):
 - **scope:** the missing Vitest spec, written first; it fails on the points the story fixes and pins the behaviour that must not change.
 
 Tasks:
-1. [ ] Create `packages/ui-components/src/components/dropdown-menu/DropdownMenu.spec.tsx` with Testing Library and `userEvent`, mounting `DropdownMenu` open (`isOpen`) with a trigger child and a mixed `options` list (plain, `isChecked`, `value` + `selectedValues`, `subText`, `keepOpen`, a separator, a disabled item).
-2. [ ] Characterisation tests that must pass before and after: `onSelectValue` receives `value`; `callback` is called; `onOpenChange(false)` is called after an action unless `keepOpen`; a hidden or disabled item is not activatable.
-3. [ ] Target tests that must fail now: no element with `role="dialog"` around the menu; the menu has `role="menu"`; Escape calls `onOpenChange(false)`; Tab moves focus out of the menu; a selected item exposes a checked state (assert the role, `menuitemradio` or `menuitemcheckbox`, and `aria-checked`, once t03 settles which); the check icon is `aria-hidden`; the name of an item with `subText` contains both texts.
-4. [ ] Run only this spec; record which tests are red. If jsdom cannot represent a point (focus trap on Tab), say so in the ticket and cover it with a Playwright component test next to `e2e/help-menu/` instead of dropping it.
+1. [x] Create `packages/ui-components/src/components/dropdown-menu/DropdownMenu.spec.tsx` with Testing Library and `userEvent`, mounting `DropdownMenu` open (`isOpen`) with a trigger child and a mixed `options` list (plain, `isChecked`, `value` + `selectedValues`, `subText`, `keepOpen`, a separator, a disabled item).
+2. [x] Characterisation tests that must pass before and after: `onSelectValue` receives `value`; `callback` is called; `onOpenChange(false)` is called after an action unless `keepOpen`; a hidden or disabled item is not activatable.
+3. [x] Target tests that must fail now: no element with `role="dialog"` around the menu; the menu has `role="menu"`; Escape calls `onOpenChange(false)`; Tab moves focus out of the menu; a selected item exposes a checked state (assert the role, `menuitemradio` or `menuitemcheckbox`, and `aria-checked`, once t03 settles which); the check icon is `aria-hidden`; the name of an item with `subText` contains both texts.
+4. [x] Run only this spec; record which tests are red. If jsdom cannot represent a point (focus trap on Tab), say so in the ticket and cover it with a Playwright component test next to `e2e/help-menu/` instead of dropping it.
+
+t01 notes (spec run on the current code, 2026-10-09):
+- Green today and kept as plain `it`: the characterisation tests (onSelectValue, callback, close after action, keepOpen, disabled, hidden, arrows + Enter), `role="menu"` named by the trigger, and Escape calling `onOpenChange(false)` — the last two were expected red by task 3 but already pass.
+- Red today, marked `it.fails` with `// fixed by tNN`: not wrapped in a dialog (t02), Tab leaves the menu (t02), checked state as `menuitemradio`/`menuitemcheckbox` + `aria-checked` (t03), check icon `aria-hidden` (t03), item name contains `subText` (t03).
+- jsdom does represent the Tab point: adding `isNonModal` to the root Popover turns both t02 tests green, so no Playwright test was added.
 
 ### t02-menu-role-and-keyboard
 - **size:** S
