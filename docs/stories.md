@@ -3,7 +3,7 @@
 > One story = one shippable slice, written to be executed by an agent.
 > Id format: `s<number>-<short-slug>` — reused in every pipeline file and in the branch name.
 
-**Shared by every story** (not repeated below): the work lives in `packages/ui-components/src/components/<component>/` (lower-case, hyphenated folder), styling goes through tokens (`tokens.ts` where the component has one, `index.scss` otherwise, no hard-coded values), every visible text is translatable, the component has a Storybook story and tests, passes the automated accessibility check and full keyboard navigation, and ships with one changeset in `.changeset/`. Each story that adds or changes a component also updates the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP): the component's page, its catalogue entry and the canvas index. Issue numbers (`ui-kit #…`) refer to `suitenumerique/ui-kit`, which is not this fork's backlog; they are cross-references to the approved design. Detailed conventions are owned by `/dm-architect`.
+**Shared by every story** (not repeated below): the work lives in `packages/ui-components/src/components/<component>/` (lower-case, hyphenated folder), styling goes through tokens (`tokens.ts` where the component has one, `index.scss` otherwise, no hard-coded values), every visible text is translatable, the component has a Storybook story and tests, passes the automated accessibility check and full keyboard navigation, and ships with one changeset in `.changeset/`. Each story that adds or changes a component also updates the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP): the component's page, its catalogue entry and the canvas index. That artifact is an internal design-review support kept by the team, not a documentation site: the PRD's graveyard item "documentation site outside the existing Storybook" still applies, and Storybook remains the only documentation of the components. Issue numbers (`ui-kit #…`) refer to `suitenumerique/ui-kit`, which is not this fork's backlog; they are cross-references to the approved design. Detailed conventions are owned by `/dm-architect`.
 
 Stories are ordered by dependency: fixes first, then variants of existing components, then new components, then the Gantt in three slices.
 
@@ -69,7 +69,7 @@ ui-kit #213 (DND broken), related #72 (click through portals). Files: `component
 - [ ] `Checkbox`, `Radio` and `Switch` each accept a size option, and the small size renders with the dimensions defined by tokens.
 - [ ] The default size is unchanged for existing callers (no visual or API regression, existing tests pass).
 - [ ] Each small control keeps its label, hint text, error and success states, and its focus ring.
-- [ ] Each small control has a minimum interactive area that remains operable by keyboard and pointer.
+- [ ] Each small control has an interactive area of at least 24×24 px (checked by a test on the rendered size) and remains operable by keyboard and pointer.
 
 ### Dependencies
 None.
@@ -84,7 +84,7 @@ ui-kit #244, #269, #245 (design approved). Files: `components/forms/checkbox`, `
 2
 
 ### Acceptance criteria
-- [ ] `Tabs` offers the new horizontal appearance through the existing `variant` option, without changing the current `default` and `line` variants.
+- [ ] `Tabs` offers the new horizontal appearance through the existing `variant` option, with a Storybook story and a snapshot test, without changing the current `default` and `line` variants (their snapshots are unchanged).
 - [ ] Arrow keys move between tabs, and both automatic and manual activation modes work.
 - [ ] The tab list does not overflow on a narrow viewport.
 
@@ -101,7 +101,7 @@ ui-kit #231 (design approved). Files: `components/tabs/` (`Tabs.tsx`, `index.scs
 2
 
 ### Acceptance criteria
-- [ ] `LaGaufreV2` and `UserMenu` render the approved design, driven by tokens.
+- [ ] `LaGaufreV2` and `UserMenu` each have a Storybook story per state (closed, open, with and without user) covered by a snapshot test, and every colour, spacing and radius comes from a token (no literal value in the stylesheet).
 - [ ] The waffle label is translated in every supported language.
 - [ ] Keyboard navigation opens, traverses and closes both menus.
 
@@ -118,7 +118,7 @@ ui-kit #278 (design approved) and #241 (waffle label translation). Files: `compo
 3
 
 ### Acceptance criteria
-- [ ] `Filter` and `SearchFilter` render the approved design, driven by tokens.
+- [ ] `Filter` and `SearchFilter` each have a Storybook story per state (default, active, open, loading, empty) covered by a snapshot test, and every colour, spacing and radius comes from a token (no literal value in the stylesheet).
 - [ ] Selecting an option marks the filter active, and the reset row clears it and calls `onReset`.
 - [ ] `SearchFilter` shows loading and empty states, and searching does not lose the current selection.
 - [ ] Both are operable by keyboard.
@@ -136,7 +136,7 @@ ui-kit #259 (design approved). Files: `components/filter/`, `components/search-f
 3
 
 ### Acceptance criteria
-- [ ] The share modal renders the approved design, driven by tokens.
+- [ ] The share modal has a Storybook story per state (default, with invitations, empty, import) covered by a snapshot test, and every colour, spacing and radius comes from a token (no literal value in the stylesheet).
 - [ ] The modal keeps the invitation, role selection, link copying and import actions working (existing tests pass).
 
 ### Dependencies
@@ -154,7 +154,7 @@ ui-kit #203 (design approved). Files: `components/share/` (`modal/`, `access/`, 
 ### Acceptance criteria
 - [ ] `Skeleton` renders a placeholder of a given width and height with a shape option (line, block, circle).
 - [ ] The animation stops when the user prefers reduced motion.
-- [ ] The placeholder is hidden from assistive technology or marked as busy, and does not take focus.
+- [ ] The placeholder is hidden from assistive technology (`aria-hidden="true"`) and does not take focus; the loading container that wraps it is the one marked busy by the caller.
 
 ### Dependencies
 None.
@@ -229,7 +229,7 @@ No equivalent in ui-kit: design to be reviewed. The separator is decorative and 
 None.
 
 ### Agentic notes
-ui-kit #232 (design approved). Check that it does not duplicate `Tabs` or `Radio`; if it is a visual variant of one of them, say so at research time.
+ui-kit #232 (design approved). Check that it does not duplicate `Tabs` or `Radio`; if it is only a visual variant of one of them, say so at research time and fold it into s05 or s04 through a PRD amendment instead of building a new component.
 
 ## Story s14-toolbar — Toolbar
 **As a** user **I want** a toolbar of actions **so that** I reach frequent commands quickly.
@@ -240,7 +240,7 @@ ui-kit #232 (design approved). Check that it does not duplicate `Tabs` or `Radio
 ### Acceptance criteria
 - [ ] `Toolbar` groups buttons and separators and exposes the toolbar role with an accessible label.
 - [ ] Left and right arrow keys move focus between its controls, with a single tab stop for the whole toolbar.
-- [ ] Controls that do not fit move to an overflow menu or wrap, without being cut off.
+- [ ] Controls that do not fit wrap onto a new line, without being cut off or hidden (no overflow menu in this story).
 
 ### Dependencies
 None.
@@ -335,7 +335,7 @@ ui-kit #198 (design approved). Reuse `Modal` and `TreeView` (with `TreeProvider.
 None.
 
 ### Agentic notes
-Risk: ARIA behaviour and screen-reader differences, and overlap with `Select` (which is already `searchable`). Decide at research time whether to extend `Select` or add a separate component. ui-kit #286 (async `Select`) was in progress upstream in Cunningham: check before duplicating. No approved design.
+Risk: ARIA behaviour and screen-reader differences, and overlap with `Select` (which is already `searchable`). Decide at research time whether to extend `Select` or add a separate component. An asynchronous `Select` (Cunningham issue #286, a different tracker from ui-kit) was in progress upstream: check before duplicating. No approved design.
 
 ## Story s20-upload-module — Upload module
 **As a** user **I want** to upload files and follow their progress **so that** I know when each file is done.
@@ -372,7 +372,7 @@ Risk: file state management and asynchronous progress. ui-kit #186 (design appro
 s20-upload-module.
 
 ### Agentic notes
-Risk: validation rules and large files. ui-kit #187 (design approved). Reuse `DataGrid` (`SimpleDataGrid`); known accessibility issue on table cells and headers upstream (RGAA 5.7): do not repeat it. Parsing is limited to the file formats chosen at research time.
+Risk: validation rules and large files. ui-kit #187 (design approved). Depends on s20 because the file choice and the file list of the contact import reuse the upload module; the table itself comes from the existing `DataGrid`. Reuse `DataGrid` (`SimpleDataGrid`); known accessibility issue on table cells and headers upstream (RGAA 5.7): do not repeat it. Parsing is limited to the file formats chosen at research time.
 
 ## Story s22-gantt-read-only — Gantt chart, read-only
 **As a** project manager **I want** to see tasks on a time axis **so that** I read the schedule at a glance.
