@@ -1,3 +1,5 @@
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import userEvent from "@testing-library/user-event";
 import React, { useState } from "react";
 import { render, screen } from "@testing-library/react";
@@ -186,5 +188,86 @@ describe("<Checkbox/>", () => {
     expect(
       document.querySelector(".c__checkbox__group.my-custom-class"),
     ).toBeInTheDocument();
+  });
+
+  describe("size", () => {
+    const rootOf = (input: HTMLElement) => input.closest("label")!;
+
+    it("marks the root of a small checkbox with the shared small modifier", () => {
+      render(<Checkbox label="Agree" size="small" />);
+      const root = rootOf(screen.getByRole("checkbox", { name: "Agree" }));
+      expect(root.classList.contains("c__checkbox--small")).toBe(true);
+    });
+
+    it("keeps today's root classes without size and with size=medium", () => {
+      render(
+        <>
+          <Checkbox label="Default" />
+          <Checkbox label="Medium" size="medium" />
+        </>,
+      );
+      for (const name of ["Default", "Medium"]) {
+        const root = rootOf(screen.getByRole("checkbox", { name }));
+        expect(root.className).toBe("c__checkbox");
+      }
+    });
+
+    it("accepts only medium or small", () => {
+      // Checked by `tsc` (yarn build), not at runtime.
+      // @ts-expect-error unknown size
+      render(<Checkbox label="Huge" size="huge" />);
+      // @ts-expect-error the inherited numeric HTML size is no longer accepted
+      render(<Checkbox label="Three" size={3} />);
+    });
+
+    it("keeps label, hint text, states and indeterminate when small", () => {
+      render(
+        <>
+          <Checkbox label="Errored" size="small" state="error" text="Err" />
+          <Checkbox label="Passed" size="small" state="success" text="Ok" />
+          <Checkbox label="Partial" size="small" indeterminate />
+        </>,
+      );
+      for (const name of ["Errored Err", "Passed Ok", "Partial"]) {
+        expect(
+          rootOf(screen.getByRole("checkbox", { name })).classList,
+        ).toContain("c__checkbox--small");
+      }
+      expect(screen.getByText("Err")).toBeInTheDocument();
+      expect(screen.getByText("Ok")).toBeInTheDocument();
+      expect(document.querySelector(".c__field--error")).toBeInTheDocument();
+      expect(document.querySelector(".c__field--success")).toBeInTheDocument();
+      expect(
+        (screen.getByRole("checkbox", { name: "Partial" }) as HTMLInputElement)
+          .indeterminate,
+      ).toBe(true);
+    });
+  });
+});
+
+describe("forms-checkbox small tokens", () => {
+  // Vitest stubs stylesheets, so the generated CSS is read from disk.
+  const tokensCss = readFileSync(
+    resolve(__dirname, "../../../cunningham-tokens.css"),
+    "utf8",
+  );
+  const blocks = [
+    ":root ",
+    ".cunningham-theme--dark",
+    ".cunningham-theme--dsfr-light",
+    ".cunningham-theme--dsfr-dark",
+    ".cunningham-theme--anct-light",
+    ".cunningham-theme--anct-dark",
+  ];
+
+  it.each(blocks)("are emitted in %s", (selector) => {
+    // Theme blocks hold flat declarations only: the first `}` closes the block.
+    const body = tokensCss.split(`${selector}{`)[1]?.split("}")[0] ?? "";
+    expect(body).toMatch(
+      /--c--components--forms-checkbox--small-size:\s*1rem;/,
+    );
+    expect(body).toMatch(
+      /--c--components--forms-checkbox--small-font-size:\s*var\(--c--globals--font--sizes--xs\);/,
+    );
   });
 });

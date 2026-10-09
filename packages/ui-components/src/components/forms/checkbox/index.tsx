@@ -15,10 +15,16 @@ export type CheckboxOnlyProps = {
   label?: ReactNode;
 };
 
-export type CheckboxProps = InputHTMLAttributes<HTMLInputElement> &
+// The inherited numeric HTML `size` is replaced by the control size.
+export type CheckboxProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "size"
+> &
   RefAttributes<HTMLInputElement> &
   FieldProps &
-  CheckboxOnlyProps;
+  CheckboxOnlyProps & {
+    size?: "medium" | "small";
+  };
 
 export const Checkbox = ({
   indeterminate,
@@ -26,6 +32,7 @@ export const Checkbox = ({
   checked,
   label,
   ref,
+  size = "medium",
   ...props
 }: CheckboxProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +64,7 @@ export const Checkbox = ({
       className={classNames("c__checkbox", className, {
         "c__checkbox--disabled": props.disabled,
         "c__checkbox--full-width": props.fullWidth,
+        "c__checkbox--small": size === "small",
       })}
     >
       <Field compact={true} {...props}>
