@@ -34,12 +34,12 @@ Tasks:
 - **scope:** replace the literal gap by the surface token, changeset, Storybook check, artifact.
 
 Tasks:
-1. [ ] In `button/_base.scss`, inside `button-variant`, replace the inner `0 0 0 1px #fff` of the four `&:focus-visible` blocks (primary, secondary, tertiary, bordered) by `0 0 0 1px var(--c--contextuals--background--surface--primary)`. Touch nothing else in the file.
-2. [ ] `focus-ring.spec.tsx` is now green; `button/index.spec.tsx` and the full `yarn test` still pass.
+1. [x] In `button/_base.scss`, inside `button-variant`, replace the inner `0 0 0 1px #fff` of the four `&:focus-visible` blocks (primary, secondary, tertiary, bordered) by `0 0 0 1px var(--c--contextuals--background--surface--primary)`. Touch nothing else in the file.
+2. [x] `focus-ring.spec.tsx` is now green; `button/index.spec.tsx` and the full `yarn test` still pass.
 3. [ ] Open the `Button` stories in Storybook (port from `bash .dm/lib/dm-port.sh`), keyboard-focus each variant, check light and dark, and run the Storybook a11y panel: no new violation. Stop the server afterwards.
-4. [ ] Add a changeset in `.changeset/` (package `@gouvfr-lasuite/ui-components`, patch) with a gitmoji-style summary.
+4. [x] Add a changeset in `.changeset/` (package `@gouvfr-lasuite/ui-components`, patch) with a gitmoji-style summary.
 5. [ ] Update the design-system artifact: the `Button` page note on the focus ring, and republish after re-reading the published index. The PR description carries `Artifact: updated (version <id>)`.
-6. [ ] Run `yarn lint`, `yarn check-locales`, `yarn build`.
+6. [x] Run `yarn lint`, `yarn check-locales`, `yarn build`.
 
 ## US totals
 - **Person-days:** 1.5
