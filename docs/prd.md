@@ -72,3 +72,8 @@ Strict respect of the existing product's constraints (tokens, RGAA accessibility
 - The Gantt is usable in editing mode (move, resize, dependencies) on a demonstration data set.
 
 ## Amendements
+
+### 2026-10-09 — v0.1.0 — design-system-artifact
+**Entre dans le périmètre :** la mise à jour, à chaque ticket qui ajoute ou modifie un composant, de l'artefact de design system (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP) : page du composant, entrée du catalogue, index du canevas.
+**Sorti du cimetière ?** oui — l'élément « Documentation site outside the existing Storybook » reste exclu pour toute documentation destinée aux utilisateurs des composants (Storybook en reste la seule documentation officielle). L'artefact est une exception assumée : un support de revue de design interne, privé, maintenu par le propriétaire du fork, qui sert de référence visuelle pendant le développement. Il n'est ni publié ni livré avec les paquets. Ce qui a changé depuis la décision d'exclure : le propriétaire a demandé que cette référence suive chaque livraison.
+**Stories :** toutes (règle commune, voir le texte partagé de docs/stories.md)
