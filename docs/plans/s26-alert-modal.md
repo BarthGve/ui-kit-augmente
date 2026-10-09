@@ -1,9 +1,9 @@
 ---
-validated: no
+validated: yes
 ---
 # Plan — Story s26-alert-modal
 
-> **Awaiting owner design review.** The owner asked to review the design (`docs/designs/s26-alert-modal.md` + `.html`) and the artifact **before any coding**. `validated` stays `no` until that review; `/dm-execute` is fail-closed on it. The open questions of the research (focus target on a destructive alert, icon set, default labels, provider helper, primary action closing) may change t02 tasks 3-5.
+> **Design approved by the owner (2026-10-09).** The owner reviewed `docs/designs/s26-alert-modal.md` + `.html` and the artifact page (version 23) and found them conforming. Decisions applied to the tasks below (they override any earlier wording of this plan): (1) layout and radius as in design revisions 1-3: title, muted message, divider, right-aligned footer, modal radius token `--c--components--modal--border-radius` (8px); (2) `severity?` is **optional with no default**; without it there is no icon and the primary button is the neutral inverse style; with it the icon and the semantic button colour appear, and `severity="error"` focuses the **dismiss** button initially (otherwise the primary action, else dismiss); (3) icons are Material ligatures like `MessageModal` (aria-hidden); (4) default labels reuse existing keys (`disclaimer.ok`, `confirmation.cancel`), no new locale key; (5) no `useModals().alertModal()` helper (follow-up story if wanted); (6) the primary action does not close the modal by itself; (7) `size?: "default" | "sm"` (maps to the narrower Modal size) and an optional `media` slot in the header replacing the severity icon; (8) footer actions at natural width, right-aligned, stacked with the primary on top on narrow screens.
 
 Branch: `feature/s26-alert-modal` (framing) · tickets: `feature/s26-alert-modal/<ticket-id>`
 Research: `docs/research/s26-alert-modal.md` — read it first; this plan does not repeat it. Design: `docs/designs/s26-alert-modal.md` (anatomy, API, states, a11y contract, gaps), mockup `docs/designs/s26-alert-modal.html`.
