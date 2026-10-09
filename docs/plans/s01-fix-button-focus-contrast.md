@@ -22,10 +22,10 @@ Acceptance criteria (docs/stories.md):
 - **scope:** a Vitest spec that guards the focus ring, written first and failing on the literal `#fff`.
 
 Tasks:
-1. [ ] Create `packages/ui-components/src/components/button/focus-ring.spec.tsx` (name next to `index.spec.tsx`). It imports `tokens` from `:/cunningham-tokens` and computes the WCAG contrast ratio with a small helper local to the spec.
-2. [ ] For each of the six themes (`default`, `dark`, `dsfr-light`, `dsfr-dark`, `anct-light`, `anct-dark`) and each of the six colours (`brand`, `neutral`, `warning`, `error`, `success`, `info`), assert `border.semantic.<colour>.primary` against `background.surface.primary` is at least 3:1. The test must fail if a theme or colour token is missing (no silent skip).
-3. [ ] Read `button/_base.scss` as text and assert that no `focus-visible` block contains a literal hex colour and that each `box-shadow` uses `var(--c--contextuals--background--surface--primary)` for its inner gap. This test fails today (four literal `#fff`).
-4. [ ] Run `yarn test` for this spec only; record the red result in the ticket (it fails on task 3, passes on task 2).
+1. [x] Create `packages/ui-components/src/components/button/focus-ring.spec.tsx` (name next to `index.spec.tsx`). It imports `tokens` from `:/cunningham-tokens` and computes the WCAG contrast ratio with a small helper local to the spec.
+2. [x] For each of the six themes (`default`, `dark`, `dsfr-light`, `dsfr-dark`, `anct-light`, `anct-dark`) and each of the six colours (`brand`, `neutral`, `warning`, `error`, `success`, `info`), assert `border.semantic.<colour>.primary` against `background.surface.primary` is at least 3:1. The test must fail if a theme or colour token is missing (no silent skip).
+3. [x] Read `button/_base.scss` as text and assert that no `focus-visible` block contains a literal hex colour and that each `box-shadow` uses `var(--c--contextuals--background--surface--primary)` for its inner gap. This test fails today (four literal `#fff`).
+4. [x] Run `yarn test` for this spec only; record the red result in the ticket (it fails on task 3, passes on task 2).
 
 ### t02-focus-ring-surface-gap
 - **size:** XS
