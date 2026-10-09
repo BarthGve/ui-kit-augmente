@@ -3,7 +3,7 @@
 > One story = one shippable slice, written to be executed by an agent.
 > Id format: `s<number>-<short-slug>` — reused in every pipeline file and in the branch name.
 
-**Shared by every story** (not repeated below): the work lives in `packages/ui-components/src/components/<component>/` (lower-case, hyphenated folder), styling goes through tokens (`tokens.ts` where the component has one, `index.scss` otherwise, no hard-coded values), every visible text is translatable, the component has a Storybook story and tests, passes the automated accessibility check and full keyboard navigation, and ships with one changeset in `.changeset/`. Each story that adds or changes a component also updates the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP): the component's page, its catalogue entry and the canvas index. That artifact is an internal design-review support kept by the team, not a documentation site: the PRD's graveyard item "documentation site outside the existing Storybook" still applies, and Storybook remains the only documentation of the components. Issue numbers (`ui-kit #…`) refer to `suitenumerique/ui-kit`, which is not this fork's backlog; they are cross-references to the approved design. Detailed conventions are owned by `/dm-architect`.
+**Shared by every story** (not repeated below): the work lives in `packages/ui-components/src/components/<component>/` (lower-case, hyphenated folder), styling goes through tokens (`tokens.ts` where the component has one, `index.scss` otherwise, no hard-coded values), every visible text is translatable, the component has a Storybook story and tests, passes the automated accessibility check and full keyboard navigation, and ships with one changeset in `.changeset/`. Each story that adds or changes a component also updates the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP): the component's page, its catalogue entry and the canvas index. That artifact is an internal design-review support kept by the team, not a documentation site: the PRD's graveyard item "documentation site outside the existing Storybook" still applies, and Storybook remains the only documentation of the components. Issue numbers (`ui-kit #…`) refer to `suitenumerique/ui-kit`, which is not this fork's backlog (one exception, flagged where it occurs: s19 cites a Cunningham issue); they are cross-references to the approved design. Detailed conventions are owned by `/dm-architect`.
 
 Stories are ordered by dependency: fixes first, then variants of existing components, then new components, then the Gantt in three slices.
 
@@ -260,10 +260,10 @@ ui-kit #217 (design approved). Reuse `Button` and `Separator`; do not create new
 - [ ] `StorageGauge` keeps its current behaviour (existing tests pass), and uses `Gauge` for its bar.
 
 ### Dependencies
-None.
+Blocked until the design check of ui-kit #220 is confirmed with the user (no planning before).
 
 ### Agentic notes
-ui-kit #220 (design approved, design check pending: confirm the design with the user before planning). Files: `components/storage-gauge/` (`storage-gauge-bar/`). Do not change the `StorageGauge` public props.
+ui-kit #220 (design approved, design check pending). Files: `components/storage-gauge/` (`storage-gauge-bar/`). Do not change the `StorageGauge` public props.
 
 ## Story s16-modal-stepper — Stepper inside the modal
 **As a** user in a multi-step flow **I want** a stepper in the modal **so that** I see which step I am on.
@@ -316,7 +316,7 @@ No equivalent in ui-kit: design to be reviewed. Dates are formatted with the act
 s03-fix-tree-dnd.
 
 ### Agentic notes
-ui-kit #198 (design approved). Reuse `Modal` and `TreeView` (with `TreeProvider.onLoadChildren`); add no tree logic of its own.
+ui-kit #198 (design approved). Reuse `Modal` and `TreeView` (with `TreeProvider.onLoadChildren`); add no tree logic of its own. Depends on s03 because the modal renders the tree inside a portal and relies on lazy loading, and s03 fixes the tree's click-through-portal behaviour (ui-kit #72) in the same files; if research shows the move modal does not hit that code, drop the dependency and say so.
 
 ## Story s19-combobox — Combobox
 **As a** user **I want** to type to filter and pick an option **so that** I find a value in a long list.
@@ -372,7 +372,7 @@ Risk: file state management and asynchronous progress. ui-kit #186 (design appro
 s20-upload-module.
 
 ### Agentic notes
-Risk: validation rules and large files. ui-kit #187 (design approved). Depends on s20 because the file choice and the file list of the contact import reuse the upload module; the table itself comes from the existing `DataGrid`. Reuse `DataGrid` (`SimpleDataGrid`); known accessibility issue on table cells and headers upstream (RGAA 5.7): do not repeat it. Parsing is limited to the file formats chosen at research time.
+Risk: validation rules and large files. ui-kit #187 (design approved). Depends on s20 because the file choice and the file list of the contact import reuse the upload module; the table itself comes from the existing `DataGrid`. The import reads a local file and sends nothing, so if research shows the upload module cannot be reused, drop the dependency on s20 and say so. Reuse `DataGrid` (`SimpleDataGrid`); known accessibility issue on table cells and headers upstream (RGAA 5.7): do not repeat it. Parsing is limited to the file formats chosen at research time.
 
 ## Story s22-gantt-read-only — Gantt chart, read-only
 **As a** project manager **I want** to see tasks on a time axis **so that** I read the schedule at a glance.
@@ -423,6 +423,7 @@ Risk: pointer and keyboard interaction and snapping. Reuse `components/dnd/` onl
 - [ ] A dependency that would create a cycle is refused with a message.
 - [ ] Moving a task that has a dependent task shows a conflict when the order would be broken.
 - [ ] The dependencies are listed for assistive technology.
+- [ ] A Storybook story loads a demonstration data set and lets the user move, resize and link its tasks, so the PRD's success criterion (usable in editing mode) can be checked by hand.
 
 ### Dependencies
 s23-gantt-move-resize.

@@ -1,63 +1,41 @@
-# Revue des stories : ui-kit fork (nouveaux composants et évolutions)
+# Revue des stories : ui-kit fork (deuxième passe)
 
-> Revue à contexte neuf de `docs/stories.md` contre `docs/prd.md`. Lecture seule, rien n'a été modifié.
+> Revue à contexte neuf de `docs/stories.md` contre `docs/prd.md`. Lecture seule, aucun fichier modifié. Les correctifs du premier rapport (commit `bdc22535`, dans l'historique git) ont été revérifiés un par un, sans les présumer corrects.
 
 ## Perimeter coverage
-| Fonctionnalité PRD (core loop) | Couverte par | OK ? |
-|---|---|---|
-| Toolbar (#217) | s14-toolbar | ✅ |
-| Selector (#232) | s13-selector | ✅ |
-| Stepper dans la modale (#188) | s16-modal-stepper | ✅ |
-| Gauge générique (#220) | s15-generic-gauge | ✅ |
-| Move modal (#198) | s18-move-modal | ✅ |
-| Contact import via table (#187) | s21-contact-import | ✅ |
-| Upload module (#186) | s20-upload-module | ✅ |
-| Accordion | s11-accordion | ✅ |
-| Breadcrumb | s12-breadcrumb | ✅ |
-| Combobox | s19-combobox | ✅ |
-| Skeleton | s09-skeleton | ✅ |
-| Card | s10-card | ✅ |
-| Timeline | s17-timeline | ✅ |
-| Gantt (éditable dès la v1) | s22 (lecture seule), s23 (déplacer et redimensionner), s24 (dépendances) | ✅ |
-| Corrections bugs et accessibilité (#184, #183, #213, #309…) | s01 (#184), s02 (#183, #309), s03 (#213) | ✅ |
-| Petits checkbox, radio, switch (#244, #269, #245) | s04-small-form-controls | ✅ |
-| Nouveaux onglets horizontaux (#231) | s05-horizontal-tabs | ✅ |
-| Mise à jour des filtres (#259) | s07-filters-update | ✅ |
-| Mise à jour du partage (#203) | s08-share-modal-update | ✅ |
-| Waffle et menu utilisateur (#278, #241) | s06-waffle-user-menu | ✅ |
+Les 20 lignes du tableau « Replicated (core loop) / In scope » du PRD sont livrées par au moins une story (couverture 100 %) : Toolbar (s14), Selector (s13), Stepper (s16), Gauge (s15), Move modal (s18), Contact import (s21), Upload module (s20), Accordion (s11), Breadcrumb (s12), Combobox (s19), Skeleton (s09), Card (s10), Timeline (s17), Gantt (s22, s23, s24), corrections bugs et accessibilité (s01, s02, s03), petits contrôles de formulaire (s04), onglets horizontaux (s05), filtres (s07), partage (s08), waffle et menu utilisateur (s06).
 
-- [x] Les 20 lignes du tableau sont livrées par au moins une story (couverture 100 %).
-- Les 19 tickets cités dans les critères de succès du PRD sont tous référencés dans les notes des stories.
-- Le Gantt (complexité 5) est déjà découpé en trois tranches livrables (lecture seule, édition, dépendances). Ce découpage suit la consigne du PRD de livrer d'abord en lecture seule.
-- L'expression « blocs communs » de la section Problème du PRD n'est pas une ligne du tableau. Elle n'exige donc pas de story.
+- Les 19 tickets des critères de succès du PRD sont tous référencés dans les notes des stories.
+- Le Gantt (5) est découpé en trois tranches 3, 4 et 4, dans l'ordre lecture seule, déplacement et redimensionnement, puis dépendances.
 
 ## Scope
-- [x] Aucune story ne réintroduit un élément du cimetière. Il n'y a aucune refonte des tokens ni de `ui-codemod`, aucune app de démo, aucune intégration applicative, aucun thème, aucun graphique ou carte autre que Timeline et Gantt.
-- [ ] Une story dépasse le périmètre : voir les findings sur s08 et sur le texte partagé.
+- [ ] Un point reste ouvert sur le cimetière : voir le finding 1 (texte partagé et artefact design-system).
+- [x] Aucune story ne dépasse le périmètre. Le correctif de s08 est vérifié : les critères ne portent plus que sur #203. Les tickets #151 et #313 sont explicitement exclus dans les notes.
+- Pas de refonte des tokens ni de `ui-codemod`, pas d'app de démo, pas d'intégration applicative, pas de thème, pas de graphique ni de carte.
 
 ## Story quality
-- [x] Aucune story n'est une couche technique. Chacune livre une valeur de bout en bout, et les stories s09 et s15 s'adressent à un développeur mais restent livrables seules.
-- [ ] Tous les critères ne peuvent pas devenir un test : voir les findings.
-- [x] Les notes agentiques sont présentes et utiles dans les 24 stories (fichiers, pièges, risques).
-- [x] Aucun 5 n'est laissé en une seule story. Les 4 (s19, s20, s21, s23, s24) énoncent tous leur risque.
+- [x] Aucune couche technique.
+- [x] Les critères peuvent devenir des tests. Les ambiguïtés du premier rapport sont levées (s09, s14, s04, s05 à s08).
+- [x] Notes agentiques présentes et utiles dans les 24 stories.
+- [x] Aucun 5. Les 4 énoncent tous leur risque.
 
 ## The list as a whole
-- [x] L'ordre des dépendances est exécutable : s18 dépend de s03, s21 de s20, s23 de s22 et s24 de s23. Il n'y a ni cycle ni référence vers l'avant.
-- [x] Les ids respectent `s<numéro>-<slug>`, sont uniques et vont de s01 à s24 sans trou.
-- [ ] Un chevauchement potentiel est à lever : voir le finding sur s13.
+- [x] Dépendances exécutables : s18 dépend de s03, s21 de s20, s23 de s22, s24 de s23. Pas de cycle, pas de référence vers l'avant.
+- [x] Ids conformes à `s<numéro>-<slug>`, uniques, de s01 à s24 sans trou.
+- [ ] Un chevauchement potentiel reste ouvert : s13 face à s05 et s04 (finding 5).
 
 ## Findings
-1. **major** — s08-share-modal-update — Le périmètre du PRD est « Share update (#203) ». La story ajoute en plus #151 (masquer le mode invitation) et #313 (action « demander l'accès »), qui ne sont pas dans le PRD. Le critère « une action "demander l'accès" est disponible quand elle est activée » est une fonctionnalité nouvelle. La note dit elle-même « re-check the scope of #313 with the user », donc le doute est reconnu mais non tranché. À faire : retirer #313 et son critère, ou amender le PRD (`## Amendements`). Ajouter #151 au périmètre se décide de la même façon.
-2. **minor** — s06, s07, s08 (et s05) — Le critère « rend le design approuvé, piloté par les tokens » n'est pas testable tel quel. Il n'a ni référence mesurable ni test visuel nommé (instantané Storybook, valeurs de tokens attendues). Les autres critères de ces stories sont bons. À faire : citer la référence de design vérifiée (valeurs de tokens, dimensions, états) ou un test d'instantané.
-3. **minor** — s04-small-form-controls — Le critère « aire interactive minimale » n'a pas de valeur (par exemple 24×24 px). Il ne peut pas devenir un test en l'état.
-4. **minor** — s09-skeleton, s14-toolbar — Les critères alternatifs sont ambigus. Pour s09, « masqué aux technologies d'assistance **ou** marqué occupé ». Pour s14, « menu de débordement **ou** retour à la ligne ». Il faut trancher, sinon le test n'est pas déterministe.
-5. **minor** — Texte partagé de stories.md — Chaque story doit mettre à jour un artefact externe de design-system (page du composant, catalogue, index du canevas). Ce travail est hors dépôt. Il touche de près le graveyard « site de documentation en dehors de Storybook » et alourdit chaque story d'un livrable non testable dans le dépôt. À faire : confirmer qu'il s'agit d'un support interne de design et non d'un site de documentation. Sinon, le sortir des critères de livraison.
-6. **minor** — s13-selector — Le risque de doublon avec `Tabs` ou `Radio` est reconnu dans les notes mais reporté à la recherche. Si le Selector est une variante visuelle d'un de ces deux composants, s13 chevauche s05 ou s04. À surveiller.
-7. **minor** — s16 / s19 — Le numéro `#286` désigne deux choses différentes : un bug de padding des modales (s16) et le `Select` asynchrone (s19). L'une de ces références est fausse ou ambiguë. À corriger pour éviter une mauvaise traçabilité.
-8. **minor** — s21-contact-import — Le PRD donne comme dépendance DataGrid, alors que la story dépend de s20 (upload). La dépendance est plausible parce que l'import passe par le choix d'un fichier. Elle n'est pas justifiée dans les notes et alourdit l'ordre de livraison. À faire : la justifier ou la retirer.
+1. **major** — Texte partagé (toutes les stories) — Chaque story qui ajoute ou modifie un composant doit mettre à jour un artefact externe (claude.ai) : la page du composant, son entrée de catalogue et l'index du canevas. Le texte affirme que ce n'est pas un site de documentation et que Storybook reste la seule documentation. Cette affirmation contredit la description du livrable : une page par composant, un catalogue et un index forment, par leur forme, un site de documentation. Le cimetière du PRD exclut « Documentation site outside the existing Storybook ». Le PRD n'a aucun amendement (`## Amendements` est vide), donc rien n'enregistre l'exception ; la requalification n'existe que dans `stories.md`. Le livrable est aussi hors dépôt, donc invérifiable par un test ou une revue de diff. Il double enfin `docs/design-system.md`, que le pipeline produit via `/dm-design-system`. Pas classé critical parce qu'aucune story n'a pour objet de construire ce site et que l'artefact préexiste ; si l'humain juge qu'il s'agit bien d'un site de documentation, la sévérité monte à critical. À faire : soit consigner la justification dans `## Amendements` du PRD, soit sortir cette obligation des critères de livraison des stories.
+2. **minor** — s06, s07, s08 — Les critères sont testables, mais seulement par snapshot et absence de littéraux. Ils ne vérifient pas la conformité à la référence de design approuvée. À citer à la planification.
+3. **minor** — s18-move-modal — La dépendance sur s03 n'est pas justifiée dans les notes. Justifier ou retirer.
+4. **minor** — s21-contact-import — La dépendance sur s20 est justifiée mais discutable (l'import lit un fichier local, s20 envoie). À dire explicitement dans les notes.
+5. **minor** — s13-selector — Risque de doublon avec `Tabs` ou `Radio`, cadré par l'exigence d'un amendement du PRD en cas de fusion. À surveiller.
+6. **minor** — s15-generic-gauge — « Design check pending » n'est noté que dans les notes agentiques, pas dans les dépendances.
+7. **minor** — s24 / critère de succès du PRD — Aucune story ne demande une story Storybook avec un jeu de données de démonstration pour l'édition du Gantt.
+8. **minor** — s19-combobox — La note cite « Cunningham issue #286 », ce qui contredit le texte partagé (« Issue numbers refer to suitenumerique/ui-kit »). Ajouter l'exception au texte partagé.
 
 ## Verdict
-Aucune fonctionnalité du périmètre n'est oubliée, et il n'y a aucune fuite du cimetière, aucune couche technique ni aucun 5 non découpé. Le seul défaut notable est le dépassement de périmètre de s08 (#313). Les autres points sont des précisions rédactionnelles. Le correctif de s08 est rapide, après quoi la liste pourra passer au `/dm-architect` puis à la planification.
+La couverture du périmètre est complète, sans couche technique ni 5 non découpé. Reste un point de fond : le texte partagé impose un artefact de pages de composants hors Storybook, qui ressemble à l'élément « documentation site outside the existing Storybook » du cimetière, sans amendement du PRD qui le justifie. Il doit être tranché avant de passer à `/dm-architect`.
 
 Max severity: major
 Stories ready: no
