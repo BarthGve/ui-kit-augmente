@@ -137,15 +137,13 @@ ui-kit #259 (design approved). Files: `components/filter/`, `components/search-f
 
 ### Acceptance criteria
 - [ ] The share modal renders the approved design, driven by tokens.
-- [ ] The invitation mode can be hidden by a prop, and when hidden it is absent from the page.
 - [ ] The modal keeps the invitation, role selection, link copying and import actions working (existing tests pass).
-- [ ] An "ask for access" action is available when enabled.
 
 ### Dependencies
 None.
 
 ### Agentic notes
-ui-kit #203 (design approved), #151 (hide invitation mode), #313 (ask for access). Files: `components/share/` (`modal/`, `access/`, `users-invitation/`, `import-modal/`). The e2e suites `share-modal` and `share-import-modal` exist: keep them green. Re-check the scope of #313 with the user before planning.
+ui-kit #203 (design approved). Files: `components/share/` (`modal/`, `access/`, `users-invitation/`, `import-modal/`). The e2e suites `share-modal` and `share-import-modal` exist: keep them green. Out of scope on purpose: hiding the invitation mode (ui-kit #151) and "ask for access" (ui-kit #313) are not in the PRD; adding them needs a PRD amendment first.
 
 ## Story s09-skeleton — Skeleton loading placeholder
 **As a** developer **I want** a skeleton placeholder **so that** loading states keep the layout stable.
