@@ -243,8 +243,7 @@ describe("<TreeView/>", () => {
       expect(row("a")).toHaveAttribute("aria-selected", "true");
     });
 
-    // fixed by t03: Row drops rowProps.onClick for ordinary rows.
-    it.fails("calls rowProps.onClick when an ordinary row is clicked", async () => {
+    it("calls rowProps.onClick once when an ordinary row is clicked, and still selects it", async () => {
       const user = userEvent.setup();
       const onRowClick = vi.fn();
       renderTree({ rowProps: { onClick: onRowClick } });
@@ -252,6 +251,7 @@ describe("<TreeView/>", () => {
       await user.click(screen.getByText("b"));
 
       expect(onRowClick).toHaveBeenCalledTimes(1);
+      expect(row("b")).toHaveAttribute("aria-selected", "true");
     });
   });
 });
