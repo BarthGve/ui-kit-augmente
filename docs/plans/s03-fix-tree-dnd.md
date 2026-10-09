@@ -68,10 +68,19 @@ Notes (t02, done):
 - **scope:** make the red tests green and nothing else.
 
 Tasks:
-1. [ ] `TreeView.tsx` `Row`: call the destructured `onClick` from `rowProps` in the ordinary-row branch before `props.node.handleClick(e)`, as the title/separator branch already does (`:380-381`). The t01 `it.fails` test flips to `it`; the AC3 portal test stays green (the item guard stops the event before the row).
-2. [ ] For every `test.fail()` of t02, fix its cause in `components/tree-view/` or `components/dnd/` and flip it to `test`. Do not change the public props of `TreeView`, `TreeViewItem`, `TreeProvider`. If the cause is the HTML5 backend or `dndRootElement` (structural: expose `dndManager`, or change backend), stop and write `docs/decisions/005-tree-view-dnd-backend.md` (MADR, options and why rejected) before coding; otherwise no ADR.
-3. [ ] If t02 found nothing besides task 1, state it in the ticket; do not invent changes.
-4. [ ] Run the tree-view spec and the e2e `tree-view` spec; both green, no `it.fails` / `test.fail()` left.
+1. [x] `TreeView.tsx` `Row`: call the destructured `onClick` from `rowProps` in the ordinary-row branch before `props.node.handleClick(e)`, as the title/separator branch already does (`:380-381`). The t01 `it.fails` test flips to `it`; the AC3 portal test stays green (the item guard stops the event before the row).
+2. [x] For every `test.fail()` of t02, fix its cause in `components/tree-view/` or `components/dnd/` and flip it to `test`. Do not change the public props of `TreeView`, `TreeViewItem`, `TreeProvider`. If the cause is the HTML5 backend or `dndRootElement` (structural: expose `dndManager`, or change backend), stop and write `docs/decisions/005-tree-view-dnd-backend.md` (MADR, options and why rejected) before coding; otherwise no ADR.
+3. [x] If t02 found nothing besides task 1, state it in the ticket; do not invent changes.
+4. [x] Run the tree-view spec and the e2e `tree-view` spec; both green, no `it.fails` / `test.fail()` left.
+
+Notes (t03, done):
+- Task 1: the ordinary-row `onClick` now calls `rowProps.onClick` then `node.handleClick`, same as the title branch; `onClick` stays destructured out of the spread, so it cannot be overridden or called twice. The t01 test is now a plain `it` asserting exactly one call **and** that the row is still selected; seen red first (0 calls). AC3 portal test unchanged and green.
+- Task 2: nothing to do, t02 left no `test.fail()`; no ADR 005.
+- Task 3: t02 found nothing besides task 1; no other change made.
+- Task 4: spec 7/7 green; e2e `tree-view` 6/6 green (chromium, throwaway config, headless shell 1243, `ctPort` from `dm-port.sh`, config deleted). `yarn lint`, `yarn check-locales`, `yarn test` (559), `yarn build` green; `cunningham-tokens-sass.scss` restored.
+- Mutations (restored): fix removed -> 1 red (this test, 0 calls); `onClick` called twice -> 1 red (this test, 2 calls).
+- Consumer impact: the only in-repo consumer passing `rowProps.onClick` is `stories/tree-view-example.tsx`; its handler now also fires on ordinary rows (reads `.name`, present there) and on Enter, where its `onKeyDown` sets the same text, idempotent.
+- Changeset `.changeset/tree-rows-hear-clicks.md` (patch) added here at the launcher's request, ahead of t04 task 1, which it covers.
 
 ### t04-tree-view-delivery
 - **size:** XS

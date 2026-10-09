@@ -396,7 +396,10 @@ const Row = <T,>({ children, customRowProps, ...props }: RowProps<T>) => {
       key={props.node.id}
       ref={props.innerRef}
       onFocus={(e) => e.stopPropagation()}
-      onClick={props.node.handleClick}
+      onClick={(e) => {
+        onClick?.(e);
+        props.node.handleClick(e);
+      }}
       onKeyDown={handleKeyDown}
       {...restCustomRowProps}
     >
