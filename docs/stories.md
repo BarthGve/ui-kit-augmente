@@ -3,7 +3,7 @@
 > One story = one shippable slice, written to be executed by an agent.
 > Id format: `s<number>-<short-slug>` — reused in every pipeline file and in the branch name.
 
-**Shared by every story** (not repeated below): the work lives in `packages/ui-components/src/components/<component>/` (lower-case, hyphenated folder), styling goes through tokens (`tokens.ts` where the component has one, `index.scss` otherwise, no hard-coded values), every visible text is translatable, the component has a Storybook story and tests, passes the automated accessibility check and full keyboard navigation, and ships with one changeset in `.changeset/`. Each story that adds or changes a component also updates the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP): the component's page, its catalogue entry and the canvas index. This is a deliberate exception to the PRD's graveyard item "documentation site outside the existing Storybook", recorded in the PRD's `## Amendements` (2026-10-09, design-system-artifact): the artifact is a private design-review reference kept by the fork owner, never published or shipped with the packages, and Storybook remains the only official documentation of the components. Issue numbers (`ui-kit #…`) refer to `suitenumerique/ui-kit`, which is not this fork's backlog (one exception, flagged where it occurs: s19 cites a Cunningham issue); they are cross-references to the approved design. Detailed conventions are owned by `/dm-architect`.
+**Shared by every story** (not repeated below): the work lives in `packages/ui-components/src/components/<component>/` (lower-case, hyphenated folder), styling goes through tokens (`tokens.ts` where the component has one, `index.scss` otherwise, no hard-coded values), every visible text is translatable, the component has a Storybook story and tests, passes the automated accessibility check and full keyboard navigation, and ships with one changeset in `.changeset/`. Each ticket that delivers or changes a component also updates the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP): the component's page, its catalogue entry and the canvas index. The artifact lives outside the repository, so it is checked by hand, not by a test: the ticket's PR description carries the line `Artifact: updated (version <id>)` and `/dm-review` refuses the ticket without it. This is a deliberate exception to the PRD's graveyard item "documentation site outside the existing Storybook", recorded in the PRD's `## Amendements` (2026-10-09, design-system-artifact): the artifact is a private design-review reference kept by the fork owner, never published or shipped with the packages, and Storybook remains the only official documentation of the components. Issue numbers (`ui-kit #…`) refer to `suitenumerique/ui-kit`, which is not this fork's backlog (one exception, flagged where it occurs: s19 cites a Cunningham issue); they are cross-references to the approved design. Detailed conventions are owned by `/dm-architect`.
 
 Stories are ordered by dependency: fixes first, then variants of existing components, then new components, then the Gantt in three slices.
 
@@ -154,7 +154,7 @@ ui-kit #203 (design approved). Files: `components/share/` (`modal/`, `access/`, 
 ### Acceptance criteria
 - [ ] `Skeleton` renders a placeholder of a given width and height with a shape option (line, block, circle).
 - [ ] The animation stops when the user prefers reduced motion.
-- [ ] The placeholder is hidden from assistive technology (`aria-hidden="true"`) and does not take focus; the loading container that wraps it is the one marked busy by the caller.
+- [ ] The placeholder is hidden from assistive technology (`aria-hidden="true"`) and does not take focus.
 
 ### Dependencies
 None.
@@ -260,7 +260,7 @@ ui-kit #217 (design approved). Reuse `Button` and `Separator`; do not create new
 - [ ] `StorageGauge` keeps its current behaviour (existing tests pass), and uses `Gauge` for its bar.
 
 ### Dependencies
-Blocked until the design check of ui-kit #220 is confirmed with the user (no planning before).
+Blocked until the design check of ui-kit #220 is confirmed with the user (no planning before). While blocked, the parent Issue stays in `backlog`, `/dm-plan` must not be run on this story, and a sequential run of the stories skips s15; no other story depends on it.
 
 ### Agentic notes
 ui-kit #220 (design approved, design check pending). Files: `components/storage-gauge/` (`storage-gauge-bar/`). Do not change the `StorageGauge` public props.
@@ -280,7 +280,7 @@ ui-kit #220 (design approved, design check pending). Files: `components/storage-
 None.
 
 ### Agentic notes
-ui-kit #188 (design approved). Files: `components/modal/` (`ModalDefaultLayout.tsx`, `ModalTabLayout.tsx`, `tokens.ts`). `OnboardingModal` already has steps: check whether `OnboardingStepItem` can be reused. Known padding bug on modals (ui-kit #286) is out of scope.
+ui-kit #188 (design approved). Files: `components/modal/` (`ModalDefaultLayout.tsx`, `ModalTabLayout.tsx`, `tokens.ts`). `OnboardingModal` already has steps: check whether `OnboardingStepItem` can be reused. Known padding bug on modals (ui-kit issue #286, not the Cunningham #286 cited in s19) is out of scope.
 
 ## Story s17-timeline — Timeline
 **As a** user **I want** a timeline of events **so that** I read what happened in order.
@@ -335,7 +335,7 @@ ui-kit #198 (design approved). Reuse `Modal` and `TreeView` (with `TreeProvider.
 None.
 
 ### Agentic notes
-Risk: ARIA behaviour and screen-reader differences, and overlap with `Select` (which is already `searchable`). Decide at research time whether to extend `Select` or add a separate component. An asynchronous `Select` (Cunningham issue #286, a different tracker from ui-kit) was in progress upstream: check before duplicating. No approved design.
+Risk: ARIA behaviour and screen-reader differences, and overlap with `Select` (which is already `searchable`). Decide at research time whether to extend `Select` or add a separate component. An asynchronous `Select` (Cunningham issue #286, a different tracker from ui-kit; not the ui-kit #286 cited in s16) was in progress upstream: check before duplicating. No approved design.
 
 ## Story s20-upload-module — Upload module
 **As a** user **I want** to upload files and follow their progress **so that** I know when each file is done.
@@ -369,10 +369,10 @@ Risk: file state management and asynchronous progress. ui-kit #186 (design appro
 - [ ] The table is operable by keyboard and its cells are associated with their headers.
 
 ### Dependencies
-s20-upload-module.
+None.
 
 ### Agentic notes
-Risk: validation rules and large files. ui-kit #187 (design approved). Depends on s20 because the file choice and the file list of the contact import reuse the upload module; the table itself comes from the existing `DataGrid`. The import reads a local file and sends nothing, so if research shows the upload module cannot be reused, drop the dependency on s20 and say so. Reuse `DataGrid` (`SimpleDataGrid`); known accessibility issue on table cells and headers upstream (RGAA 5.7): do not repeat it. Parsing is limited to the file formats chosen at research time.
+Risk: validation rules and large files. ui-kit #187 (design approved). No dependency on s20: the import reads a local file in the browser and sends nothing, so it does not need the upload module's progress, cancel and retry. Choose the file with the existing `FileUploader`; the table comes from the existing `DataGrid`. Reuse `DataGrid` (`SimpleDataGrid`); known accessibility issue on table cells and headers upstream (RGAA 5.7): do not repeat it. Parsing is limited to the file formats chosen at research time.
 
 ## Story s22-gantt-read-only — Gantt chart, read-only
 **As a** project manager **I want** to see tasks on a time axis **so that** I read the schedule at a glance.
@@ -384,7 +384,7 @@ Risk: validation rules and large files. ui-kit #187 (design approved). Depends o
 - [ ] `Gantt` renders one row per task, with a bar positioned and sized from its start and end dates.
 - [ ] The time axis can be zoomed between day, week and month, and the chart scrolls horizontally with a fixed task list.
 - [ ] Today is marked, and a task with no dates is shown without a bar.
-- [ ] Each bar exposes its task name and dates to assistive technology, and the chart is navigable by keyboard.
+- [ ] Each bar exposes its task name and dates to assistive technology, and the chart is navigable by keyboard: Tab enters the chart, Up and Down move focus between task rows, Home and End jump to the first and last task, and the focused task announces its name and dates.
 
 ### Dependencies
 None.
@@ -401,7 +401,7 @@ First slice of the PRD's Gantt (complexity 5, split here). No equivalent in ui-k
 ### Acceptance criteria
 - [ ] Dragging a bar changes its start and end by the same amount, and `onTaskChange` is called with the new dates.
 - [ ] Dragging a bar edge changes only that date, and a task cannot end before it starts.
-- [ ] The same changes are possible from the keyboard.
+- [ ] The same changes are possible from the keyboard: with a task focused, Alt+Left and Alt+Right move it by one zoom unit, Shift+Left and Shift+Right change its end date by one zoom unit, and Escape cancels a change in progress.
 - [ ] Dropping or resizing snaps to the current zoom unit (day, week or month).
 - [ ] Pressing Escape during a drag cancels it and restores the original dates.
 
