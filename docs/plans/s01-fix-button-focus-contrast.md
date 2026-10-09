@@ -22,10 +22,10 @@ Acceptance criteria (docs/stories.md):
 - **scope:** a Vitest spec that guards the focus ring, written first and failing on the literal `#fff`.
 
 Tasks:
-1. [ ] Create `packages/ui-components/src/components/button/focus-ring.spec.tsx` (name next to `index.spec.tsx`). It imports `tokens` from `:/cunningham-tokens` and computes the WCAG contrast ratio with a small helper local to the spec.
-2. [ ] For each of the six themes (`default`, `dark`, `dsfr-light`, `dsfr-dark`, `anct-light`, `anct-dark`) and each of the six colours (`brand`, `neutral`, `warning`, `error`, `success`, `info`), assert `border.semantic.<colour>.primary` against `background.surface.primary` is at least 3:1. The test must fail if a theme or colour token is missing (no silent skip).
-3. [ ] Read `button/_base.scss` as text and assert that no `focus-visible` block contains a literal hex colour and that each `box-shadow` uses `var(--c--contextuals--background--surface--primary)` for its inner gap. This test fails today (four literal `#fff`).
-4. [ ] Run `yarn test` for this spec only; record the red result in the ticket (it fails on task 3, passes on task 2).
+1. [x] Create `packages/ui-components/src/components/button/focus-ring.spec.tsx` (name next to `index.spec.tsx`). It imports `tokens` from `:/cunningham-tokens` and computes the WCAG contrast ratio with a small helper local to the spec.
+2. [x] For each of the six themes (`default`, `dark`, `dsfr-light`, `dsfr-dark`, `anct-light`, `anct-dark`) and each of the six colours (`brand`, `neutral`, `warning`, `error`, `success`, `info`), assert `border.semantic.<colour>.primary` against `background.surface.primary` is at least 3:1. The test must fail if a theme or colour token is missing (no silent skip).
+3. [x] Read `button/_base.scss` as text and assert that no `focus-visible` block contains a literal hex colour and that each `box-shadow` uses `var(--c--contextuals--background--surface--primary)` for its inner gap. This test fails today (four literal `#fff`).
+4. [x] Run `yarn test` for this spec only; record the red result in the ticket (it fails on task 3, passes on task 2).
 
 ### t02-focus-ring-surface-gap
 - **size:** XS
@@ -34,12 +34,12 @@ Tasks:
 - **scope:** replace the literal gap by the surface token, changeset, Storybook check, artifact.
 
 Tasks:
-1. [ ] In `button/_base.scss`, inside `button-variant`, replace the inner `0 0 0 1px #fff` of the four `&:focus-visible` blocks (primary, secondary, tertiary, bordered) by `0 0 0 1px var(--c--contextuals--background--surface--primary)`. Touch nothing else in the file.
-2. [ ] `focus-ring.spec.tsx` is now green; `button/index.spec.tsx` and the full `yarn test` still pass.
+1. [x] In `button/_base.scss`, inside `button-variant`, replace the inner `0 0 0 1px #fff` of the four `&:focus-visible` blocks (primary, secondary, tertiary, bordered) by `0 0 0 1px var(--c--contextuals--background--surface--primary)`. Touch nothing else in the file.
+2. [x] `focus-ring.spec.tsx` is now green; `button/index.spec.tsx` and the full `yarn test` still pass.
 3. [ ] Open the `Button` stories in Storybook (port from `bash .dm/lib/dm-port.sh`), keyboard-focus each variant, check light and dark, and run the Storybook a11y panel: no new violation. Stop the server afterwards.
-4. [ ] Add a changeset in `.changeset/` (package `@gouvfr-lasuite/ui-components`, patch) with a gitmoji-style summary.
-5. [ ] Update the design-system artifact: the `Button` page note on the focus ring, and republish after re-reading the published index. The PR description carries `Artifact: updated (version <id>)`.
-6. [ ] Run `yarn lint`, `yarn check-locales`, `yarn build`.
+4. [x] Add a changeset in `.changeset/` (package `@gouvfr-lasuite/ui-components`, patch) with a gitmoji-style summary.
+5. [x] Update the design-system artifact: the `Button` page note on the focus ring, and republish after re-reading the published index. The PR description carries `Artifact: updated (version <id>)`.
+6. [x] Run `yarn lint`, `yarn check-locales`, `yarn build`.
 
 ## US totals
 - **Person-days:** 1.5
