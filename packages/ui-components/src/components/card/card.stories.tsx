@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
 import { Badge } from "../badge";
 import { Button } from "../button";
 import { Card } from "./Card";
@@ -6,7 +7,6 @@ import { Card } from "./Card";
 const meta = {
   title: "Components/Card",
   component: Card,
-  tags: ["autodocs"],
   parameters: { layout: "padded" },
   args: { children: "A card groups related content." },
 } satisfies Meta<typeof Card>;
@@ -45,4 +45,20 @@ export const LongContent: Story = {
       <Card {...args} />
     </div>
   ),
+};
+
+export const InteractiveLink: Story = {
+  args: {
+    href: "#card-target",
+    header: "Annual report",
+    children: "The whole card is a link. Its content names it.",
+  },
+};
+
+export const InteractiveButton: Story = {
+  args: {
+    onPress: fn(),
+    header: "New project",
+    children: "The whole card is a button. Enter and Space press it.",
+  },
 };

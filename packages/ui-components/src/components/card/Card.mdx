@@ -1,0 +1,86 @@
+import { Meta, Canvas, ArgTypes } from "@storybook/blocks";
+import * as CardStories from "./card.stories";
+
+<Meta of={CardStories} name="Docs" />
+
+# Card
+
+`Card` groups related content in a bordered, rounded, elevated surface. It is
+presentational: it owns no state, no data and no text.
+
+## Usage
+
+```tsx
+import { Card } from "@gouvfr-lasuite/ui-components";
+
+<Card header="Project status" footer={<Button>Open project</Button>}>
+  Three milestones delivered.
+</Card>;
+```
+
+<Canvas of={CardStories.Default} />
+
+## Slots
+
+`header` and `footer` are optional and take any React node; when omitted, their
+section is not rendered. The body is `children`. Each section has the same
+padding; the header and footer are separated from the body by a divider.
+Long content wraps; the card fills the width of its container.
+
+<Canvas of={CardStories.HeaderBodyFooter} />
+<Canvas of={CardStories.LongContent} />
+
+## Interactive cards
+
+The whole card can be a single control. Pass **either** `href` **or**
+`onPress`, never both (the props type rejects the combination):
+
+- `href` renders a native link (`<a href>`). Enter follows it.
+- `onPress` renders `<div role="button" tabindex="0">`. Click, Enter and Space
+  press it.
+
+Without either, the card is a plain `div` that keyboard focus skips.
+
+<Canvas of={CardStories.InteractiveLink} />
+<Canvas of={CardStories.InteractiveButton} />
+
+Hover changes the background. Keyboard focus shows an outline ring offset from
+the border, also in forced-colors mode; there is no ring after a mouse click.
+The background transition is removed when reduced motion is requested.
+
+### No interactive content inside an interactive card
+
+An interactive card must not contain a link, a button or any other focusable
+control: nested controls are unreachable or ambiguous for assistive
+technologies (axe rule `nested-interactive`). A card that needs actions in its
+footer stays **static**.
+
+## Accessibility
+
+- An interactive card is named by its content. To give a shorter name, pass
+  `aria-label`, or `aria-labelledby` pointing at a heading inside the card.
+- A static card has no role. To expose it as a named group, pass
+  `role="group"` with `aria-label` or `aria-labelledby`.
+- Heading levels inside the header are yours to choose (`h2` to `h6`); Card
+  imposes none.
+
+## Tokens
+
+| Token (`--c--components--card--…`) | Default                                            |
+| ---------------------------------- | -------------------------------------------------- |
+| `background-color`                 | `contextuals.background.surface.secondary`         |
+| `background-color--hover`          | `contextuals.background.semantic.neutral.tertiary` |
+| `color`                            | `contextuals.content.semantic.neutral.primary`     |
+| `border-color`                     | `contextuals.border.surface.primary`               |
+| `border-width`                     | `1px`                                              |
+| `border-radius`                    | `8px`                                              |
+| `box-shadow`                       | `0 2px 4px rgba(0, 0, 0, 0.05)`                    |
+| `padding`                          | `globals.spacings.base`                            |
+| `header-font-weight`               | `globals.font.weights.bold`                        |
+| `focus-ring-color`                 | `contextuals.border.semantic.brand.primary`        |
+| `focus-ring-width`                 | `2px`                                              |
+| `focus-ring-offset`                | `2px`                                              |
+
+## Props
+
+<ArgTypes of={CardStories} />
