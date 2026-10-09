@@ -61,3 +61,6 @@ Cut into two stories so each closes on its own:
 - **s02a — operable and announced:** popover role (`isNonModal`), selected state announced, accessible names keep `subText`, tests for keyboard/roles. Closes the first and third acceptance criteria.
 - **s02b — long labels and focus contrast:** wrapping/truncation (and the `--tiny` variant), focus background contrast, once #309 is reproduced. Closes the second criterion and the 1.11:1 defect.
 The caller-side `aria-expanded` is a separate ticket per consumer family (Share, HelpMenu, Preview, Language, FeedbackForm), decided at planning.
+
+## Decision (2026-10-09, owner asked for the split)
+Split as proposed. `s02-fix-dropdown-menu` keeps the operable and announced menu (popover role, keyboard, selected state, accessible names, a Vitest spec), re-scored 3. New story `s25-dropdown-menu-long-labels` (Issue #28, depends on s02, scored 3) takes long labels (#309), the focus indicator contrast and the trigger `aria-expanded` of the nine consumers. The caller-side trigger work stays in s25 so that it is not lost. Both are written in docs/stories.md.
