@@ -57,5 +57,13 @@ Nom et emplacement conformes au plan ; aucune dépendance ajoutée ; lint propre
 - Les anneaux rendus dans un navigateur (ticket de test seulement ; le contrôle Storybook est dans t02).
 - L'erreur du troisième fichier en échec ; `yarn lint`, `yarn check-locales` et `yarn build` complets.
 
-Max severity: major
-Ship allowed: no
+
+## Re-review (après correctifs 92247df4 et 27d24abc)
+
+- Constat 1 (couleurs DSFR/ANCT non lues) : résolu. Le spec lit désormais `cunningham-tokens.css` (livré), résout les `var()` par thème puis `:root`. Mutation : ring `brand` de `dsfr-dark` forcé à `#444444` dans le CSS : 1 test rouge sur 37, restauré.
+- Constat 2 (test rouge isolé) : résolu. Le correctif t02 est dans la même PR ; le spec est vert (37/37) et la suite complète passe (33 fichiers, 534 tests). Mutation : un seul `#fff` réintroduit dans `_base.scss` : 1 test rouge sur 37, restauré.
+- Mineurs 3 à 5 inchangés (non bloquants).
+- Revue combinée t01+t02 : voir `t02-focus-ring-surface-gap.md`.
+
+Max severity: minor
+Ship allowed: yes
