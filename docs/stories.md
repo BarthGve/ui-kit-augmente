@@ -474,3 +474,510 @@ None.
 ### Agentic notes
 Requested by the owner on 2026-10-09. Build on the existing `Modal` (`components/modal/`, size and layout variants, `ModalProvider`, pre-built `MessageModal` / `ConfirmationModal` / `DeleteConfirmationModal`) and reuse the severity icons and tokens of `Alert` (`components/alert/`): do not duplicate them. Research must check first whether an alert modal is only a new pre-built variant of `Modal` (probable: complexity 2) or needs `alertdialog` support the current `Modal` lacks (react-aria-components `AlertDialog`). No `role="alertdialog"` exists in `src/` today. Keep it presentational. Same shared rules as the other component stories: artifact update, one changeset (minor), Storybook story, tests.
 
+## Story s27-slider — Slider
+**As a** user setting a value in a range **I want** a slider **so that** I pick a number or a range without typing.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] `Slider` selects a single value or a range between `min` and `max` with `step`, controlled and uncontrolled (`useControllableState`).
+- [ ] Arrow keys change the value by `step`, Home/End jump to the bounds, PageUp/PageDown by a larger step (tests).
+- [ ] The thumb has an accessible name and exposes `aria-valuemin|max|now|valuetext`; a disabled slider cannot be changed.
+- [ ] Track, thumb and focus ring come from `--c--components--slider--*` tokens, in the six themes.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Slider. Build on the react-aria-components `Slider`. Two-thumb range is part of this story. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s28-sheet — Sheet (side panel)
+**As a** user working in a page **I want** a side panel that slides over the page **so that** I edit or read details without leaving the page.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] `Sheet` opens from the left, right, top or bottom as a modal dialog (`role="dialog"`, named by its title) with a backdrop.
+- [ ] Focus moves in, is trapped, returns to the opener on close; Escape and the close button call `onClose`; outside click closes it unless disabled (tests).
+- [ ] Header, body and footer slots; the body scrolls while header and footer stay visible.
+- [ ] Width, padding and elevation come from tokens; the slide animation is removed under `prefers-reduced-motion`.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Sheet. Reuse the `Modal` internals (`components/modal/`, react-aria `Modal`/`Dialog`) rather than a second overlay system. Distinct from s29 (touch drawer). Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s29-drawer — Drawer (bottom sheet)
+**As a** mobile user **I want** a bottom drawer I can drag closed **so that** I use overlays comfortably on touch screens.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] `Drawer` opens from the bottom as a modal dialog with a drag handle; a swipe or drag down beyond a threshold closes it (test with pointer events).
+- [ ] Keyboard and screen reader users can close it with Escape and a labelled close button; focus is trapped and restored.
+- [ ] Snap points are optional; content taller than the viewport scrolls inside the drawer.
+- [ ] Radius, handle and elevation come from tokens; motion respects `prefers-reduced-motion`.
+
+### Dependencies
+s28-sheet.
+
+### Agentic notes
+shadcn Drawer (vaul-style). Share the overlay base with s28; no new dependency without an ADR (use pointer events or an existing library). Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s30-empty — Empty state
+**As a** user facing a list with no content **I want** an empty state **so that** I understand why nothing is shown and what to do next.
+
+### Complexity
+1
+
+### Acceptance criteria
+- [ ] `Empty` renders an optional icon or media slot, a title, a description and an optional action area.
+- [ ] It is presentational: no `role` beyond a landmark-free group; the title is a heading level chosen by the caller (`headingLevel`).
+- [ ] Spacing and colours come from tokens; works in the six themes.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Empty. Keep it free of data logic. Likely a small component reusing `Button` for the action. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s31-input-otp — Input OTP
+**As a** user entering a verification code **I want** a one-time-code input **so that** I type a code digit by digit.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] `InputOTP` renders `length` slots; typing fills slots and moves focus forward, Backspace moves back, paste fills all slots (tests).
+- [ ] Exposes one logical field to assistive technology (`autocomplete="one-time-code"`, an accessible name, `aria-invalid` on error) and works with `Field`.
+- [ ] Optional groups and a separator; `onComplete` fires once when all slots are filled.
+- [ ] Slot size, border and focus ring come from tokens; error and disabled states.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Input OTP. Beware the form/forms split: put it under `components/forms/input-otp/`. Mobile keyboards and autofill are the risk. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s32-button-group — Button group
+**As a** user choosing among related actions **I want** grouped buttons **so that** related actions read as one control.
+
+### Complexity
+1
+
+### Acceptance criteria
+- [ ] `ButtonGroup` renders adjacent `Button`s with shared borders and radius only on the outer edges, horizontal or vertical.
+- [ ] Keyboard order follows DOM order; the group exposes `role="group"` with an accessible name when given.
+- [ ] Works with every `Button` variant and size and with a split button (button + dropdown trigger).
+- [ ] Gap and radius come from tokens.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Button Group. Presentational wrapper around `Button`; do not change `Button` itself. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s33-input-group — Input group
+**As a** user filling a form **I want** an input with a prefix, suffix or inline action **so that** units, icons and buttons sit inside the field.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] `InputGroup` wraps `Input` (and `TextArea`) with leading and trailing addons: text, icon or button.
+- [ ] The group shows one shared border and one focus ring; clicking an addon text focuses the input.
+- [ ] Error, success and disabled states of `Field` propagate to the whole group; addons are `aria-hidden` unless interactive.
+- [ ] Addon spacing and colours come from tokens.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Input Group. Build on `forms/input` and `Field`; mind the form/forms split. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s34-toggle — Toggle button
+**As a** user switching a state on or off **I want** a toggle button **so that** a tool or format option stays pressed.
+
+### Complexity
+1
+
+### Acceptance criteria
+- [ ] `Toggle` renders a button with `aria-pressed`; click, Enter and Space switch it; controlled and uncontrolled.
+- [ ] Variants `default` and `outlined`, sizes like `Button`; the pressed state is visible without colour alone.
+- [ ] Focus ring and colours from tokens in the six themes.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Toggle (the Toggle Group is covered by s13-selector). react-aria-components `ToggleButton`. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s35-hover-card — Hover card
+**As a** user scanning a page **I want** a card shown on hover or focus of a trigger **so that** I preview details without clicking.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] `HoverCard` opens after a delay on hover and on keyboard focus of its trigger, and closes on blur, Escape or pointer leave (tests with timers).
+- [ ] The card is reachable by keyboard and not announced as a dialog; content is also available some other way (documented rule).
+- [ ] Placement follows `Popover`; elevation and radius from tokens.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Hover Card. Relation to `Tooltip` and `Popover`: reuse their positioning. Touch devices have no hover: document the fallback. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s36-kbd — Kbd (keyboard key)
+**As a** user reading help text **I want** a visual keyboard key **so that** shortcuts are shown consistently.
+
+### Complexity
+1
+
+### Acceptance criteria
+- [ ] `Kbd` renders a `kbd` element with key styling; `KbdGroup` joins several keys with a separator.
+- [ ] Platform-aware helper shows ⌘ on macOS and Ctrl elsewhere, overridable; text stays readable by screen readers.
+- [ ] Font, border and background from tokens.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Kbd. Trivial presentational component. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s37-collapsible — Collapsible
+**As a** user reading a page **I want** a single collapsible region **so that** I show or hide a block of content.
+
+### Complexity
+1
+
+### Acceptance criteria
+- [ ] `Collapsible` has a trigger and a content region; the trigger exposes `aria-expanded` and `aria-controls`; Enter and Space toggle it.
+- [ ] Controlled and uncontrolled; the collapsed content is not focusable and hidden from assistive technology.
+- [ ] Height transition removed under `prefers-reduced-motion`.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Collapsible. Share the disclosure logic with s11-accordion (react-aria `Disclosure`). Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s38-carousel — Carousel
+**As a** user browsing a set of items **I want** a carousel **so that** I move through slides.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] `Carousel` shows one or more slides with previous and next buttons and optional indicators; keyboard arrows move between slides (tests).
+- [ ] The region is labelled (`aria-roledescription="carousel"`), each slide is a labelled group, and autoplay (if any) can be paused and stops on focus.
+- [ ] Touch swipe and scroll-snap work; `prefers-reduced-motion` disables animation.
+- [ ] Controls and indicators from tokens.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Carousel. Prefer native CSS scroll-snap over a new library; ADR needed otherwise. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s39-aspect-ratio — Aspect ratio
+**As a** developer placing media **I want** a fixed aspect-ratio container **so that** images and videos keep their proportions.
+
+### Complexity
+1
+
+### Acceptance criteria
+- [ ] `AspectRatio` renders its child inside a box of the given `ratio` (e.g. 16/9) and the child fills it without distortion.
+- [ ] The default ratio is 1; invalid ratios fall back to 1 (test).
+- [ ] No extra DOM role.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Aspect Ratio. Use the CSS `aspect-ratio` property. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s40-menubar — Menubar
+**As a** user of a desktop-style application **I want** a menubar **so that** I reach grouped commands from a persistent bar.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] `Menubar` renders top-level menus; arrow keys move between menus, Enter/Space/ArrowDown opens, Escape closes, hover switches menus while one is open (tests).
+- [ ] Roles `menubar`, `menu`, `menuitem`, `menuitemcheckbox`, `menuitemradio`, shortcuts shown with `Kbd`.
+- [ ] Sub-menus supported; items reuse the `DropdownMenu`/`Menu` item rendering.
+- [ ] Colours, spacing and elevation from tokens.
+
+### Dependencies
+s02-fix-dropdown-menu (done), s36-kbd.
+
+### Agentic notes
+shadcn Menubar. Reuse `components/menu/` item bodies and the semantics settled in ADR 003. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s41-navigation-menu — Navigation menu
+**As a** user of a site with many sections **I want** a navigation menu with fly-out content **so that** I discover sections of a large site.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] `NavigationMenu` renders top-level links and triggers whose panels open on click or focus with keyboard arrows between items (tests).
+- [ ] Uses a `nav` landmark with a label; the current page link has `aria-current="page"`; panels are not `menu` roles.
+- [ ] On narrow screens it collapses to a button-opened list.
+- [ ] Tokens for spacing, elevation, colours.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Navigation Menu. Distinct from `Menubar` (application commands). Check overlap with `layout` header before building. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s42-sidebar — Sidebar
+**As a** user of an application **I want** a collapsible sidebar **so that** I navigate between areas of the app.
+
+### Complexity
+4
+
+### Acceptance criteria
+- [ ] `Sidebar` provides header, grouped navigation, footer, and a collapsed (icons only) mode toggled by a button and a keyboard shortcut.
+- [ ] Landmark `nav`/`aside` with a label; current item `aria-current`; collapsed state persists through a controlled prop; tooltips on icons when collapsed.
+- [ ] On narrow screens it becomes an off-canvas sheet (s28).
+- [ ] Widths, colours and transitions from tokens; reduced motion respected.
+
+### Dependencies
+s28-sheet.
+
+### Agentic notes
+shadcn Sidebar. Complexity 4: provider/context, responsive behaviour, persistence. Check overlap with `layout` left panel (`components/layout/`) and reuse it. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s43-scroll-area — Scroll area
+**As a** user of a constrained panel **I want** a styled scroll area **so that** scrollbars match the interface on every platform.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] `ScrollArea` wraps content with custom thin scrollbars (vertical and horizontal) that remain keyboard and wheel operable and keep native scroll semantics.
+- [ ] The viewport is focusable when it scrolls (`tabindex=0`) and labelled; scrollbars hide when not needed.
+- [ ] Scrollbar colours and sizes from tokens; forced-colors mode falls back to native.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Scroll Area. Compare with `smart-scroller`; prefer CSS (`scrollbar-width`, `::-webkit-scrollbar`) over JS. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s44-resizable — Resizable panels
+**As a** user arranging a workspace **I want** resizable panels **so that** I adjust the space given to each area.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] `ResizablePanelGroup` lays out panels with draggable handles, horizontal or vertical, with `minSize`/`maxSize` per panel (pointer test).
+- [ ] Handles are keyboard operable (arrows, Home/End), `role="separator"` with `aria-valuenow` and an accessible name.
+- [ ] Controlled sizes and `onResize`; double click on a handle resets (optional).
+- [ ] Handle visuals from tokens.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Resizable. A `resize-handle` folder already exists without component: check what it holds and reuse. No new dependency without ADR. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s45-item — Item
+**As a** developer building lists **I want** a generic list item **so that** media, title, description and actions are laid out consistently.
+
+### Complexity
+1
+
+### Acceptance criteria
+- [ ] `Item` renders optional media, title, description and an actions area, with variants `default`, `outlined`, `muted` and sizes.
+- [ ] It can render as a link or button (`href`/`onPress`) with a visible focus ring, and groups into a list with `ItemGroup`.
+- [ ] Tokens for spacing and colours.
+
+### Dependencies
+s10-card.
+
+### Agentic notes
+shadcn Item. Reuse the interactive pattern of `Card` (s10). Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s46-typography — Typography
+**As a** designer and developer **I want** typography components **so that** headings and text share the same scale.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] Components or classes for `h1`–`h4`, paragraph, lead, large, small, muted, blockquote, inline code and list read sizes and weights from tokens.
+- [ ] Heading level is chosen independently of its visual style (`as` prop) and a heading never skips levels by default styling.
+- [ ] Storybook shows the full scale in the six themes.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Typography. Design tokens for typography already exist in `ui-tokens`; do not redesign them (out of scope, PRD graveyard). Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s47-chart — Chart
+**As a** user reading data **I want** simple charts **so that** I see trends and comparisons.
+
+### Complexity
+4
+
+### Acceptance criteria
+- [ ] `Chart` renders bar, line and area charts from a data array with axes, legend and tooltip, themed by tokens in the six themes.
+- [ ] Every chart has a text alternative: an accessible name, a summary and a data table fallback toggle (test).
+- [ ] Colour is never the only differentiator (patterns or labels) and colours meet 3:1 against the surface.
+- [ ] Responsive to its container; reduced motion respected.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Chart (Recharts wrapper). Needs a charting library: a new dependency requires an ADR. The PRD graveyard listed data visualisation as out of scope; reopened by the owner on 2026-10-09 (see PRD amendment) — maps stay excluded. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s48-bubble — Chat bubble
+**As a** user reading a conversation **I want** chat bubbles **so that** messages are visually grouped by sender.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] `Bubble` renders content with variants (`default`, `secondary`, `muted`, `tinted`, `outline`, `ghost`, `destructive`) and `align` start or end.
+- [ ] `BubbleGroup` groups consecutive bubbles; `BubbleReactions` shows a reactions row labelled for assistive technology.
+- [ ] A bubble can render as a link or button; errors are also in text, not colour only.
+- [ ] Max width 80% of the container; tokens only.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Bubble. Part of a chat set with s49 and s50. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s49-message — Message
+**As a** user reading a conversation **I want** a message row **so that** author, time and actions go with the content.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] `Message` lays out avatar (from `users`), author name, timestamp, content (a `Bubble`) and message actions.
+- [ ] Message actions are reachable by keyboard and shown on hover and focus; the timestamp uses `<time>`.
+- [ ] Own and others' messages align differently; spacing from tokens.
+
+### Dependencies
+s48-bubble.
+
+### Agentic notes
+shadcn Message. Reuse `Avatar` from `components/users`. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s50-message-scroller — Message scroller
+**As a** user following a live conversation **I want** a scroll area tuned for chat **so that** new messages are followed only when I am at the bottom.
+
+### Complexity
+4
+
+### Acceptance criteria
+- [ ] `MessageScroller` follows new content only while the reader is at the live edge and shows a jump-to-latest button otherwise (test with a scrollable jsdom/Playwright harness).
+- [ ] Prepending older messages keeps the scroll position.
+- [ ] The viewport is a labelled focusable region and the content is `role="log"`, with `aria-busy` while streaming.
+- [ ] Jump to a given message id.
+
+### Dependencies
+s49-message.
+
+### Agentic notes
+shadcn Message Scroller. Scroll anchoring is the risk: needs a real-browser test. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s51-marker — Marker
+**As a** user reading a conversation or timeline **I want** inline markers **so that** system notes and dividers sit between messages.
+
+### Complexity
+1
+
+### Acceptance criteria
+- [ ] `Marker` renders variants `default`, `border` and `separator` (centred label with rules) with an optional icon and content.
+- [ ] Presentational by default; `role="status"` when it reports progress; icon-only markers need an `aria-label`.
+- [ ] Tokens only.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Marker (companion of Message). May be reused by s17-timeline. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s52-questionnaire — Questionnaire
+**As a** user answering a series of questions **I want** a step-by-step questionnaire **so that** I answer one question at a time.
+
+### Complexity
+4
+
+### Acceptance criteria
+- [ ] `Questionnaire` shows one item at a time with previous, next, skip and submit; single choice, multiple choice and free text; required validation blocks next.
+- [ ] Each item is a `fieldset` with a `legend`; invalid controls expose `aria-invalid`; focus moves to the new item or to the first invalid control; inactive items are inert (tests).
+- [ ] Progress is a named progress bar; answers are read from `FormData` on submit; controlled navigation is supported.
+- [ ] Keyboard shortcuts for choices are optional.
+
+### Dependencies
+s16-modal-stepper.
+
+### Agentic notes
+shadcn Questionnaire. Overlaps with the stepper (s16): share step state logic. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s53-direction — Direction (RTL support)
+**As a** user of a right-to-left language **I want** right-to-left layouts **so that** the interface mirrors correctly.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] `DirectionProvider` sets `dir` for its subtree and `useDirection()` returns the value; `Provider` can take a `direction`.
+- [ ] Components use logical CSS properties (inline-start/end) so a Storybook toolbar switch to RTL mirrors them; audit of the existing components lists those that do not (report, not all fixed here).
+- [ ] Keyboard arrow semantics follow direction in components that use arrows (Tabs, Slider).
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Direction. Large audit surface: scope this story to the provider, the hook, the Storybook switch and the audit report; fixes become separate stories. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s54-native-select — Native select
+**As a** user on a mobile device or with a simple form **I want** a native select **so that** the platform picker is used when richer UI is not needed.
+
+### Complexity
+1
+
+### Acceptance criteria
+- [ ] `NativeSelect` wraps a native `select` with the `Field` look: label, hint, error and success states, disabled.
+- [ ] Options and optgroups are passed as children or an `options` array; the value is controlled or uncontrolled.
+- [ ] Tokens for border, radius and focus ring consistent with `Input`.
+
+### Dependencies
+None.
+
+### Agentic notes
+shadcn Native Select. Existing `Select` is custom; keep both. Mind the form/forms split. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s55-attachment — Attachment
+**As a** user adding files to a message or form **I want** attachment chips **so that** I see, open and remove attached files.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] `Attachment` renders a file chip with icon or thumbnail, name, size, and an optional remove button with an accessible name including the file name.
+- [ ] A list of attachments is a list (`ul`); upload progress and error states are shown and announced.
+- [ ] Reuses file-type icons from `FileUploader` / `Preview`; tokens only.
+
+### Dependencies
+s20-upload-module.
+
+### Agentic notes
+shadcn Attachment. Partially covered by the upload module (s20): this story is the display component only. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
