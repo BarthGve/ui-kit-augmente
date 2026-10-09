@@ -80,11 +80,20 @@ t03 notes (2026-10-09):
 - **scope:** prove the nine consumers still work, then deliver.
 
 Tasks:
-1. [ ] Run the existing stories and tests of the consumers: `ContextMenu`, `Filter`, `HelpMenu`, `FeedbackForm`, `language-picker`, `FilePreview`, and the Share dropdowns (`AccessRoleDropdown`, `ShareMembersActions`, `ShareLinkSettings`, `ShareMemberItem`, `ShareInvitationItem`). Fix only what the change broke.
+1. [x] Run the existing stories and tests of the consumers: `ContextMenu`, `Filter`, `HelpMenu`, `FeedbackForm`, `language-picker`, `FilePreview`, and the Share dropdowns (`AccessRoleDropdown`, `ShareMembersActions`, `ShareLinkSettings`, `ShareMemberItem`, `ShareInvitationItem`). Fix only what the change broke.
 2. [ ] Open the `DropdownMenu` stories in Storybook, use the keyboard and the a11y panel in light and dark: no new violation. Stop the server afterwards.
-3. [ ] Add a changeset in `.changeset/` (`@gouvfr-lasuite/ui-components`, patch or minor as the selection change decides).
-4. [ ] Update the design-system artifact (`DropdownMenu` page: roles and selection note); the PR description carries `Artifact: updated (version <id>)`.
-5. [ ] Run `yarn lint`, `yarn check-locales`, `yarn test`, `yarn build`.
+3. [x] Add a changeset in `.changeset/` (`@gouvfr-lasuite/ui-components`, patch or minor as the selection change decides).
+4. [x] Update the design-system artifact (`DropdownMenu` page: roles and selection note); the PR description carries `Artifact: updated (version <id>)`.
+5. [x] Run `yarn lint`, `yarn check-locales`, `yarn test`, `yarn build`.
+
+t04 notes (2026-10-09):
+- Consumers: none of them has a Vitest spec (the only one is `DropdownMenu.spec.tsx`); their coverage is the Playwright e2e. Chromium (headless shell 1243, throwaway config on the dm-port, deleted) over `help-menu`, `context-menu`, `filter`, `share-modal`, `file-preview`: 187/192. The 5 failures are the known "opens … in a new tab" tests (4 HelpMenu + `pdf-preview-links`), `newPage.url()` empty, already failing on `next`; `pdf-preview-mixed-sizes` passed this time. `FeedbackForm` and `language-picker` have no e2e: their stories were driven with Playwright (open, pick, reopen): items are `menuitemcheckbox`, the pick updates the trigger, closes the menu and moves `aria-checked`, no page error. `Header`, `MainLayout` and `InvitationUserSelectorList` import only the `DropdownMenuOption` type (rendered through `LanguagePicker` and `AccessRoleDropdown`); the `share-import-modal` e2e was not run. No consumer fix needed.
+- Task 2 left unticked: its criterion "no new violation" is not met as stated; to be decided at review. Storybook (no human browser, so no a11y panel): 7 `DropdownMenu` stories × themes `default` and `dark`, driven by Playwright with axe-core (the a11y addon's engine, wcag2a/aa + best-practice), compared with the pre-s02 sources (swapped temporarily, then restored).
+  - Axe before s02: only `aria-dialog-name` on the popover (the modal also hid the rest of the page). After s02: `aria-dialog-name` is gone; `region` on the portalled `.c__dropdown-menu__list` is new and comes from `isNonModal` (the list is no longer inside a modal dialog). Three pre-existing issues are now visible because the page is no longer hidden: `landmark-one-main` and `page-has-heading-one` (bare story iframe), and in `dark` `color-contrast` 2.26:1 on the danger "Delete" label (`#c9191e` on `#2f303d`, computed colours identical before s02, a token issue outside s02).
+  - Keyboard (14 runs): Tab reaches the trigger, Enter opens with no `dialog` in the tree. Escape closes and returns focus to the trigger; in the full pass focus was put on an item with `.focus()` first, and Escape from natural keyboard focus was checked on 2 stories only. Pre-existing defects, same before s02: after a keyboard open, focus sits on the menu container, so the first ArrowDown lands on the second item (item 1 is skipped); and an ArrowDown pressed immediately after Enter does not reach the menu, so Escape does not close it (focus stays on the trigger now, fell to `body` before).
+- Changesets on `next`: `quiet-menus-leave.md` (patch, t02) and `checked-menus-speak.md` (minor, t03).
+- Artifact updated by the main agent: versions `1791550341-decf` (t02) and `1791551232-79f3` (t03).
+- `yarn lint` (0 errors, 93 pre-existing warnings), `yarn check-locales`, `yarn test` (34 files, 552 tests), `yarn build`: green. Regenerated `cunningham-tokens-sass.scss` restored.
 
 ## US totals
 - **Person-days:** 5
