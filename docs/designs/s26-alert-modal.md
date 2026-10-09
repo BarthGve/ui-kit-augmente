@@ -133,3 +133,12 @@ Reported, **not** filled by invention.
 3. **Modal close "X" is not localised** (`aria-label="close"` hard-coded). Avoided here by hiding it; fixing it is outside the story.
 4. **`Button` medium height**: `docs/design-system.md` says 40px, `button/tokens.ts` says `medium-height` 48px. The mockup draws 40px; the implementation uses the real `Button`, so the mockup button height is indicative.
 5. **Initial-focus on a destructive primary** is an accessibility choice the design system does not settle (open question 1).
+
+
+## Revision 2026-10-09 — owner's reference image (shadcn alert dialog)
+The owner asked to take inspiration from a reference: a compact dialog with a title, a muted description, a **divider**, then a footer with **right-aligned** actions (dismiss as a bordered button, then the primary action). Changes to the design above:
+- **Severity is optional, default none (neutral).** Without `severity` there is no icon and the primary button uses the neutral inverse style (as in the reference). With a severity the icon (aria-hidden) precedes the title and the primary button takes the semantic colour. The four severities of the acceptance criteria stay available.
+- **Layout:** body (title + muted message) then a footer separated by a 1px border; footer actions **right-aligned**, natural width (not `fullWidth`), dismiss first, primary last; on narrow screens the footer stacks with the primary action on top.
+- **Surface:** radius 12px, same elevation token as `Modal`; message in the muted content colour. These two values (radius, footer padding) are literals not covered by a global token: reported as design-system gaps.
+- API: `severity?` has no default (was `info`); everything else unchanged. Default labels, focus rule and open questions unchanged.
+- Mockup `s26-alert-modal.html` redrawn (v2): neutral reference case, four severities, dismiss-only case, light and dark.
