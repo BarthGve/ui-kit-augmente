@@ -588,3 +588,32 @@
 .c__noscroll {
   overflow: hidden;
 }
+
+// AlertModal. `Modal` takes no className: scope through its own elements.
+.c__modal__footer:has(.c__alert-modal__actions) {
+  // Full-width divider: the footer cancels the scroller padding around it.
+  // It stays inside the scroller so a long message remains keyboard
+  // scrollable (a sticky footer leaves the scroller without focusable).
+  margin: var(--c--globals--spacings--md) calc(-1 * var(--padding))
+    calc(-1 * var(--padding));
+  padding: var(--c--globals--spacings--sm) var(--padding);
+  border-top: 1px solid var(--c--components--modal--border-color);
+  // The footer colour would square the modal bottom corners.
+  background-color: transparent;
+}
+
+.c__modal__title:has(> .c__alert-modal__media) {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.c__alert-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--c--globals--spacings--sm);
+
+  // Stacked, the primary action comes first.
+  @include media(sm) {
+    flex-direction: column-reverse;
+  }
+}
