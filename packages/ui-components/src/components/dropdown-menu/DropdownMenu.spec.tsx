@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { vi } from "vitest";
+import { it, vi } from "vitest";
 import { CunninghamProvider } from ":/components/provider";
 import { DropdownMenu } from "./DropdownMenu";
 import { DropdownMenuItem } from "./types";
 
-const setup = () => {
+const setup = ({
+  shouldCloseOnInteractOutside,
+}: {
+  shouldCloseOnInteractOutside?: (element: Element) => boolean;
+} = {}) => {
   const onOpenChange = vi.fn();
   const onSelectValue = vi.fn();
   const callbacks = {
@@ -14,6 +18,7 @@ const setup = () => {
     keepOpen: vi.fn(),
     disabled: vi.fn(),
     hidden: vi.fn(),
+    child: vi.fn(),
   };
   const options: DropdownMenuItem[] = [
     { label: "Rename", callback: callbacks.plain },
@@ -25,9 +30,13 @@ const setup = () => {
     { type: "separator" },
     { label: "Locked", isDisabled: true, callback: callbacks.disabled },
     { label: "Ghost", isHidden: true, callback: callbacks.hidden },
+    {
+      label: "More",
+      children: [{ label: "Archive", callback: callbacks.child }],
+    },
   ];
 
-  // The caller owns `isOpen`, as every consumer does.
+  // The caller owns `isOpen` and its trigger toggles it, as every consumer does.
   const Harness = () => {
     const [isOpen, setIsOpen] = useState(true);
     return (
@@ -37,13 +46,16 @@ const setup = () => {
           options={options}
           isOpen={isOpen}
           selectedValues={["editor"]}
+          shouldCloseOnInteractOutside={shouldCloseOnInteractOutside}
           onSelectValue={onSelectValue}
           onOpenChange={(open) => {
             onOpenChange(open);
             setIsOpen(open);
           }}
         >
-          <button type="button">Actions</button>
+          <button type="button" onClick={() => setIsOpen(!isOpen)}>
+            Actions
+          </button>
         </DropdownMenu>
         <button type="button">After</button>
       </CunninghamProvider>
@@ -115,10 +127,40 @@ describe("<DropdownMenu/>", () => {
       expect(screen.getByRole("menu", { name: "Actions" })).toBeInTheDocument();
     });
 
-    // fixed by t02: flip to a plain `it`
-    it.fails("is not wrapped in a dialog", () => {
+    it("is not wrapped in a dialog", () => {
       setup();
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("closes on a click outside the menu", async () => {
+      const { onOpenChange } = setup();
+      await userEvent.click(document.body);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+
+    it("stays open on an outside click refused by shouldCloseOnInteractOutside", async () => {
+      const { onOpenChange } = setup({
+        shouldCloseOnInteractOutside: () => false,
+      });
+      await userEvent.click(document.body);
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+
+    it("closes on a click on the trigger", async () => {
+      setup();
+      await userEvent.click(screen.getByText("Actions"));
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+
+    it("activates a submenu item without closing on the way", async () => {
+      const { callbacks, onOpenChange } = setup();
+      await userEvent.click(item("More"));
+      await userEvent.click(item("Archive"));
+      expect(callbacks.child).toHaveBeenCalledTimes(1);
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 
     it("asks to close on Escape", async () => {
@@ -127,8 +169,10 @@ describe("<DropdownMenu/>", () => {
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 
-    // fixed by t02: flip to a plain `it`
-    it.fails("lets Tab move focus out of the menu", async () => {
+    // Limit: focus leaves for the end of the page (relatedTarget null), so the
+    // menu is not asked to close; it stays open until the next outside
+    // click or Escape from the caller's side.
+    it("lets Tab move focus out of the menu", async () => {
       setup();
       expect(item("Rename")).toHaveFocus();
       await userEvent.tab();

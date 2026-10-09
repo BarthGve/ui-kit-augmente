@@ -41,10 +41,17 @@ t01 notes (spec run on the current code, 2026-10-09):
 - **scope:** remove the dialog wrapper and make the keyboard behaviour as specified.
 
 Tasks:
-1. [ ] In `dropdown-menu/DropdownMenu.tsx`, test `isNonModal` on the root `<Popover>` (react-aria-components 1.16.0 renders a dialog unless `isNonModal`, `Popover.tsx:189-227`) so that the menu is no longer inside `role="dialog"`. Keep `triggerRef`, `isOpen`, `onOpenChange` and `shouldCloseOnInteractOutside` working.
-2. [ ] Check click-outside still closes the menu, since `isNonModal` removes the underlay and the dismiss button: add a test for it in the spec.
-3. [ ] Escape and Tab: the t01 tests pass. If Tab cannot be made to leave the menu while the caller owns `isOpen`, document the exact limit in the spec and in the ticket instead of hiding it.
-4. [ ] Run the e2e specs that open this menu (`e2e/help-menu`, `e2e/context-menu`, `e2e/filter`, `e2e/share-modal`) when Playwright can run; otherwise state they were not run.
+1. [x] In `dropdown-menu/DropdownMenu.tsx`, test `isNonModal` on the root `<Popover>` (react-aria-components 1.16.0 renders a dialog unless `isNonModal`, `Popover.tsx:189-227`) so that the menu is no longer inside `role="dialog"`. Keep `triggerRef`, `isOpen`, `onOpenChange` and `shouldCloseOnInteractOutside` working.
+2. [x] Check click-outside still closes the menu, since `isNonModal` removes the underlay and the dismiss button: add a test for it in the spec.
+3. [x] Escape and Tab: the t01 tests pass. If Tab cannot be made to leave the menu while the caller owns `isOpen`, document the exact limit in the spec and in the ticket instead of hiding it.
+4. [x] Run the e2e specs that open this menu (`e2e/help-menu`, `e2e/context-menu`, `e2e/filter`, `e2e/share-modal`) when Playwright can run; otherwise state they were not run.
+
+t02 notes (2026-10-09):
+- `isNonModal` alone removes the dialog and lets Tab leave, but it also turns off React Aria's outside-click dismissal: a click on a non-focusable area no longer closed the menu (test red). Restored in `DropdownMenu.tsx` with `useInteractOutside` from `react-aria` (already a dependency), through one predicate also passed to the Popover: the trigger is excluded (all nine consumers toggle `isOpen` from it, otherwise the click closes then reopens), portaled submenu popovers (`data-trigger="SubmenuTrigger"`) are excluded, then the caller's `shouldCloseOnInteractOutside` decides.
+- Tab limit (documented in the spec): Tab moves focus out of the menu, but the menu is not asked to close. The popover is portaled at the end of `body`, so focus goes past the page (jsdom: `body`; real browser not exercised, no e2e presses Tab out of the menu), React Aria's blur handler sees no `relatedTarget` and keeps it open. The menu stays visible until an outside click (or a focus move onto another page element, which does close it).
+- The "click on the trigger closes" test was red on `next` in jsdom (the old code closed then the toggle reopened); it is a new guarantee, not a characterisation. Real-browser behaviour before the change (underlay) was not checked.
+- Spec: the two t02 tests flipped to `it`; added outside click (on `document.body`), refusal by `shouldCloseOnInteractOutside`, click on the trigger, submenu item activation. `it` is now imported from `vitest`: the global type has no `.fails`, which broke `yarn build` (inherited from t01).
+- e2e (chromium only, headless shell 1243 via a throwaway config, port from dm-port): 107/111 pass; the 4 failures are the HelpMenu "opens … in a new tab" tests (`newPage.url()` empty), which fail identically with the `next` version of the component. WebKit and Firefox were not run.
 
 ### t03-selected-state-and-names
 - **size:** M
