@@ -25,4 +25,32 @@
     border-top: var(--c--components--card--border-width) solid
       var(--c--components--card--border-color);
   }
+
+  &--interactive {
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+
+    &:hover,
+    &:active {
+      background-color: var(--c--components--card--background-color--hover);
+    }
+
+    &:focus-visible {
+      outline: var(--c--components--card--focus-ring-width) solid
+        var(--c--components--card--focus-ring-color);
+      outline-offset: var(--c--components--card--focus-ring-offset);
+    }
+
+    @media (forced-colors: active) {
+      &:focus-visible {
+        outline-color: Highlight;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
 }
