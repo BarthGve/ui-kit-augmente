@@ -38,7 +38,7 @@ Tasks:
 2. [x] `focus-ring.spec.tsx` is now green; `button/index.spec.tsx` and the full `yarn test` still pass.
 3. [ ] Open the `Button` stories in Storybook (port from `bash .dm/lib/dm-port.sh`), keyboard-focus each variant, check light and dark, and run the Storybook a11y panel: no new violation. Stop the server afterwards.
 4. [x] Add a changeset in `.changeset/` (package `@gouvfr-lasuite/ui-components`, patch) with a gitmoji-style summary.
-5. [ ] Update the design-system artifact: the `Button` page note on the focus ring, and republish after re-reading the published index. The PR description carries `Artifact: updated (version <id>)`.
+5. [x] Update the design-system artifact: the `Button` page note on the focus ring, and republish after re-reading the published index. The PR description carries `Artifact: updated (version <id>)`.
 6. [x] Run `yarn lint`, `yarn check-locales`, `yarn build`.
 
 ## US totals
