@@ -89,10 +89,21 @@ Notes (t03, done):
 - **scope:** regression, changeset, artifact.
 
 Tasks:
-1. [ ] Add `.changeset/<name>.md` for `@gouvfr-lasuite/ui-components`: **patch** (`rowProps.onClick` is now called, a bug fix with no API change); if t03 added a prop or changed a callback contract, **minor**.
-2. [ ] Update the design-system artifact (`TreeView` page: `afterMove` / `TreeViewMoveResult` fields, `canDrop`, `rowProps.onClick`, `dndRootElement` note) — done by the main agent; the PR description carries `Artifact: updated (version <id>)`. Read the published index again before republishing and merge.
-3. [ ] Run `yarn lint`, `yarn check-locales`, `yarn test`, `yarn build`; restore the regenerated `cunningham-tokens-sass.scss` if the build rewrites it.
+1. [x] Add `.changeset/<name>.md` for `@gouvfr-lasuite/ui-components`: **patch** (`rowProps.onClick` is now called, a bug fix with no API change); if t03 added a prop or changed a callback contract, **minor**.
+2. [x] Update the design-system artifact (`TreeView` page: `afterMove` / `TreeViewMoveResult` fields, `canDrop`, `rowProps.onClick`, `dndRootElement` note) — done by the main agent; the PR description carries `Artifact: updated (version <id>)`. Read the published index again before republishing and merge.
+3. [x] Run `yarn lint`, `yarn check-locales`, `yarn test`, `yarn build`; restore the regenerated `cunningham-tokens-sass.scss` if the build rewrites it.
 4. [ ] Open the `TreeView` stories (Simple, SimpleWithChildren, Example, WithViewMore) in Storybook and drag by hand; stop the server (port from `dm-port.sh`).
+
+Notes (t04):
+- Task 1: done in t03 and on `next` (`43448459`, #51): `.changeset/tree-rows-hear-clicks.md`, **minor** at the launcher's request, not patch (the t03 note above still says patch): a `rowProps.onClick` handler that was silently ignored on ordinary rows now fires, a behaviour change for consumers.
+- Task 2: artifact updated by the main agent, version `1791557991-e7e1`.
+- Task 3: `yarn lint`, `yarn check-locales`, `yarn test` (559 + 21 tokens), `yarn build` green; `cunningham-tokens-sass.scss` restored.
+- Task 4, left unticked: no human hand drag. Storybook on the `dm-port.sh` port (21261), stories driven with Playwright chromium (headless shell 1243, hand-like `mouse` steps and `dragTo`), throwaway script outside the repo; server stopped, port free.
+  - All four stories render `TreeViewExample`, which passes `canDrop={() => false}` (since `dd569de5`, before s03): an in-tree drag starts (`dragstart`, `dragenter`, `dragend`) and is refused (no `drop`, rows unchanged), in all four. A **successful** in-tree move cannot be seen in these stories; only the t02 e2e proves it.
+  - Example: the dnd-kit drag from the right panel works ("Dossier A" lands under Threads, level 2).
+  - Ordinary rows: click selects the row and updates "Display node …", no error, in all four.
+  - Story defect, pre-existing, not fixed (out of t04 scope): the Example handler `getElementsByClassName("name")?.[0].innerHTML` throws `Cannot read properties of undefined (reading 'innerHTML')` on clicks on title and separator rows (Example) and on the "view more" row outside its button (WithViewMore). The title/separator/view-more branch already called `rowProps.onClick` before t03. Same unguarded read in its `onKeyDown` on Enter, not exercised.
+  - axe-core on `#storybook-root`, `dsfr-light` and `dsfr-dark`: none in Simple, SimpleWithChildren, WithViewMore; Example has `aria-treeitem-name` (serious, 1 node, not identified) in both. Judged not new from the diff (s03 changed 5 lines of `onClick`, no markup); axe not run on the pre-s03 commit. Dark theme: axe only, no clicks or drags; white-label `dark` not run.
 
 ## US totals
 - **Person-days:** 4.5
