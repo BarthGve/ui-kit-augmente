@@ -59,4 +59,4 @@ Agentic notes: no equivalent in ui-kit, design to be reviewed; keep it presentat
 5. **Real browser coverage.** Only chromium is installed locally in previous stories; webkit/firefox focus-ring behaviour not verified here.
 
 ## Real complexity
-Scored 1, re-scored **2**. The component itself is trivial, but the story brings three non-trivial things the score did not see: the missing elevation token (a design-system decision), a three-way render path (static / link / button) with an axe constraint, and a keyboard/focus-ring verification that needs a real browser. Still small: no dependency, no data, no i18n. Two tickets, about 2.5 person-days.
+Scored 1, re-scored **2**. The component itself is trivial, but the story brings three non-trivial things the score did not see: the missing elevation token (a design-system decision), a three-way render path (static / link / button) with an axe constraint, and a keyboard/focus-ring verification that needs a real browser. Still small: no dependency, no data, no i18n. Two tickets, about 3 person-days.
