@@ -119,6 +119,77 @@ export const Success = {
   },
 };
 
+export const Small = {
+  render: Template,
+
+  args: {
+    size: "small",
+  },
+};
+
+export const SmallWithLabel = {
+  render: Template,
+
+  args: {
+    size: "small",
+    checked: true,
+    label: "Label",
+    text: "This is an optional text",
+  },
+};
+
+export const SmallIndeterminate = {
+  render: Template,
+
+  args: {
+    size: "small",
+    indeterminate: true,
+    label: "Label",
+  },
+};
+
+export const SmallError = {
+  render: Template,
+
+  args: {
+    size: "small",
+    checked: true,
+    label: "Label",
+    text: "This is an optional text",
+    state: "error",
+  },
+};
+
+export const SmallSuccess = {
+  render: Template,
+
+  args: {
+    size: "small",
+    checked: true,
+    label: "Label",
+    text: "This is an optional text",
+    state: "success",
+  },
+};
+
+export const SmallDisabled = {
+  render: Template,
+
+  args: {
+    size: "small",
+    checked: true,
+    disabled: true,
+    label: "Label",
+  },
+};
+
+export const SizesCompared = () => (
+  <CheckboxGroup>
+    <Checkbox label="Medium" text="Default size" checked={true} />
+    <Checkbox label="Small" text="Dense layouts" size="small" checked={true} />
+  </CheckboxGroup>
+);
+
 export const Group = () => (
   <div>
     <div className="fs-l fw-bold mb-t clr-gray-900">Your offices</div>
