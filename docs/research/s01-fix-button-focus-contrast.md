@@ -61,3 +61,9 @@ Scored **1** in docs/stories.md; real: **2**. The change is small (SCSS plus a t
 
 ## Split proposal
 None needed.
+
+## Decision (2026-10-09, owner delegated the choice)
+- **Measurement:** the ring is measured against the colours adjacent to it (the inner gap and the page surface), not against the button fill, which has the same hue by design and is separated from the ring by the gap. This is the reading used by WCAG non-text contrast.
+- **Scope:** all variants (primary, secondary, tertiary, bordered) and all six colours at once, since they share one mixin and one defect.
+- **Themes:** all six themes; computed on 2026-10-09, all 36 theme × colour combinations already reach 3:1 against the surface.
+- **What really changes:** the literal `#fff` gap becomes `contextuals.background.surface.primary`, and a Vitest test guards the contrast. Complexity re-scored to 2 in docs/stories.md; story rewritten there.
