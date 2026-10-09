@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>s26 alert modal — reference mockup</title>
+<style>
+  /* Reference only (docs/designs/s26-alert-modal.md). NOT production code: Execute builds with the real Modal.
+     Values read from packages/ui-components/src/cunningham-tokens.css (default theme and .cunningham-theme--dark).
+     Icons are inline SVG stand-ins for the Material ligatures (info, check_circle, error_outline, cancel). */
+  :root {
+    --font: "Hanken Grotesk", Inter, "Roboto Flex Variable", sans-serif;
+    --page: #FFFFFF;                 /* contextuals.background.surface.primary */
+    --surface: #FFFFFF;              /* contextuals.background.surface.secondary (modal background-color) */
+    --border: #E2E2EA;               /* contextuals.border.surface.primary */
+    --text: #25252F;                 /* contextuals.content.semantic.neutral.primary */
+    --backdrop: #00000099;           /* components.modal.backdrop-color */
+    --shadow: 0 6px 20px 0 rgba(0, 0, 18, 0.10); /* components.modal.box-shadow */
+    --btn-border: #D3D4E0;           /* contextuals.border.semantic.neutral.tertiary (gray-150) */
+    --btn-neutral: #69697D;          /* contextuals.content.semantic.neutral.tertiary (gray-550) */
+    --brand: #5E5CD0;                /* brand-550, default theme brand */
+  }
+  .dark {
+    --page: #2F303D;  --surface: #25252F;  --border: #3A3A4C;  --text: #F0F0F3;
+    --btn-border: #454558;  --btn-neutral: #B7B7CB;  --brand: #7576EE;
+  }
+  .sev-info { --icon:#0069CF; --btn-bg:#0069CF; --btn-on:#EAF2F9; --ring:#0069CF; }
+  .dark .sev-info { --icon:#8DBDEF; --ring:#1185ED; }
+  .sev-success { --icon:#027B3E; --btn-bg:#027B3E; --btn-on:#E8F1EA; --ring:#027B3E; }
+  .dark .sev-success { --icon:#86C597; --ring:#309556; }
+  .sev-warning { --icon:#BC4200; --btn-bg:#BC4200; --btn-on:#F8F0E9; --ring:#BC4200; }
+  .dark .sev-warning { --icon:#E8AE8A; --ring:#DA5E18; }
+  .sev-error { --icon:#D7010E; --btn-bg:#D7010E; --btn-on:#F9EFEC; --ring:#D7010E; }
+  .dark .sev-error { --icon:#EEA99D; --ring:#F0463D; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font); background: #fff; color: #25252F; }
+  header.top { padding: 24px 32px 0; }
+  header.top h1 { margin: 0 0 4px; font-size: 1.25rem; }
+  header.top p { margin: 0; font-size: .875rem; color: #5D5D70; max-width: 70ch; }
+  .theme { background: var(--page); color: var(--text); padding: 24px 32px 32px; margin-top: 24px; }
+  .theme h2 { margin: 0 0 16px; font-size: 1rem; font-weight: 600; }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 16px; }
+  .backdrop { background: var(--backdrop); border-radius: 8px; padding: 24px 16px 8px; display: flex; flex-direction: column; align-items: center; }
+  .cap { color: #fff; font-size: .75rem; padding: 8px 0 4px; opacity: .85; }
+  .modal { width: 300px; max-width: 100%; background: var(--surface); color: var(--text); border-radius: 8px; box-shadow: var(--shadow);
+    padding: 1.5rem; border: 1px solid var(--border); }
+  .title { display: flex; align-items: center; gap: .5rem; margin-bottom: .375rem; font-size: 1.125rem; font-weight: 600; line-height: 1.5rem; }
+  .icon { display: flex; flex-shrink: 0; color: var(--icon); }
+  .msg { margin: 0; font-size: .875rem; font-weight: 400; line-height: 1.25rem; }
+  .footer { display: flex; gap: 1rem; margin-top: 1.5rem; }
+  .btn { flex: 1; height: 40px; border-radius: 4px; font: 500 .875rem var(--font); cursor: default; border: 1px solid transparent; }
+  .btn--primary { background: var(--btn-bg); color: var(--btn-on); }
+  .btn--bordered { background: transparent; border-color: var(--btn-border); color: var(--btn-neutral); }
+  /* initial focus ring (button focus recipe: 1px surface + 4px semantic border) */
+  .btn--focus { box-shadow: 0 0 0 1px var(--page), 0 0 0 4px var(--ring); }
+  @media (max-width: 480px) { .footer { flex-direction: column; } .theme { padding: 16px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>AlertModal — reference mockup (s26)</h1>
+  <p>Four severities, light then dark. Top row: primary action + dismiss (the primary button holds the initial focus, shown by its ring). Bottom row: dismiss only (it holds the initial focus). Static reference: the implementation reuses the real <code>Modal</code> and <code>Button</code>.</p>
+</header>
+<section class="theme "><h2>Light — default theme</h2><div class="row"><div class="backdrop"><div class="modal sev-info" role="alertdialog" aria-labelledby="t-info-True-light" aria-describedby="d-info-True-light">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/></svg></span><span id="t-info-True-light">Your session will expire soon</span></div>
+  <p class="msg" id="d-info-True-light">You will be signed out in 5 minutes. Save your work to avoid losing changes.</p>
+  <div class="footer"><button class="btn btn--bordered">Cancel</button><button class="btn btn--primary btn--focus">Stay signed in</button></div>
+</div><div class="cap">info · primary + dismiss</div></div><div class="backdrop"><div class="modal sev-success" role="alertdialog" aria-labelledby="t-success-True-light" aria-describedby="d-success-True-light">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M7.8 12.4l3 3 5.4-6"/></svg></span><span id="t-success-True-light">Document published</span></div>
+  <p class="msg" id="d-success-True-light">Your document is now visible to everyone who has the link.</p>
+  <div class="footer"><button class="btn btn--bordered">Cancel</button><button class="btn btn--primary btn--focus">View document</button></div>
+</div><div class="cap">success · primary + dismiss</div></div><div class="backdrop"><div class="modal sev-warning" role="alertdialog" aria-labelledby="t-warning-True-light" aria-describedby="d-warning-True-light">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><circle cx="12" cy="16.4" r=".6" fill="currentColor"/></svg></span><span id="t-warning-True-light">Unsaved changes</span></div>
+  <p class="msg" id="d-warning-True-light">If you leave this page, your latest changes will be lost.</p>
+  <div class="footer"><button class="btn btn--bordered">Cancel</button><button class="btn btn--primary btn--focus">Save and leave</button></div>
+</div><div class="cap">warning · primary + dismiss</div></div><div class="backdrop"><div class="modal sev-error" role="alertdialog" aria-labelledby="t-error-True-light" aria-describedby="d-error-True-light">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></span><span id="t-error-True-light">Upload failed</span></div>
+  <p class="msg" id="d-error-True-light">The file could not be sent. Check your connection and try again.</p>
+  <div class="footer"><button class="btn btn--bordered">Cancel</button><button class="btn btn--primary btn--focus">Try again</button></div>
+</div><div class="cap">error · primary + dismiss</div></div></div><div class="row"><div class="backdrop"><div class="modal sev-info" role="alertdialog" aria-labelledby="t-info-False-light" aria-describedby="d-info-False-light">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/></svg></span><span id="t-info-False-light">Your session will expire soon</span></div>
+  <p class="msg" id="d-info-False-light">You will be signed out in 5 minutes. Save your work to avoid losing changes.</p>
+  <div class="footer"><button class="btn btn--primary btn--focus">Ok</button></div>
+</div><div class="cap">info · dismiss only</div></div><div class="backdrop"><div class="modal sev-success" role="alertdialog" aria-labelledby="t-success-False-light" aria-describedby="d-success-False-light">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M7.8 12.4l3 3 5.4-6"/></svg></span><span id="t-success-False-light">Document published</span></div>
+  <p class="msg" id="d-success-False-light">Your document is now visible to everyone who has the link.</p>
+  <div class="footer"><button class="btn btn--primary btn--focus">Ok</button></div>
+</div><div class="cap">success · dismiss only</div></div><div class="backdrop"><div class="modal sev-warning" role="alertdialog" aria-labelledby="t-warning-False-light" aria-describedby="d-warning-False-light">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><circle cx="12" cy="16.4" r=".6" fill="currentColor"/></svg></span><span id="t-warning-False-light">Unsaved changes</span></div>
+  <p class="msg" id="d-warning-False-light">If you leave this page, your latest changes will be lost.</p>
+  <div class="footer"><button class="btn btn--primary btn--focus">Ok</button></div>
+</div><div class="cap">warning · dismiss only</div></div><div class="backdrop"><div class="modal sev-error" role="alertdialog" aria-labelledby="t-error-False-light" aria-describedby="d-error-False-light">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></span><span id="t-error-False-light">Upload failed</span></div>
+  <p class="msg" id="d-error-False-light">The file could not be sent. Check your connection and try again.</p>
+  <div class="footer"><button class="btn btn--primary btn--focus">Ok</button></div>
+</div><div class="cap">error · dismiss only</div></div></div></section>
+<section class="theme dark"><h2>Dark — .cunningham-theme--dark</h2><div class="row"><div class="backdrop"><div class="modal sev-info" role="alertdialog" aria-labelledby="t-info-True-dark" aria-describedby="d-info-True-dark">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/></svg></span><span id="t-info-True-dark">Your session will expire soon</span></div>
+  <p class="msg" id="d-info-True-dark">You will be signed out in 5 minutes. Save your work to avoid losing changes.</p>
+  <div class="footer"><button class="btn btn--bordered">Cancel</button><button class="btn btn--primary btn--focus">Stay signed in</button></div>
+</div><div class="cap">info · primary + dismiss</div></div><div class="backdrop"><div class="modal sev-success" role="alertdialog" aria-labelledby="t-success-True-dark" aria-describedby="d-success-True-dark">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M7.8 12.4l3 3 5.4-6"/></svg></span><span id="t-success-True-dark">Document published</span></div>
+  <p class="msg" id="d-success-True-dark">Your document is now visible to everyone who has the link.</p>
+  <div class="footer"><button class="btn btn--bordered">Cancel</button><button class="btn btn--primary btn--focus">View document</button></div>
+</div><div class="cap">success · primary + dismiss</div></div><div class="backdrop"><div class="modal sev-warning" role="alertdialog" aria-labelledby="t-warning-True-dark" aria-describedby="d-warning-True-dark">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><circle cx="12" cy="16.4" r=".6" fill="currentColor"/></svg></span><span id="t-warning-True-dark">Unsaved changes</span></div>
+  <p class="msg" id="d-warning-True-dark">If you leave this page, your latest changes will be lost.</p>
+  <div class="footer"><button class="btn btn--bordered">Cancel</button><button class="btn btn--primary btn--focus">Save and leave</button></div>
+</div><div class="cap">warning · primary + dismiss</div></div><div class="backdrop"><div class="modal sev-error" role="alertdialog" aria-labelledby="t-error-True-dark" aria-describedby="d-error-True-dark">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></span><span id="t-error-True-dark">Upload failed</span></div>
+  <p class="msg" id="d-error-True-dark">The file could not be sent. Check your connection and try again.</p>
+  <div class="footer"><button class="btn btn--bordered">Cancel</button><button class="btn btn--primary btn--focus">Try again</button></div>
+</div><div class="cap">error · primary + dismiss</div></div></div><div class="row"><div class="backdrop"><div class="modal sev-info" role="alertdialog" aria-labelledby="t-info-False-dark" aria-describedby="d-info-False-dark">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/></svg></span><span id="t-info-False-dark">Your session will expire soon</span></div>
+  <p class="msg" id="d-info-False-dark">You will be signed out in 5 minutes. Save your work to avoid losing changes.</p>
+  <div class="footer"><button class="btn btn--primary btn--focus">Ok</button></div>
+</div><div class="cap">info · dismiss only</div></div><div class="backdrop"><div class="modal sev-success" role="alertdialog" aria-labelledby="t-success-False-dark" aria-describedby="d-success-False-dark">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M7.8 12.4l3 3 5.4-6"/></svg></span><span id="t-success-False-dark">Document published</span></div>
+  <p class="msg" id="d-success-False-dark">Your document is now visible to everyone who has the link.</p>
+  <div class="footer"><button class="btn btn--primary btn--focus">Ok</button></div>
+</div><div class="cap">success · dismiss only</div></div><div class="backdrop"><div class="modal sev-warning" role="alertdialog" aria-labelledby="t-warning-False-dark" aria-describedby="d-warning-False-dark">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><circle cx="12" cy="16.4" r=".6" fill="currentColor"/></svg></span><span id="t-warning-False-dark">Unsaved changes</span></div>
+  <p class="msg" id="d-warning-False-dark">If you leave this page, your latest changes will be lost.</p>
+  <div class="footer"><button class="btn btn--primary btn--focus">Ok</button></div>
+</div><div class="cap">warning · dismiss only</div></div><div class="backdrop"><div class="modal sev-error" role="alertdialog" aria-labelledby="t-error-False-dark" aria-describedby="d-error-False-dark">
+  <div class="title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></span><span id="t-error-False-dark">Upload failed</span></div>
+  <p class="msg" id="d-error-False-dark">The file could not be sent. Check your connection and try again.</p>
+  <div class="footer"><button class="btn btn--primary btn--focus">Ok</button></div>
+</div><div class="cap">error · dismiss only</div></div></div></section>
+</body>
+</html>
