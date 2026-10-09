@@ -139,7 +139,7 @@ Reported, **not** filled by invention.
 The owner asked to take inspiration from a reference: a compact dialog with a title, a muted description, a **divider**, then a footer with **right-aligned** actions (dismiss as a bordered button, then the primary action). Changes to the design above:
 - **Severity is optional, default none (neutral).** Without `severity` there is no icon and the primary button uses the neutral inverse style (as in the reference). With a severity the icon (aria-hidden) precedes the title and the primary button takes the semantic colour. The four severities of the acceptance criteria stay available.
 - **Layout:** body (title + muted message) then a footer separated by a 1px border; footer actions **right-aligned**, natural width (not `fullWidth`), dismiss first, primary last; on narrow screens the footer stacks with the primary action on top.
-- **Surface:** radius 12px, same elevation token as `Modal`; message in the muted content colour. These two values (radius, footer padding) are literals not covered by a global token: reported as design-system gaps.
+- **Surface:** the radius is **the project's modal radius**, `var(--c--components--modal--border-radius)` (8px), the same value and token as `Modal` (no 12px as in the reference image); same elevation token as `Modal`; message in the muted content colour; buttons keep the `Button` radius (4px). Only the footer padding is a literal without a global token (design-system gap).
 - API: `severity?` has no default (was `info`); everything else unchanged. Default labels, focus rule and open questions unchanged.
 - Mockup `s26-alert-modal.html` redrawn (v2): neutral reference case, four severities, dismiss-only case, light and dark.
 
@@ -150,3 +150,6 @@ Facts read on the page: parts root / trigger / content / header (optional media,
 - Destructive case = `severity="error"` with the primary action in the error colour.
 - RTL: verify with the Direction story (s53) once it exists.
 Not adopted: a trigger part (the repo opens modals through `isOpen` / `ModalProvider`).
+
+## Revision 3 — radius (owner)
+The owner required the radius to match the project's modals: `AlertModal` reuses `--c--components--modal--border-radius` (8px) and adds no radius token. Mockup updated (8px modal, 4px buttons like `Button`).
