@@ -46,13 +46,20 @@ Notes (t01, done):
 - **scope:** answer research question 1 with a real pointer: a Playwright component test next to `e2e/`, since jsdom cannot see CSS `pointer-events` or the HTML5 backend.
 
 Tasks:
-1. [ ] Add `packages/ui-components/e2e/tree-view/tree-view-dnd.spec.tsx` (and a small component fixture if the existing e2e pattern needs one) mounting a `TreeProvider` + `TreeView`, using `locator.dragTo` / mouse events; port from `bash .dm/lib/dm-port.sh`, not the dev port; chromium only.
-2. [ ] Test A: dragging a root node onto a parent with children moves it and `afterMove` fires with the expected `newParentId`; the node is rendered under the new parent.
-3. [ ] Test B: dropping onto a node refused by `canDrop` leaves the DOM order unchanged.
-4. [ ] Test C: the same drag works for a node whose children were loaded lazily (`onLoadChildren`).
-5. [ ] Test D: the tree rendered inside a portal / `Modal` with `dndRootElement` set to the modal element moves a node; without it, record what happens (research question 2; s18 depends on it).
-6. [ ] Any test red today is marked `test.fail()` with `// fixed by t03` and its cause written in the ticket. If A-C are all green, say that the story's DnD criteria were already met; if D is red, t03 decides the fix.
-7. [ ] Stop everything started (servers, browsers).
+1. [x] Add `packages/ui-components/e2e/tree-view/tree-view-dnd.spec.tsx` (and a small component fixture if the existing e2e pattern needs one) mounting a `TreeProvider` + `TreeView`, using `locator.dragTo` / mouse events; port from `bash .dm/lib/dm-port.sh`, not the dev port; chromium only.
+2. [x] Test A: dragging a root node onto a parent with children moves it and `afterMove` fires with the expected `newParentId`; the node is rendered under the new parent.
+3. [x] Test B: dropping onto a node refused by `canDrop` leaves the DOM order unchanged.
+4. [x] Test C: the same drag works for a node whose children were loaded lazily (`onLoadChildren`).
+5. [x] Test D: the tree rendered inside a portal / `Modal` with `dndRootElement` set to the modal element moves a node; without it, record what happens (research question 2; s18 depends on it).
+6. [x] Any test red today is marked `test.fail()` with `// fixed by t03` and its cause written in the ticket. If A-C are all green, say that the story's DnD criteria were already met; if D is red, t03 decides the fix.
+7. [x] Stop everything started (servers, browsers).
+
+Notes (t02, done):
+- Harness: fixture `e2e/helpers/mount-tree-view.tsx` (callbacks built in the browser, moves on `window.__treeMoves`, every `canDrop` parent on `window.__canDropAsked`). Run with a throwaway config (not committed): chromium only, installed headless shell 1243 (the configured 1228 is not installed), `ctPort` 28568 from `dm-port.sh`. Plain `locator.dragTo` drives the real HTML5 backend; no mouse fallback, no synthetic DataTransfer events.
+- Result: **6/6 green, no `test.fail()`**, stable over `--repeat-each=5` (30/30). A (into a parent: `first-child`, `newParentId: "b"`, `index: 0`; and before the first root row: `newParentId: null`, `index: 0`, the positional index jsdom got wrong), B (`canDrop` asked about `b`, no move, order unchanged), C (lazy children) and D are green. **The story's DnD criteria were already met in a real browser (chromium)**: no defect reproduces, consistent with the #215 fix (not proven by reverting it). t03 reduces to the `rowProps.onClick` fix.
+- D: the tree inside an open `Modal` moves a node both with `dndRootElement` = a `div` inside the modal body and without it. Removing the `dndRootElement` pass-through in `TreeView.tsx` turns 0 tests red: for a single tree in a same-document portal the prop is not load-bearing (window listeners see the events), and the pass-through itself has no test. Throwaway probe (not committed): a page tree mounted first plus a modal tree also move in the modal, both variants, no console error — but react-dnd 14 `DndProvider` (no `manager` prop, arborist passes none) shares one global manager per window built with the **first mounted** provider's options, so the modal tree's `dndRootElement` was most likely ignored there. For s18 (unverified, s18 decides): with several trees on a page only the first mounted tree's `dndRootElement` applies; a rooted tree mounted first, then a second tree, or unmount/remount ordering, was not exercised.
+- Mutations (restored, `git diff --exit-code` clean): `canDrop` skipped in `disableDrop` -> 1 red (B); `onMove` no-op -> 5 red (A×2, C, D×2); `index === 0` branch disabled -> 2 red (A×2); `dndRootElement` dropped -> 0 red.
+- Not verified: webkit/firefox, a headed OS-level drag (Playwright drives CDP drag events, hit-tested), the shared-manager ordering above, the drag preview, the stale `canDrop` highlight (research Q5), a shadow-root or iframe host.
 
 ### t03-fix-red-tests
 - **size:** S
