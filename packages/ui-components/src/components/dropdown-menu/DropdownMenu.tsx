@@ -9,7 +9,14 @@ import { useInteractOutside } from "react-aria";
 import { MenuItemAction, MenuItemSeparator } from "../menu/types";
 import { MenuItemBody } from "../menu/MenuItemBody";
 import { DropdownMenuItem } from "./types";
-import { Fragment, PropsWithChildren, ReactNode, useId, useRef } from "react";
+import {
+  ComponentProps,
+  Fragment,
+  PropsWithChildren,
+  ReactNode,
+  useId,
+  useRef,
+} from "react";
 import clsx from "clsx";
 import { useCunningham } from ":/components/provider";
 
@@ -38,7 +45,7 @@ export const DropdownMenu = ({
   isOpen = false,
   onOpenChange,
   children,
-  selectedValues = [],
+  selectedValues,
   onSelectValue,
   topMessage,
   bottomMessage,
@@ -76,12 +83,32 @@ export const DropdownMenu = ({
     },
   });
 
-  const getAriaLabel = (option: MenuItemAction): string => {
-    if (option.opensInNewWindow) {
-      return option.label + t("components.menu.newWindowLabelSuffix");
+  // The name comes from the content (label + subText); an aria-label is only
+  // needed to append the new-window suffix, so it repeats the subText.
+  const getAriaLabel = (option: MenuItemAction): string | undefined => {
+    if (!option.opensInNewWindow) {
+      return undefined;
     }
-    return option.label;
+    return (
+      [option.label, option.subText].filter(Boolean).join(" ") +
+      t("components.menu.newWindowLabelSuffix")
+    );
   };
+
+  // ADR 003: only checkable options get a checked state; the others stay
+  // plain menuitems. `value` alone is not enough: some callers use it as an
+  // action id without `selectedValues`.
+  const getCheckedState = (option: MenuItemAction & { value?: string }) => {
+    if (option.isChecked !== undefined) {
+      return option.isChecked || isSelectedValue(option.value);
+    }
+    if (selectedValues && option.value) {
+      return isSelectedValue(option.value);
+    }
+    return undefined;
+  };
+  const isSelectedValue = (value?: string) =>
+    !!value && !!selectedValues?.includes(value);
 
   const renderMenuItems = (items: DropdownMenuItem[]) =>
     items.map((option, index) => {
@@ -122,6 +149,8 @@ export const DropdownMenu = ({
         );
       }
 
+      const isChecked = getCheckedState(option);
+
       return (
         <Fragment key={itemKey}>
           <MenuItem
@@ -129,6 +158,18 @@ export const DropdownMenu = ({
               "c__dropdown-menu-item--danger": option.variant === "danger",
             })}
             aria-label={getAriaLabel(option)}
+            render={
+              isChecked === undefined
+                ? undefined
+                : (props) => (
+                    <div
+                      // No `href` on these items: always the div branch.
+                      {...(props as ComponentProps<"div">)}
+                      role="menuitemcheckbox"
+                      aria-checked={isChecked}
+                    />
+                  )
+            }
             onAction={() => {
               if (option.value) {
                 onSelectValue?.(option.value);
@@ -145,10 +186,7 @@ export const DropdownMenu = ({
               icon={option.icon}
               label={option.label}
               subText={option.subText}
-              isChecked={
-                option.isChecked ||
-                (!!option.value && selectedValues.includes(option.value))
-              }
+              isChecked={isChecked}
             />
           </MenuItem>
           {/* @deprecated: use { type: "separator" } instead */}

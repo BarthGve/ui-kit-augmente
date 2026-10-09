@@ -26,7 +26,12 @@ export const MenuItemBody = ({
   hasSubmenu,
 }: MenuItemBodyProps) => (
   <>
-    {icon && <div className="c__dropdown-menu-item__icon">{icon}</div>}
+    {icon && (
+      // Decorative: an icon font (Material ligature) would leak its name.
+      <div className="c__dropdown-menu-item__icon" aria-hidden="true">
+        {icon}
+      </div>
+    )}
     <div className="c__dropdown-menu-item__label-container">
       <div className="c__dropdown-menu-item__label">{label}</div>
       {subText && (
@@ -37,11 +42,13 @@ export const MenuItemBody = ({
       <ChevronRight
         size={IconSize.SMALL}
         className="c__dropdown-menu-item__chevron"
+        aria-hidden="true"
       />
     ) : isChecked ? (
       <Checkmark2
         size={IconSize.SMALL}
         className="c__dropdown-menu-item__check"
+        aria-hidden="true"
       />
     ) : null}
   </>
