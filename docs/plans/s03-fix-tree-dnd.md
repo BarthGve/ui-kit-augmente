@@ -23,14 +23,21 @@ Acceptance criteria (docs/stories.md):
 - **scope:** the missing Vitest spec (jsdom), written first; characterises AC1-AC4 and holds the one known red test.
 
 Tasks:
-1. [ ] Create `packages/ui-components/src/components/tree-view/TreeView.spec.tsx` (Testing Library, `fireEvent` drag events, `getBoundingClientRect` mocked from the row `top` style and row height 34, `CunninghamProvider` + `TreeProvider` + `TreeView` with a minimal `renderNode` built on `TreeViewItem`). Import `it` from `vitest` (global type has no `.fails`).
-2. [ ] AC1 test (passes today): dragging `a` onto the middle of `b` calls `afterMove` once with `newParentId: "b"`, `sourceId: "a"`, `mode: "first-child"`, `index: 0`; the rendered tree shows `a` under `b`. Assert parent and shape only; the exact index inside a parent is not reliable in jsdom (research, traps).
-3. [ ] AC1 variant (passes today): `beforeMove` receives the result and a callback; `afterMove` is not called until the callback runs.
-4. [ ] AC2 test (passes today): with `canDrop={() => false}` the same drag calls neither `afterMove` nor `beforeMove` and the tree order is unchanged; also `canDrag` returning false prevents the move.
-5. [ ] AC3 test (passes today): a `createPortal`-rendered `<button>` inside a node, clicked, does not call an ancestor `div` `onClick`, nor the row `onClick`; a click on the node itself reaches the ancestor once (guards against a test that passes because nothing bubbles).
-6. [ ] AC4 test (passes today): `TreeProvider` with `onLoadChildren`, node `l` open and unloaded; after the children render, dragging `a` onto `l1`'s parent calls `afterMove` with `newParentId: "l"`.
-7. [ ] Known-red test, marked `it.fails` with `// fixed by t03`: `rowProps={{ onClick }}` is called once when an ordinary row is clicked (today `Row` drops it, `TreeView.tsx:342,399`). Keep AC3 asserting that the portal click calls it zero times.
-8. [ ] Run only this spec; record in the ticket which tests are green and which are `it.fails`, and anything jsdom cannot represent.
+1. [x] Create `packages/ui-components/src/components/tree-view/TreeView.spec.tsx` (Testing Library, `fireEvent` drag events, `getBoundingClientRect` mocked from the row `top` style and row height 34, `CunninghamProvider` + `TreeProvider` + `TreeView` with a minimal `renderNode` built on `TreeViewItem`). Import `it` from `vitest` (global type has no `.fails`).
+2. [x] AC1 test (passes today): dragging `a` onto the middle of `b` calls `afterMove` once with `newParentId: "b"`, `sourceId: "a"`, `mode: "first-child"`, `index: 0`; the rendered tree shows `a` under `b`. Assert parent and shape only; the exact index inside a parent is not reliable in jsdom (research, traps).
+3. [x] AC1 variant (passes today): `beforeMove` receives the result and a callback; `afterMove` is not called until the callback runs.
+4. [x] AC2 test (passes today): with `canDrop={() => false}` the same drag calls neither `afterMove` nor `beforeMove` and the tree order is unchanged; also `canDrag` returning false prevents the move.
+5. [x] AC3 test (passes today): a `createPortal`-rendered `<button>` inside a node, clicked, does not call an ancestor `div` `onClick`, nor the row `onClick`; a click on the node itself reaches the ancestor once (guards against a test that passes because nothing bubbles).
+6. [x] AC4 test (passes today): `TreeProvider` with `onLoadChildren`, node `l` open and unloaded; after the children render, dragging `a` onto `l1`'s parent calls `afterMove` with `newParentId: "l"`.
+7. [x] Known-red test, marked `it.fails` with `// fixed by t03`: `rowProps={{ onClick }}` is called once when an ordinary row is clicked (today `Row` drops it, `TreeView.tsx:342,399`). Keep AC3 asserting that the portal click calls it zero times.
+8. [x] Run only this spec; record in the ticket which tests are green and which are `it.fails`, and anything jsdom cannot represent.
+
+Notes (t01, done):
+- Result: 6 green `it`, 1 `it.fails` (`rowProps.onClick`, `// fixed by t03`). Spec run alone and in `yarn test`.
+- Index finding: jsdom drops `clientX/Y` from the generic `Event` it builds for drag events; the spec sets them with `Object.defineProperties`, and then the middle-of-row drop is exact (`first-child`, `newParentId: "b"`, `index: 0`), contrary to the research note. Only the index the plan names is asserted; positional indices (between rows) stay for t02.
+- `canDrag` refusal: the HTML5 backend cancels `dragstart`; the drag helper stops there, as a browser would (firing `dragover` anyway throws "hover while not dragging"). The `canDrop`/`canDrag` negatives are meaningful because AC1 uses the same helper and moves.
+- AC3: the bite is the ancestor `div` count (0 on the portal click, 1 on the label) plus `aria-selected` staying false. `rowProps.onClick` called 0 times is vacuous until t03 (Row never calls it today).
+- jsdom cannot show: CSS `pointer-events`, hit-testing, the real HTML5 drag sequence, the drag preview, `dndRootElement` in a portal. Left to t02.
 
 ### t02-tree-view-browser-drag
 - **size:** M
