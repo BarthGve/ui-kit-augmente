@@ -142,3 +142,11 @@ The owner asked to take inspiration from a reference: a compact dialog with a ti
 - **Surface:** radius 12px, same elevation token as `Modal`; message in the muted content colour. These two values (radius, footer padding) are literals not covered by a global token: reported as design-system gaps.
 - API: `severity?` has no default (was `info`); everything else unchanged. Default labels, focus rule and open questions unchanged.
 - Mockup `s26-alert-modal.html` redrawn (v2): neutral reference case, four severities, dismiss-only case, light and dark.
+
+## Revision 2 — shadcn Alert Dialog page (https://ui.shadcn.com/docs/components/base/alert-dialog)
+Facts read on the page: parts root / trigger / content / header (optional media, title, description) / footer (cancel first, action second); the only documented prop is `size` on the content, `"default" | "sm"`; examples: default, small, with media (icon), small with media, destructive ("Delete Chat"), RTL. The page documents nothing about role, focus, Escape or outside click (delegated to Base UI). Adopted here:
+- `size`: `"default" | "sm"` alongside the existing `Modal` sizes (small is the narrower layout).
+- `media?: ReactNode` slot in the header, above the title, replacing the severity icon when provided.
+- Destructive case = `severity="error"` with the primary action in the error colour.
+- RTL: verify with the Direction story (s53) once it exists.
+Not adopted: a trigger part (the repo opens modals through `isOpen` / `ModalProvider`).
