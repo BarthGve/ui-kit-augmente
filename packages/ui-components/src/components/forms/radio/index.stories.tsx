@@ -112,6 +112,81 @@ export const Success = {
   },
 };
 
+export const Small = {
+  render: Template,
+
+  args: {
+    size: "small",
+  },
+};
+
+export const SmallWithLabel = {
+  render: Template,
+
+  args: {
+    size: "small",
+    checked: true,
+    label: "Label",
+    text: "This is an optional text",
+  },
+};
+
+export const SmallDisabled = {
+  render: Template,
+
+  args: {
+    size: "small",
+    checked: true,
+    disabled: true,
+    label: "Label",
+  },
+};
+
+const SmallOffices = () => (
+  <>
+    <Radio
+      label="New York"
+      name="city"
+      value="new_york"
+      text="5th Avenue Offices"
+      size="small"
+    />
+    <Radio
+      label="Singapour"
+      name="city"
+      value="singapour"
+      text="Opened in 2015"
+      size="small"
+    />
+    <Radio
+      label="Dublin"
+      name="city"
+      value="dublin"
+      text="Closed since 2019"
+      disabled={true}
+      size="small"
+    />
+  </>
+);
+
+export const SmallGroup = () => (
+  <RadioGroup>
+    <SmallOffices />
+  </RadioGroup>
+);
+
+export const SmallGroupError = () => (
+  <RadioGroup state="error" text="An important error message">
+    <SmallOffices />
+  </RadioGroup>
+);
+
+export const SmallGroupSuccess = () => (
+  <RadioGroup state="success" text="Success message !">
+    <SmallOffices />
+  </RadioGroup>
+);
+
 export const Group = () => {
   return (
     <div>
