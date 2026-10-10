@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/experimental-ct-react";
 import type { Locator, Page } from "@playwright/test";
-import { TestGantt } from "../helpers/mount-gantt";
+import { ControlledGantt, TestGantt } from "../helpers/mount-gantt";
 
 // What jsdom cannot measure: sticky layout, scrolling, media queries.
 
@@ -33,6 +33,44 @@ const leftDay = async (page: Page) => {
   const scrollLeft = await scroller(page).evaluate((el) => el.scrollLeft);
   return Math.floor(scrollLeft / perDay + 0.01);
 };
+
+// Colours of the scroller as rendered, at points relative to its box: the
+// ring is a pseudo-element, only the bitmap shows where it is drawn.
+const colorsAt = async (
+  page: Page,
+  locator: Locator,
+  points: [number, number][],
+) => {
+  const png = (await locator.screenshot()).toString("base64");
+  return page.evaluate(
+    async ([data, at]) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${data}`;
+      await img.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const context = canvas.getContext("2d")!;
+      context.drawImage(img, 0, 0);
+      return at.map(([x, y]) =>
+        Array.from(context.getImageData(x, y, 1, 1).data.slice(0, 3)),
+      );
+    },
+    [png, points] as const,
+  );
+};
+const rgb = (css: string) => css.match(/\d+/g)!.slice(0, 3).map(Number);
+const row = (page: Page, index: number) =>
+  page.locator(`[role="row"][aria-rowindex="${index}"]`);
+const ring = (locator: Locator) =>
+  locator.evaluate((el) => {
+    const style = getComputedStyle(el, "::after");
+    return {
+      style: style.outlineStyle,
+      width: style.outlineWidth,
+      color: style.outlineColor,
+    };
+  });
 
 test.describe("Gantt", () => {
   test("the task list stays fixed while the timeline scrolls horizontally", async ({
@@ -146,5 +184,129 @@ test.describe("Gantt", () => {
     expect(await lines()).toEqual(["underline", "none", "none"]);
     await page.emulateMedia({ forcedColors: "active" });
     expect(await lines()).toEqual(["underline", "none", "none"]);
+  });
+
+  test("Tab enters on the first row after the zoom buttons; arrows, Home and End move focus", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<TestGantt />);
+    for (const name of ["Day", "Week", "Month"]) {
+      await page.keyboard.press("Tab");
+      await expect(page.getByRole("button", { name })).toBeFocused();
+    }
+    await page.keyboard.press("Tab");
+    await expect(row(page, 2)).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(row(page, 3)).toBeFocused();
+    await page.keyboard.press("End");
+    await expect(row(page, 31)).toBeFocused();
+    await page.keyboard.press("ArrowUp");
+    await expect(row(page, 30)).toBeFocused();
+    await page.keyboard.press("Home");
+    await expect(row(page, 2)).toBeFocused();
+  });
+
+  test("the keyboard ring is drawn whole inside the box, over the task column, even scrolled", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<TestGantt />);
+    await page.getByRole("button", { name: "Month" }).focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("ArrowDown");
+    const focused = row(page, 3);
+    await expect(focused).toBeFocused();
+    const { style, width, color } = await ring(focused);
+    expect([style, width]).toEqual(["solid", "2px"]);
+
+    const box_ = await box(scroller(page));
+    const inner = await scroller(page).evaluate((el) => ({
+      left: el.clientLeft,
+      right: el.clientLeft + el.clientWidth,
+    }));
+    const edges = async () => {
+      const r = await box(focused);
+      const [top, bottom, middle] = [
+        r.y - box_.y + 1,
+        r.y - box_.y + r.height - 2,
+        r.y - box_.y + r.height / 2,
+      ].map(Math.round);
+      return colorsAt(page, scroller(page), [
+        [inner.left + 1, middle], // start, over the sticky task column
+        [inner.right - 2, middle], // end, before the scrollbar
+        [inner.left + 40, top], // top, over the task column
+        [inner.right - 40, bottom], // bottom, over the track
+      ]);
+    };
+    const expected = rgb(color);
+    const near = (pixel: number[]) =>
+      pixel.every((c, i) => Math.abs(c - expected[i]) <= 8);
+    expect((await edges()).map(near)).toEqual([true, true, true, true]);
+    await scrollBy(scroller(page), 600, 0);
+    expect((await edges()).map(near)).toEqual([true, true, true, true]);
+  });
+
+  test("no ring after a mouse click", async ({ mount, page }) => {
+    await mount(<TestGantt />);
+    await row(page, 3).locator('[role="rowheader"]').click();
+    await expect(row(page, 3)).toBeFocused();
+    expect((await ring(row(page, 3))).style).toBe("none");
+  });
+
+  test("moving to a row scrolls its bar into view, the task column stays put", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<TestGantt />);
+    const cell = taskCells(page).first();
+    const column = await box(cell);
+    await row(page, 2).focus();
+    await page.keyboard.press("End");
+    const box_ = await box(scroller(page));
+    const axis = await box(row(page, 1));
+    const last = await box(bar(page, "t29"));
+    expect(last.x).toBeGreaterThanOrEqual(column.x + column.width - 1);
+    expect(last.x + last.width).toBeLessThanOrEqual(box_.x + box_.width);
+    expect(last.y).toBeGreaterThanOrEqual(axis.y + axis.height - 1);
+    expect(last.y + last.height).toBeLessThanOrEqual(box_.y + box_.height);
+    expect((await box(cell)).x).toBe(column.x);
+    await page.keyboard.press("Home");
+    const first = await box(bar(page, "t0"));
+    expect(first.x).toBeGreaterThanOrEqual(column.x + column.width - 1);
+    expect(first.y).toBeGreaterThanOrEqual(axis.y + axis.height - 1);
+  });
+
+  test("a zoom the controlled parent accepts keeps the leftmost visible day", async ({
+    mount,
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await mount(<ControlledGantt />);
+    await scrollBy(scroller(page), 400, 0);
+    const week = await leftDay(page);
+    expect(week).toBeGreaterThan(0);
+    await page.getByRole("button", { name: "Day" }).click();
+    await expect(page.getByRole("button", { name: "Day" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(await leftDay(page)).toBe(week);
+  });
+
+  test("a zoom request the parent refuses does not anchor a later zoom change", async ({
+    mount,
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const refuse = () => {};
+    const component = await mount(
+      <TestGantt zoom="week" onZoomChange={refuse} />,
+    );
+    await scrollBy(scroller(page), 400, 0);
+    await page.getByRole("button", { name: "Day" }).click();
+    await scroller(page).evaluate((el) => (el.scrollLeft = 0));
+    await component.update(<TestGantt zoom="day" onZoomChange={refuse} />);
+    expect(await leftDay(page)).toBe(0);
   });
 });

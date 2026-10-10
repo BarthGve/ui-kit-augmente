@@ -49,6 +49,14 @@
   &__scroller {
     min-block-size: 0;
     overflow: auto;
+    // A container too: `cqi` inside is the visible width (the focus ring).
+    container-type: inline-size;
+    // Keyboard moves scroll a bar into view clear of the sticky column/axis.
+    scroll-padding-inline-start: var(--gantt-task-width);
+    scroll-padding-block-start: calc(
+      var(--c--components--gantt--row-height) + 2 *
+        var(--c--components--gantt--border-width)
+    );
     border: var(--c--components--gantt--border-width) solid
       var(--c--components--gantt--border-color);
     background-color: var(--c--components--gantt--background-color);
@@ -93,17 +101,30 @@
       );
     }
 
+    // Placed, so the ring layer below overlaps them instead of pushing
+    // them to a second grid row.
+    > .c__gantt__task {
+      grid-area: 1 / 1;
+    }
+
+    > .c__gantt__track {
+      grid-area: 1 / 2;
+    }
+
     &:focus-visible {
       outline: none;
     }
 
     // Drawn on a layer above the sticky task cell, which would hide a plain
-    // outline of the row.
+    // outline of the row; sticky and as wide as the box, so all four sides
+    // stay visible while the timeline scrolls.
     &:focus-visible::after {
       content: "";
-      position: absolute;
-      inset: 0;
+      position: sticky;
+      inset-inline-start: 0;
       z-index: 2;
+      grid-area: 1 / 1 / 2 / -1;
+      inline-size: 100cqi;
       outline: var(--c--components--gantt--focus-ring-width) solid
         var(--c--components--gantt--focus-ring-color);
       outline-offset: var(--c--components--gantt--focus-ring-offset);
