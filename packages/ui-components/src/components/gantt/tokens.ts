@@ -12,6 +12,12 @@ export const tokens = (defaults: DefaultTokens) => ({
   "bar-background-color": defaults.contextuals.content.semantic.brand.tertiary,
   "bar-border-color": defaults.contextuals.content.semantic.brand.tertiary,
   "today-color": defaults.contextuals.content.semantic.error.tertiary,
+  // Editing (s23): ghost of the original dates, outline and date chip.
+  "ghost-border-color": defaults.contextuals.content.semantic.brand.tertiary,
+  "drag-outline-color": defaults.contextuals.content.semantic.neutral.primary,
+  "tooltip-background-color":
+    defaults.contextuals.content.semantic.neutral.primary,
+  "tooltip-color": defaults.contextuals.background.surface.secondary,
   padding: defaults.globals.spacings.sm,
   "focus-ring-color": defaults.contextuals.content.semantic.brand.tertiary,
   // Literals below: no global token exists (design-system gaps 2 to 4).

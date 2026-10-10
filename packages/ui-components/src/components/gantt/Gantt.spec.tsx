@@ -3,6 +3,7 @@ import { resolve } from "path";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CunninghamProvider } from ":/components/provider";
 import { Gantt, GanttProps, GanttTask } from "./index";
@@ -540,6 +541,411 @@ describe("Gantt root", () => {
   });
 });
 
+// jsdom has neither PointerEvent nor layout: a MouseEvent carrying a pointer
+// id, a stubbed capture, and a track of PX pixels per day.
+class TestPointerEvent extends MouseEvent {
+  pointerId: number;
+  constructor(type: string, init: PointerEventInit = {}) {
+    super(type, init);
+    this.pointerId = init.pointerId ?? 1;
+  }
+}
+
+const deepFreeze = (tasks: GanttTask[]) =>
+  Object.freeze(tasks.map((task) => Object.freeze({ ...task }))) as GanttTask[];
+
+// en-US weeks start on Sunday: the axis starts on 2026-01-04 (Frame).
+const EDIT_TASKS = deepFreeze([
+  { id: "a", name: "Write the brief", start: "2026-03-02", end: "2026-03-13" },
+  { id: "b", name: "Build", start: "2026-01-31", end: "2026-02-05" },
+  { id: "z", name: "Frame", start: "2026-01-04", end: "2026-06-30" },
+  { id: "d", name: "Plan the launch" },
+]);
+
+describe("Gantt pointer move (s23)", () => {
+  let px = 40;
+  beforeEach(() => {
+    px = 40;
+    const proto = HTMLElement.prototype;
+    const { getBoundingClientRect } = proto;
+    const win = window as unknown as Record<string, unknown>;
+    const pointer = win.PointerEvent;
+    win.PointerEvent = TestPointerEvent;
+    proto.setPointerCapture = vi.fn();
+    proto.releasePointerCapture = vi.fn();
+    proto.hasPointerCapture = vi.fn(() => true);
+    proto.getBoundingClientRect = function (this: HTMLElement) {
+      if (this.matches('[role="gridcell"].c__gantt__track')) {
+        const days = Number(
+          this.closest<HTMLElement>('[role="grid"]')!.style.getPropertyValue(
+            "--gantt-days",
+          ),
+        );
+        return new DOMRect(0, 0, days * px, 40);
+      }
+      return getBoundingClientRect.call(this);
+    };
+    return () => {
+      proto.getBoundingClientRect = getBoundingClientRect;
+      win.PointerEvent = pointer;
+    };
+  });
+
+  const editGantt = (props: Partial<GanttProps> = {}) =>
+    renderGantt({
+      tasks: EDIT_TASKS,
+      editable: true,
+      zoom: "day",
+      ...props,
+    });
+  const barOf = (name: string) => bar(taskRow(name))!;
+  const start = (name: string) => Number(cssVar(barOf(name), "--gantt-start"));
+  const down = (el: HTMLElement, x = 100) =>
+    fireEvent.pointerDown(el, { clientX: x, button: 0, pointerId: 1 });
+  const moveTo = (el: HTMLElement, x: number) =>
+    fireEvent.pointerMove(el, { clientX: x, pointerId: 1 });
+  const up = (el: HTMLElement, x: number) =>
+    fireEvent.pointerUp(el, { clientX: x, pointerId: 1 });
+  const drag = (name: string, dx: number) => {
+    const el = barOf(name);
+    down(el);
+    moveTo(el, 100 + dx);
+    up(el, 100 + dx);
+  };
+  const root = () =>
+    screen.getByRole("grid").closest<HTMLElement>(".c__gantt")!;
+  const ghost = () => document.querySelector<HTMLElement>(".c__gantt__ghost");
+  const tip = () => document.querySelector<HTMLElement>(".c__gantt__tip");
+
+  it("read-only by default: no editing DOM, chords and pointer left alone", () => {
+    const onTaskChange = vi.fn();
+    renderGantt({ tasks: EDIT_TASKS, zoom: "day", onTaskChange });
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(root()).not.toHaveAttribute("data-editable");
+    for (const row of screen.getAllByRole("row").slice(1)) {
+      expect(row).not.toHaveAttribute("aria-keyshortcuts");
+      expect(row).not.toHaveAttribute("aria-describedby");
+    }
+    const row = taskRow("Write the brief");
+    row.focus();
+    expect(fireEvent.keyDown(row, { key: "ArrowRight", altKey: true })).toBe(
+      true,
+    );
+    const before = start("Write the brief");
+    const el = barOf("Write the brief");
+    down(el);
+    moveTo(el, 220);
+    expect(root()).not.toHaveAttribute("data-editing");
+    expect(ghost()).toBeNull();
+    expect(tip()).toBeNull();
+    up(el, 220);
+    expect(start("Write the brief")).toBe(before);
+    expect(onTaskChange).not.toHaveBeenCalled();
+  });
+
+  it("day zoom: a drag of 3 days shifts both dates by 3 days, once (AC1)", () => {
+    const onTaskChange = vi.fn();
+    editGantt({ onTaskChange });
+    drag("Write the brief", 3 * 40);
+    expect(onTaskChange).toHaveBeenCalledTimes(1);
+    expect(onTaskChange).toHaveBeenCalledWith("a", {
+      start: "2026-03-05",
+      end: "2026-03-16",
+    });
+  });
+
+  it("week zoom snaps to whole weeks (AC4)", () => {
+    px = 12;
+    const onTaskChange = vi.fn();
+    editGantt({ zoom: "week", onTaskChange });
+    drag("Write the brief", 20); // 1.67 days: 0 weeks
+    expect(onTaskChange).not.toHaveBeenCalled();
+    drag("Write the brief", 50); // 4.17 days: 1 week
+    expect(onTaskChange).toHaveBeenCalledTimes(1);
+    expect(onTaskChange).toHaveBeenCalledWith("a", {
+      start: "2026-03-09",
+      end: "2026-03-20",
+    });
+  });
+
+  it("month zoom moves by a calendar month, clamped, length kept in days (AC4)", () => {
+    px = 4;
+    const onTaskChange = vi.fn();
+    editGantt({ zoom: "month", onTaskChange });
+    drag("Build", 28 * 4);
+    expect(onTaskChange).toHaveBeenCalledWith("b", {
+      start: "2026-02-28",
+      end: "2026-03-05",
+    });
+  });
+
+  it("previews the move on the dragged row only, never touching the tasks", () => {
+    editGantt();
+    const before = JSON.stringify(EDIT_TASKS);
+    const original = start("Write the brief");
+    const others = [start("Build"), start("Frame")];
+    const label = taskRow("Write the brief").getAttribute("aria-label");
+    const el = barOf("Write the brief");
+    down(el);
+    moveTo(el, 100 + 3 * 40 + 7);
+    expect(root()).toHaveAttribute("data-editing", "move");
+    expect(start("Write the brief")).toBe(original + 3);
+    expect(Number(cssVar(ghost(), "--gantt-start"))).toBe(original);
+    expect(tip()).toHaveTextContent("March 5, 2026 to March 16, 2026");
+    expect(taskRow("Write the brief").contains(tip())).toBe(true);
+    expect([start("Build"), start("Frame")]).toEqual(others);
+    expect(taskRow("Write the brief")).toHaveAttribute("aria-label", label!);
+    expect(JSON.stringify(EDIT_TASKS)).toBe(before);
+  });
+
+  it("stops at the start of the axis and says so", () => {
+    const onTaskChange = vi.fn();
+    editGantt({ onTaskChange });
+    const el = barOf("Write the brief");
+    down(el);
+    moveTo(el, 100 - 400 * 40);
+    expect(start("Write the brief")).toBe(0);
+    expect(el).toHaveAttribute("data-clamped");
+    expect(tip()).toHaveTextContent("Limit of the chart reached");
+    up(el, 100 - 400 * 40);
+    expect(onTaskChange).toHaveBeenCalledWith("a", {
+      start: "2026-01-04",
+      end: "2026-01-15",
+    });
+  });
+
+  it.each([
+    [
+      "Escape",
+      () => fireEvent.keyDown(document.activeElement!, { key: "Escape" }),
+    ],
+    ["pointercancel", (el: HTMLElement) => fireEvent.pointerCancel(el)],
+    [
+      "lost capture",
+      (el: HTMLElement) => fireEvent.lostPointerCapture(el, { pointerId: 1 }),
+    ],
+    ["window blur", () => fireEvent.blur(window)],
+  ])("%s mid-drag restores the bar and commits nothing (AC5)", (_, cancel) => {
+    const onTaskChange = vi.fn();
+    editGantt({ onTaskChange });
+    const original = start("Write the brief");
+    const el = barOf("Write the brief");
+    down(el);
+    moveTo(el, 100 + 3 * 40);
+    cancel(el);
+    expect(start("Write the brief")).toBe(original);
+    expect(root()).not.toHaveAttribute("data-editing");
+    expect(ghost()).toBeNull();
+    expect(tip()).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Write the brief: change cancelled, dates restored",
+    );
+    moveTo(el, 100 + 5 * 40);
+    expect(start("Write the brief")).toBe(original);
+    up(el, 100 + 5 * 40);
+    expect(onTaskChange).not.toHaveBeenCalled();
+  });
+
+  it("Escape is stopped while a drag runs, and only then", () => {
+    const outer = vi.fn();
+    render(
+      <CunninghamProvider>
+        <div onKeyDown={outer}>
+          <Gantt
+            aria-label="Plan"
+            tasks={EDIT_TASKS}
+            zoom="day"
+            today="2026-03-23"
+            editable
+          />
+        </div>
+      </CunninghamProvider>,
+    );
+    const row = taskRow("Write the brief");
+    row.focus();
+    const el = barOf("Write the brief");
+    down(el);
+    moveTo(el, 100 + 40);
+    expect(fireEvent.keyDown(row, { key: "Escape" })).toBe(false);
+    expect(outer).not.toHaveBeenCalled();
+    expect(fireEvent.keyDown(row, { key: "Escape" })).toBe(true);
+    expect(outer).toHaveBeenCalledTimes(1);
+  });
+
+  it("a drag back to the start, or under half a unit, commits nothing", () => {
+    const onTaskChange = vi.fn();
+    editGantt({ onTaskChange });
+    drag("Write the brief", 15);
+    const el = barOf("Write the brief");
+    down(el);
+    moveTo(el, 100 + 3 * 40);
+    moveTo(el, 100);
+    up(el, 100);
+    expect(onTaskChange).not.toHaveBeenCalled();
+  });
+
+  it("controlled: a parent that ignores the change gets the bar back; one that applies it shows the new bar", () => {
+    const ignored = vi.fn();
+    const { unmount } = editGantt({ onTaskChange: ignored });
+    const original = start("Write the brief");
+    drag("Write the brief", 2 * 40);
+    expect(ignored).toHaveBeenCalledTimes(1);
+    expect(start("Write the brief")).toBe(original);
+    expect(ghost()).toBeNull();
+    unmount();
+
+    const Parent = () => {
+      const [tasks, setTasks] = useState(EDIT_TASKS);
+      return (
+        <CunninghamProvider>
+          <Gantt
+            aria-label="Plan"
+            tasks={tasks}
+            zoom="day"
+            today="2026-03-23"
+            editable
+            onTaskChange={(id, change) =>
+              setTasks((all) =>
+                all.map((task) =>
+                  task.id === id ? { ...task, ...change } : task,
+                ),
+              )
+            }
+          />
+        </CunninghamProvider>
+      );
+    };
+    render(<Parent />);
+    drag("Write the brief", 2 * 40);
+    expect(start("Write the brief")).toBe(original + 2);
+    expect(ghost()).toBeNull();
+    expect(root()).not.toHaveAttribute("data-editing");
+  });
+
+  it("announces the snapped dates and the commit in one status region", () => {
+    editGantt({ onTaskChange: vi.fn() });
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    const el = barOf("Write the brief");
+    down(el);
+    moveTo(el, 100 + 3 * 40);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Write the brief: March 5, 2026 to March 16, 2026",
+    );
+    up(el, 100 + 3 * 40);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Write the brief rescheduled: March 5, 2026 to March 16, 2026",
+    );
+  });
+
+  it("a task without dates or clipped by the window cannot be dragged", () => {
+    const onTaskChange = vi.fn();
+    editGantt({
+      onTaskChange,
+      tasks: [
+        { id: "f", name: "Forever", start: "0001-01-01", end: "9999-12-31" },
+        { id: "n", name: "Nothing" },
+      ],
+    });
+    expect(bar(taskRow("Nothing"))).toBeNull();
+    const el = barOf("Forever");
+    const before = start("Forever");
+    down(el);
+    moveTo(el, 100 + 3 * 40);
+    expect(root()).not.toHaveAttribute("data-editing");
+    up(el, 100 + 3 * 40);
+    expect(start("Forever")).toBe(before);
+    expect(onTaskChange).not.toHaveBeenCalled();
+  });
+
+  it("unmounted mid-drag, it leaves Escape and blur to the page", () => {
+    const outer = vi.fn();
+    document.addEventListener("keydown", outer);
+    const blur = vi.spyOn(window, "removeEventListener");
+    const { unmount } = editGantt();
+    const el = barOf("Write the brief");
+    down(el);
+    moveTo(el, 100 + 40);
+    unmount();
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(outer).toHaveBeenCalledTimes(1);
+    expect(blur).toHaveBeenCalledWith("blur", expect.any(Function));
+    document.removeEventListener("keydown", outer);
+    blur.mockRestore();
+  });
+
+  it("a task clipped on the start side of the window cannot be dragged", () => {
+    const onTaskChange = vi.fn();
+    // Ten years from today's window floor: Early starts before the window.
+    editGantt({
+      onTaskChange,
+      today: "2026-03-23",
+      tasks: [
+        { id: "e", name: "Early", start: "2010-01-01", end: "2026-03-10" },
+        { id: "l", name: "Late", start: "2026-03-01", end: "2030-01-01" },
+      ],
+    });
+    const el = barOf("Early");
+    expect(start("Early")).toBe(0);
+    down(el);
+    moveTo(el, 100 + 3 * 40);
+    expect(root()).not.toHaveAttribute("data-editing");
+    up(el, 100 + 3 * 40);
+    expect(onTaskChange).not.toHaveBeenCalled();
+  });
+
+  it("unmeasured track geometry starts no drag", () => {
+    px = 0;
+    editGantt();
+    const el = barOf("Write the brief");
+    down(el);
+    moveTo(el, 100 + 3 * 40);
+    expect(root()).not.toHaveAttribute("data-editing");
+    expect(tip()).toBeNull();
+  });
+
+  it("only the primary button starts a drag", () => {
+    editGantt();
+    const el = barOf("Write the brief");
+    fireEvent.pointerDown(el, { clientX: 100, button: 2, pointerId: 1 });
+    moveTo(el, 100 + 3 * 40);
+    expect(root()).not.toHaveAttribute("data-editing");
+  });
+
+  it("a commit that moves the axis origin keeps the leftmost visible day", () => {
+    // TASKS: the axis starts on 2026-03-01; moving the earliest task a week
+    // later moves it to 2026-03-08.
+    const Parent = () => {
+      const [tasks, setTasks] = useState(TASKS);
+      return (
+        <CunninghamProvider>
+          <Gantt
+            aria-label="Plan"
+            tasks={tasks}
+            zoom="day"
+            today="2026-03-23"
+            editable
+            onTaskChange={(id, change) =>
+              setTasks((all) =>
+                all.map((task) =>
+                  task.id === id ? { ...task, ...change } : task,
+                ),
+              )
+            }
+          />
+        </CunninghamProvider>
+      );
+    };
+    const { container } = render(<Parent />);
+    const scroller = container.querySelector<HTMLElement>(
+      ".c__gantt__scroller",
+    )!;
+    scroller.scrollLeft = 400;
+    drag("Write the brief", 7 * 40);
+    expect(start("Build")).toBe(1);
+    expect(scroller.scrollLeft).toBe(400 - 7 * 40);
+  });
+});
+
 describe("Gantt tokens", () => {
   it("emits every token of tokens.ts in the generated :root block", () => {
     const css = read("../../cunningham-tokens.css");
@@ -620,6 +1026,39 @@ describe("Gantt stylesheet", () => {
     expect(forced).toMatch(/border-color:\s*CanvasText;/);
     expect(blocks(source, /@media \(prefers-reduced-motion: reduce\)/)).toMatch(
       /transition:\s*none;/,
+    );
+  });
+
+  it("editing: grab cursors only when editable, no lag, no selection, forced colors", () => {
+    const source = scss();
+    const editable = blocks(source, /&\[data-editable\]/);
+    const editing = blocks(source, /&\[data-editing[^\]]*\]/);
+    expect(editable).toMatch(/cursor:\s*grab;/);
+    expect(editing).toMatch(/cursor:\s*grabbing;/);
+    expect(editing).toMatch(/transition:\s*none;/);
+    expect(editing).toMatch(/user-select:\s*none;/);
+    // Read-only bars keep the s22 cursor: every cursor rule is an editing one.
+    const cursors = (text: string) => text.match(/cursor:/g)?.length ?? 0;
+    expect(cursors(editable) + cursors(editing)).toBe(cursors(source));
+    expect(blocks(source, /&__ghost\b/)).toMatch(
+      /border:\s*var\(--c--components--gantt--border-width\)\s+dashed\s+var\(--c--components--gantt--ghost-border-color\);/,
+    );
+    const tipBlock = blocks(source, /&__tip\b/);
+    expect(tipBlock).toMatch(
+      /background-color:\s*var\(--c--components--gantt--tooltip-background-color\);/,
+    );
+    expect(tipBlock).toMatch(
+      /color:\s*var\(--c--components--gantt--tooltip-color\);/,
+    );
+    expect(blocks(source, /\[data-preview\]/)).toMatch(
+      /outline:\s*var\(--c--components--gantt--focus-ring-width\)\s+solid\s+var\(--c--components--gantt--drag-outline-color\);/,
+    );
+    const forced = blocks(source, /@media \(forced-colors: active\)/);
+    expect(blocks(forced, /&__ghost\b/)).toMatch(/border-color:\s*CanvasText;/);
+    expect(blocks(forced, /&__tip\b/)).toMatch(/background-color:\s*Canvas;/);
+    expect(blocks(forced, /&__tip\b/)).toMatch(/color:\s*CanvasText;/);
+    expect(blocks(forced, /\[data-preview\]/)).toMatch(
+      /outline-color:\s*Highlight;/,
     );
   });
 });
@@ -712,6 +1151,23 @@ describe("Gantt contrast", () => {
           ),
           `pressed cue on ${background}`,
         ).toBeGreaterThanOrEqual(3);
+      }
+      // Editing (s23): ghost on the row and its hover, outline on the row,
+      // tooltip text on its chip.
+      const pairs: [string, string, number][] = [
+        ["ghost-border-color", "background-color", 3],
+        ["ghost-border-color", "row-background-color--hover", 3],
+        ["drag-outline-color", "background-color", 3],
+        ["tooltip-color", "tooltip-background-color", 4.5],
+      ];
+      for (const [foreground, background, min] of pairs) {
+        expect(
+          contrast(
+            resolveVar(vars, gantt(foreground)),
+            resolveVar(vars, gantt(background)),
+          ),
+          `${foreground} on ${background}`,
+        ).toBeGreaterThanOrEqual(min);
       }
     },
   );

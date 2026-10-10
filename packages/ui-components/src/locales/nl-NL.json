@@ -327,7 +327,12 @@
       "row_no_dates_aria": "{name}, geen datums",
       "no_dates": "Geen datums",
       "today": "Vandaag",
-      "empty": "Geen taken"
+      "empty": "Geen taken",
+      "tooltip_dates": "{start} tot {end}",
+      "announce_preview": "{name}: {start} tot {end}",
+      "announce_changed": "{name} verplaatst: {start} tot {end}",
+      "announce_cancelled": "{name}: wijziging geannuleerd, datums hersteld",
+      "limit_axis": "Grens van de grafiek bereikt"
     }
   }
 }
