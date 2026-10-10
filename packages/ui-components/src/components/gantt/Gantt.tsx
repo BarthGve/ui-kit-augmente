@@ -1,5 +1,12 @@
 import clsx from "clsx";
-import { CSSProperties, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  CSSProperties,
+  FocusEvent,
+  KeyboardEvent,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import {
   CalendarDate,
   DateFormatter,
@@ -73,6 +80,12 @@ const lowerTier = (
 };
 
 const ZOOMS: GanttZoom[] = ["day", "week", "month"];
+const KEYS: Record<string, (from: number, last: number) => number> = {
+  ArrowDown: (from) => from + 1,
+  ArrowUp: (from) => from - 1,
+  Home: () => 0,
+  End: (_, last) => last,
+};
 const noop = () => {};
 
 export const Gantt = ({
@@ -97,7 +110,11 @@ export const Gantt = ({
   const scrollerRef = useRef<HTMLDivElement>(null);
   // Leftmost visible day, taken before a requested zoom: once the grid has
   // narrowed, the old offset is already clamped.
-  const anchor = useRef<{ zoom: GanttZoom; date: CalendarDate } | null>(null);
+  const anchor = useRef<{
+    zoom: GanttZoom;
+    date: CalendarDate;
+    left: number;
+  } | null>(null);
   const todayKey = today?.toString();
   const scale = useMemo(
     () =>
@@ -127,21 +144,92 @@ export const Gantt = ({
     const el = scrollerRef.current;
     if (el && next !== zoom) {
       const day = Math.floor(el.scrollLeft / px(scale.dayWidth));
-      anchor.current = { zoom: next, date: scale.origin.add({ days: day }) };
+      anchor.current = {
+        zoom: next,
+        date: scale.origin.add({ days: day }),
+        left: el.scrollLeft,
+      };
     }
     setZoom(next);
     if (!controlled) onZoomChange?.(next);
   };
 
+  // A controlled parent may refuse a request (no render follows): once the
+  // view has scrolled, that anchor is stale. Read before the DOM changes,
+  // so a narrower grid has not clamped the offset yet.
+  const anchorStale =
+    anchor.current !== null &&
+    scrollerRef.current?.scrollLeft !== anchor.current.left;
+
   // Before paint, so the new zoom is never drawn at the old offset.
   useLayoutEffect(() => {
     const el = scrollerRef.current;
-    if (el && anchor.current?.zoom === zoom) {
+    if (el && !anchorStale && anchor.current?.zoom === zoom) {
       el.scrollLeft =
         dayIndex(scale.origin, anchor.current.date) * px(scale.dayWidth);
     }
     anchor.current = null;
-  }, [zoom, scale]);
+  }, [zoom, scale, anchorStale]);
+
+  // Roving tab stop over the task rows: the task id, with its index as the
+  // fallback when that task goes. A ref, so a key press does not rerender.
+  const gridRef = useRef<HTMLDivElement>(null);
+  const focusedId = useRef<string | undefined>(undefined);
+  const stop = useRef<{ id?: string; index: number }>({ index: 0 });
+  const found = tasks.findIndex((task) => task.id === stop.current.id);
+  const stopIndex =
+    found >= 0 ? found : Math.min(stop.current.index, tasks.length - 1);
+  const taskRows = () =>
+    Array.from(
+      gridRef.current?.querySelectorAll<HTMLElement>(
+        ":scope > .c__gantt__row",
+      ) ?? [],
+    );
+
+  useLayoutEffect(() => {
+    const id = tasks[stopIndex]?.id;
+    const lost =
+      focusedId.current !== undefined &&
+      focusedId.current === stop.current.id &&
+      stop.current.id !== id;
+    stop.current = { id, index: Math.max(stopIndex, 0) };
+    // The focused row was removed: its neighbour takes the focus.
+    if (lost && document.activeElement === document.body) {
+      taskRows()[stopIndex]?.focus();
+    }
+  });
+
+  const onFocus = (event: FocusEvent<HTMLDivElement>) => {
+    const index = taskRows().indexOf(event.target);
+    if (index < 0) return;
+    for (const row of taskRows()) row.tabIndex = row === event.target ? 0 : -1;
+    stop.current = { id: tasks[index].id, index };
+    focusedId.current = tasks[index].id;
+  };
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const rows = taskRows();
+    const from = rows.indexOf(event.target as HTMLElement);
+    const move = KEYS[event.key];
+    // Modified keys are left to the browser and to s23 (move/resize).
+    if (
+      from < 0 ||
+      !move ||
+      event.altKey ||
+      event.shiftKey ||
+      event.ctrlKey ||
+      event.metaKey
+    )
+      return;
+    const next = rows[move(from, rows.length - 1)];
+    if (!next || next === event.target) return;
+    event.preventDefault();
+    next.focus();
+    // The row is as wide as the timeline: bring its bar into view.
+    next
+      .querySelector(".c__gantt__bar")
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  };
 
   const rowLabel = (task: GanttTask, dates: ReturnType<typeof formatDates>) => {
     if (!dates)
@@ -177,12 +265,18 @@ export const Gantt = ({
       </div>
       <div ref={scrollerRef} className="c__gantt__scroller">
         <div
+          ref={gridRef}
           role="grid"
           aria-label={ariaLabel}
           aria-rowcount={tasks.length + 1}
           aria-colcount={2}
           className="c__gantt__grid"
           style={{ "--gantt-days": scale.days } as CSSProperties}
+          onFocus={onFocus}
+          onBlur={(event) => {
+            if (event.relatedTarget) focusedId.current = undefined;
+          }}
+          onKeyDown={onKeyDown}
         >
           {scale.todayOffset !== null && (
             <div
@@ -242,9 +336,8 @@ export const Gantt = ({
                 role="row"
                 aria-rowindex={i + 2}
                 aria-label={rowLabel(task, dates)}
-                // The first row is the chart's tab stop, so the scroll box is
-                // keyboard reachable; t04 adds the arrow keys (roving).
-                tabIndex={i === 0 ? 0 : -1}
+                // A single tab stop, so Tab leaves the chart (roving).
+                tabIndex={i === stopIndex ? 0 : -1}
                 className="c__gantt__row"
                 data-no-dates={dates ? undefined : true}
               >

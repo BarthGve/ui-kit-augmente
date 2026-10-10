@@ -1,0 +1,185 @@
+import { Meta, Canvas, ArgTypes } from "@storybook/blocks";
+import * as GanttStories from "./gantt.stories";
+
+<Meta of={GanttStories} name="Docs" />
+
+# Gantt
+
+`Gantt` shows tasks on a time axis: one row per task, a bar from its start to
+its end date, a marker on today. It is read-only: no editing, no drag and drop.
+
+## Structure
+
+```tsx
+import { Gantt } from "@gouvfr-lasuite/ui-components";
+
+<div style={{ height: "24rem" }}>
+  <Gantt
+    aria-label="Project schedule"
+    tasks={[
+      {
+        id: "brief",
+        name: "Write the brief",
+        start: "2026-03-02",
+        end: "2026-03-13",
+      },
+      { id: "review", name: "Review", start: "2026-03-25", end: "2026-03-25" },
+      { id: "plan", name: "Plan the launch" },
+    ]}
+  />
+</div>;
+```
+
+<Canvas of={GanttStories.Default} />
+
+The chart is a single scroll box. The task column and the axis are sticky: the
+list stays in place while the timeline scrolls horizontally, and the axis stays
+on top while the rows scroll vertically.
+
+**Give the chart a size.** It fills the width of its container and takes at
+most the height of a sized parent (`max-block-size: 100%`), beyond which the
+box scrolls. In a shrink-to-fit parent (a flex row item, `inline-block`, an
+`auto` grid track) it collapses to no width: give it a width there, for
+example `flex: 1` or `width: 100%`.
+
+`aria-label` is required: it names the grid, which has no visible title.
+
+## Data
+
+```ts
+interface GanttTask {
+  id: string; // stable, unique
+  name: string;
+  start?: string | CalendarDate; // "YYYY-MM-DD"
+  end?: string | CalendarDate; // inclusive
+}
+```
+
+- **Calendar dates, not instants.** Dates are ISO days (`"2026-03-30"`) or
+  `CalendarDate`s from `@internationalized/date`. No time and no time zone is
+  involved, so a bar never shifts by a day across a daylight-saving change.
+- **The end is inclusive**: a one-day task has `start` equal to `end` and is one
+  day wide.
+- Rows follow the array order. The component never modifies `tasks`.
+- The axis starts on the first day of the locale's week (Monday in `fr-FR`,
+  Sunday in `en-US`) before the earliest start, and ends with the week or the
+  month of the latest end.
+
+### Tasks without dates
+
+A task with no dates, only one of the two, an end before its start, or a date
+that does not exist (`"2026-02-30"`) keeps its row and its name, shows
+"No dates" and draws no bar.
+
+<Canvas of={GanttStories.WithoutDates} />
+
+### Today
+
+`today` sets the marker's day (default: today in the local time zone). The
+marker is a line with a "Today" label, not drawn when today is outside the
+axis. Pass a fixed `today` in tests and stories. The marker does not move at
+midnight while the page stays open.
+
+<Canvas of={GanttStories.OneDayTasks} />
+
+## Zoom
+
+Day, Week and Month change the width of a day (and the axis labels). Week is
+the default. Uncontrolled, `defaultZoom` sets the initial zoom. Controlled,
+`zoom` decides and `onZoomChange` receives the requested zoom; the chart only
+changes when the parent updates `zoom`. A zoom change from the control keeps
+the left-most visible day in place; in controlled mode, as long as the chart
+is not scrolled between the request and the parent's update (a request the
+parent refuses is dropped once the chart scrolls). A `zoom` change that does
+not come from the control keeps the scroll offset.
+
+<Canvas of={GanttStories.Zoomed} />
+<Canvas of={GanttStories.WideSchedule} />
+
+## Keyboard
+
+| Key                       | Action                                                                  |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `Tab`                     | Reaches the Day, Week and Month buttons, then the current task row once |
+| `Shift+Tab`               | The same, backwards                                                     |
+| `Enter` / `Space`         | On a zoom button, switches the zoom                                     |
+| `Arrow Down` / `Arrow Up` | Focuses the next / previous task row, without wrapping                  |
+| `Home` / `End`            | Focuses the first / last task row                                       |
+
+The chart is one tab stop: `Tab` enters on the current row (the first one
+initially, then the last row focused, by keyboard or by click) and the next
+`Tab` leaves the chart. Moving to a row scrolls its bar into view. Arrow keys
+with `Alt`, `Shift`, `Ctrl` or `Meta` are left to the browser (reserved for
+editing in a later version).
+
+The focused row announces the task and its dates, formatted for the active
+locale:
+
+| Task         | Announcement (en-US)                                    |
+| ------------ | ------------------------------------------------------- |
+| Dated        | "Write the brief, from March 2, 2026 to March 13, 2026" |
+| One day      | "Review, March 25, 2026"                                |
+| Without date | "Plan the launch, no dates"                             |
+
+Keyboard focus draws a ring around the visible part of the row, also in
+forced-colors mode; there is no ring after a mouse click. The bars, the today
+marker and the dense lower axis labels are hidden from assistive technologies:
+the row's name carries the dates.
+
+## Size and performance
+
+Every task is rendered, there is no windowing. Off-screen rows skip layout
+and paint (`content-visibility: auto`), and grid lines are a background, not
+one element per day, so the DOM grows with rows plus axis labels. The task
+count is up to the caller and is not capped: `LongSchedule` (100 rows) is the
+size checked; beyond a few hundred rows, measure with your data, and split or
+page it if needed.
+
+The drawn range is capped at about ten years (3660 days). A wider schedule is
+windowed around today; bars are cut at the window's edges, and a task wholly
+outside the window keeps its row and its announced dates but draws no bar.
+
+<Canvas of={GanttStories.LongSchedule} />
+
+Transitions are removed when reduced motion is requested.
+
+## Empty
+
+<Canvas of={GanttStories.Empty} />
+
+## Tokens
+
+| Token (`--c--components--gantt--…`) | Default                                            |
+| ----------------------------------- | -------------------------------------------------- |
+| `background-color`                  | `contextuals.background.surface.secondary`         |
+| `header-background-color`           | `contextuals.background.surface.tertiary`          |
+| `color`                             | `contextuals.content.semantic.neutral.primary`     |
+| `color--muted`                      | `contextuals.content.semantic.neutral.secondary`   |
+| `border-color`                      | `contextuals.border.surface.primary`               |
+| `row-background-color--hover`       | `contextuals.background.semantic.neutral.tertiary` |
+| `bar-background-color`              | `contextuals.content.semantic.brand.tertiary`      |
+| `bar-border-color`                  | `contextuals.content.semantic.brand.tertiary`      |
+| `today-color`                       | `contextuals.content.semantic.error.tertiary`      |
+| `padding`                           | `globals.spacings.sm`                              |
+| `focus-ring-color`                  | `contextuals.content.semantic.brand.tertiary`      |
+| `border-width`                      | `1px`                                              |
+| `bar-radius`                        | `4px`                                              |
+| `bar-height`                        | `1.25rem`                                          |
+| `row-height`                        | `2.5rem`                                           |
+| `task-column-width`                 | `16rem` (at most 40% of the chart)                 |
+| `day-width--day`                    | `2.5rem`                                           |
+| `day-width--week`                   | `0.75rem`                                          |
+| `day-width--month`                  | `0.25rem`                                          |
+| `today-width`                       | `2px`                                              |
+| `focus-ring-width`                  | `2px`                                              |
+| `focus-ring-offset`                 | `-2px`                                             |
+
+## Later versions
+
+`id` is stable and `tasks` is never modified, so moving and resizing bars
+(`onTaskChange`) and dependencies between tasks are additive props. The bar is
+a stable element (`.c__gantt__bar[data-task-id]`) in its row.
+
+## Props
+
+<ArgTypes of={GanttStories} />

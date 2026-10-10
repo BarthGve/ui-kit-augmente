@@ -1,9 +1,9 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CunninghamProvider } from ":/components/provider";
 import { Gantt, GanttProps, GanttTask } from "./index";
 import { MAX_DAYS } from "./scale";
@@ -302,6 +302,166 @@ describe("Gantt tab stop", () => {
     expect(rows[0]).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("button", { name: "After" })).toHaveFocus();
+  });
+});
+
+describe("Gantt keyboard (AC4)", () => {
+  // jsdom has no layout: scrolling the bar into view is measured in the CT.
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  const taskRows = () => screen.getAllByRole("row").slice(1);
+  const tabStops = () =>
+    taskRows().filter((row) => row.getAttribute("tabindex") === "0");
+  const focusFirstRow = async (user: ReturnType<typeof userEvent.setup>) => {
+    taskRows()[0].focus();
+    expect(taskRows()[0]).toHaveFocus();
+    return user;
+  };
+
+  it("arrows move focus between rows and the single tab stop follows", async () => {
+    renderGantt();
+    const user = await focusFirstRow(userEvent.setup());
+    await user.keyboard("{ArrowDown}");
+    expect(taskRows()[1]).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(taskRows()[2]).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(taskRows()[1]).toHaveFocus();
+    expect(tabStops()).toEqual([taskRows()[1]]);
+  });
+
+  it("Home and End focus the first and last task rows", async () => {
+    renderGantt();
+    const user = await focusFirstRow(userEvent.setup());
+    await user.keyboard("{End}");
+    expect(taskRows()[TASKS.length - 1]).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(taskRows()[0]).toHaveFocus();
+    expect(tabStops()).toEqual([taskRows()[0]]);
+  });
+
+  it("does not wrap: past either end the key is left to the browser", () => {
+    renderGantt();
+    const [first] = taskRows();
+    const last = taskRows()[TASKS.length - 1];
+    first.focus();
+    expect(fireEvent.keyDown(first, { key: "ArrowUp" })).toBe(true);
+    expect(fireEvent.keyDown(first, { key: "Home" })).toBe(true);
+    expect(first).toHaveFocus();
+    last.focus();
+    expect(fireEvent.keyDown(last, { key: "ArrowDown" })).toBe(true);
+    expect(last).toHaveFocus();
+  });
+
+  it("leaves modified arrows and the zoom buttons alone (reserved for s23)", () => {
+    renderGantt();
+    const [first] = taskRows();
+    first.focus();
+    for (const modifier of ["altKey", "shiftKey", "ctrlKey", "metaKey"]) {
+      expect(
+        fireEvent.keyDown(first, { key: "ArrowDown", [modifier]: true }),
+      ).toBe(true);
+      expect(first).toHaveFocus();
+    }
+    const day = screen.getByRole("button", { name: "Day" });
+    day.focus();
+    expect(fireEvent.keyDown(day, { key: "End" })).toBe(true);
+    expect(day).toHaveFocus();
+    // Plain arrows do act (otherwise the cases above prove nothing).
+    expect(fireEvent.keyDown(first, { key: "ArrowDown" })).toBe(false);
+    expect(taskRows()[1]).toHaveFocus();
+  });
+
+  it.each([
+    [
+      "en-US",
+      [
+        "Write the brief, from March 2, 2026 to March 13, 2026",
+        "Review, March 25, 2026",
+        "Plan the launch, no dates",
+      ],
+    ],
+    [
+      "fr-FR",
+      [
+        "Write the brief, du 2 mars 2026 au 13 mars 2026",
+        "Review, le 25 mars 2026",
+        "Plan the launch, sans dates",
+      ],
+    ],
+  ])(
+    "%s: the focused row announces its task and dates",
+    async (locale, names) => {
+      renderGantt({}, locale);
+      const user = await focusFirstRow(userEvent.setup());
+      const announced = [document.activeElement?.getAttribute("aria-label")];
+      await user.keyboard("{ArrowDown}{ArrowDown}");
+      announced.push(document.activeElement?.getAttribute("aria-label"));
+      await user.keyboard("{ArrowDown}");
+      announced.push(document.activeElement?.getAttribute("aria-label"));
+      expect(announced).toEqual(names);
+    },
+  );
+
+  it("navigation changes neither the data nor the zoom", async () => {
+    const onZoomChange = vi.fn();
+    // Not frozen: a write in a key handler would throw where no test sees it.
+    const tasks = TASKS.map((task) => ({ ...task }));
+    const before = JSON.stringify(tasks);
+    renderGantt({ tasks, onZoomChange });
+    const user = await focusFirstRow(userEvent.setup());
+    await user.keyboard("{ArrowDown}{End}{Home}");
+    expect(onZoomChange).not.toHaveBeenCalled();
+    expect(JSON.stringify(tasks)).toBe(before);
+  });
+
+  it("rows added or removed keep one tab stop and a valid focus", async () => {
+    const ui = (tasks: GanttTask[]) => (
+      <CunninghamProvider>
+        <Gantt aria-label="Plan" tasks={tasks} today="2026-03-23" />
+      </CunninghamProvider>
+    );
+    const { rerender } = render(ui(TASKS));
+    const user = await focusFirstRow(userEvent.setup());
+    await user.keyboard("{ArrowDown}{ArrowDown}"); // "Review"
+    // A row inserted above: the tab stop stays on the same task.
+    rerender(ui([{ id: "z", name: "Zero" }, ...TASKS]));
+    expect(tabStops()).toHaveLength(1);
+    expect(tabStops()[0]).toHaveAccessibleName(/^Review/);
+    expect(tabStops()[0]).toHaveFocus();
+    // The focused row removed: the nearest row takes the stop and the focus.
+    rerender(
+      ui([{ id: "z", name: "Zero" }, ...TASKS].filter((t) => t.id !== "c")),
+    );
+    expect(tabStops()).toHaveLength(1);
+    expect(tabStops()[0]).toHaveAccessibleName(/^Plan the launch/);
+    expect(tabStops()[0]).toHaveFocus();
+    // The last rows removed: the stop is clamped to the last row left.
+    rerender(ui(TASKS.slice(0, 1)));
+    expect(tabStops()).toHaveLength(1);
+    expect(tabStops()[0]).toHaveAccessibleName(/^Write the brief/);
+  });
+
+  it("a click on a row moves the tab stop to it", async () => {
+    const user = userEvent.setup();
+    renderGantt();
+    await user.click(within(taskRows()[3]).getByRole("rowheader"));
+    expect(taskRows()[3]).toHaveFocus();
+    expect(tabStops()).toEqual([taskRows()[3]]);
+  });
+
+  it("keeps rows as direct children of the grid, each with its cells (axe structure)", () => {
+    renderGantt();
+    const grid = screen.getByRole("grid");
+    const rows = screen.getAllByRole("row");
+    rows.forEach((row) => expect(row.parentElement).toBe(grid));
+    expect(within(rows[0]).getAllByRole("columnheader")).toHaveLength(2);
+    rows.slice(1).forEach((row) => {
+      expect(within(row).getAllByRole("rowheader")).toHaveLength(1);
+      expect(within(row).getAllByRole("gridcell")).toHaveLength(1);
+    });
   });
 });
 
