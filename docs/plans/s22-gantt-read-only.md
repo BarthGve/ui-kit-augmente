@@ -1,0 +1,100 @@
+---
+validated: yes
+---
+# Plan — Story s22-gantt-read-only
+
+Branch: `feature/s22-gantt-read-only` (framing) · tickets: `feature/s22-gantt-read-only/<ticket-id>`
+Research: `docs/research/s22-gantt-read-only.md` — read it first; this plan does not repeat it. Design: `docs/designs/s22-gantt-read-only.md` (+ `.html` mockup): anatomy, states, token table, a11y contract, i18n keys, gaps, forward compatibility.
+
+## Target story
+**As a** project manager **I want** to see tasks on a time axis **so that** I read the schedule at a glance. Complexity 3 in stories.md, 3 after research (no dependency, no editing; the weight is the scale math, the sticky grid and the keyboard semantics).
+The premise "no equivalent in ui-kit" holds (no Gantt, no time scale; s17-timeline is unrelated). New component, so each ticket is **test-first inside the ticket**: specs are written and seen failing before the code, and the ticket is committed only when everything is green (no `it.fails` ships, since no behaviour pre-exists).
+Acceptance criteria (docs/stories.md):
+- AC1 `Gantt` renders one row per task, with a bar positioned and sized from its start and end dates.
+- AC2 Zoom between day, week and month; the chart scrolls horizontally with a fixed task list.
+- AC3 Today is marked; a task with no dates is shown without a bar.
+- AC4 Each bar exposes name and dates to AT; Tab enters the chart, Up/Down move between task rows, Home/End jump to first/last, the focused task announces its name and dates.
+
+## Tickets (ordered)
+### t01-gantt-scale
+- **size:** S
+- **estimate:** 1d
+- **depends on:** none
+- **scope:** the pure date/scale util `components/gantt/scale.ts` and its types (`GanttTask`, `GanttZoom`, `DateInput`): no React, no component, no export from `index.ts` (internal, nothing user-visible, so no changeset). Covers the maths behind AC1-AC3 and the DST/time-zone trap.
+
+Tasks:
+1. Write `components/gantt/scale.spec.ts` first (import `it` from `vitest`) and see it fail (module missing): (a) `toDay(input)` accepts `"2026-03-30"` and a `CalendarDate`, returns a `CalendarDate`; a malformed string or `"2026-02-30"` returns `null`, never throws; (b) `dayIndex(origin, date)` is an exact integer across the Europe/Paris DST change (`2026-03-28` to `2026-03-30` = 2) and across a leap day, regardless of `TZ` (run the spec under `TZ=Europe/Paris` and `TZ=America/Los_Angeles` with `vi.stubEnv`/process TZ; same result); (c) `positionOf(task)`: `start == end` is 1 day wide (inclusive end); a 3-day span is 3; `end < start`, only-start, only-end and no dates all give `null` (no bar); (d) `buildScale({tasks, zoom, today, locale})`: origin = start of the locale's week for the earliest valid start (a Monday in `fr-FR`, a Sunday in `en-US`), range ends at the end of the week/month of the latest end; all tasks without dates gives an empty range around `today`; (e) `dayWidth` per zoom (`day`, `week`, `month` distinct and decreasing) and `ticks` per zoom: day gives one tick per day, week one per week start, month one per first of month; (f) `todayOffset` is the day index of `today`, `null` when outside the range; (g) `formatDates(task, locale)` uses `Intl` (fr-FR gives `3 mars 2026`, en-US `March 3, 2026`), not hand-built strings.
+2. Implement `scale.ts` and `types.ts` with `@internationalized/date` only (`parseDate`, `CalendarDate`, `startOfWeek`, `startOfMonth`, `endOfMonth`, `today`/`getLocalTimeZone` at the edge, `DateFormatter`), the day difference via `toDate("UTC")`. No new dependency, no `Date` stored. Make (a)-(g) green. Expose `dayWidth` and `positionOf` so the pixel-to-date inverse (s23) is a one-liner later; do not write it.
+3. Run `yarn lint`, `yarn check-locales`, `yarn test --concurrency=1`, `yarn build`; restore `cunningham-tokens-sass.scss` if rewritten. No PR artifact line needed beyond `Artifact: updated (version <id>)` only if the ticket changes a component: this one adds none, so the PR says `Artifact: not applicable (internal util, no component yet)`; the main agent confirms with the owner's DoD wording.
+
+### t02-gantt-static
+- **size:** M
+- **estimate:** 1.5d
+- **depends on:** t01-gantt-scale
+- **scope:** `Gantt` static render: the sticky single-scroll-box grid, header axis, rows, bars, today marker, no-dates rows, empty state, tokens, styles, registration, i18n keys for rendering, stories, changeset (**minor**, first ticket that exports the component). Zoom is a `zoom` prop (default `"week"`) without the control yet. Covers AC1 and AC3.
+
+Tasks:
+1. Write `Gantt.spec.tsx` first and see it fail: (a) one `row` per task plus the header row inside `role="grid"`, `aria-rowcount` = tasks + 1, `aria-rowindex` on each; (b) each bar has `style` custom properties `--gantt-start` and `--gantt-span` equal to `scale.positionOf` for three fixture tasks (AC1), and `start == end` has span 1; (c) AC3: a task with no dates / one date / `end < start` renders its row and name but **no** `.c__gantt__bar`, with the "No dates" text; (d) AC3: a marker `.c__gantt__today` exists with `--gantt-start` = today's index when `today` is in range (prop injected), and is absent when out of range; the "Today" label is present; (e) an empty `tasks` array renders the "No tasks" message and no row; (f) task list order = array order, task name in a `rowheader`; (g) the bar is `aria-hidden` and the row `aria-label` is the composed string (fr-FR and en-US, `Intl` dates) for dated, one-day and no-date tasks; (h) the data array is not mutated (deep-frozen fixture); (i) `className`/extra props forwarded; (j) tokens: every key of `tokens.ts` has a `--c--components--gantt--<key>` declaration in `:root` of `src/cunningham-tokens.css` [fails until `yarn build-theme`]; (k) stylesheet text: values only from `var(--c--components--gantt--…)`, no hex colour, `rgb(` nor `px`/`rem` literal outside comments, `position: sticky` on `__task` and `__axis`, outline from the ring tokens, a `forced-colors` rule and a `prefers-reduced-motion` rule [fails until the SCSS exists]; (l) contrast: in the six themes `bar-background-color` and `focus-ring-color` are >= 3:1 against `surface.secondary` and `neutral.tertiary` (technique of `button/focus-ring.spec.tsx`, helpers copied, known duplication); `today-color` >= 3:1 against `header-background-color`. If (l) is red from the start, report it and take the s11 route (token change delegated to the owner), do not pick a colour silently.
+2. Create `tokens.ts` (design table), register `gantt` in `packages/ui-components/cunningham.ts`, run `yarn build-theme`; check the `--c--components--gantt--*` variables appear in the six theme blocks; restore `src/cunningham-tokens-sass.scss` to its previous content plus only the gantt hunks (flag it in the PR, hand-add only new blocks). Never hand-edit `cunningham-tokens.*`. (j) turns green.
+3. Add the i18n keys used here (`task_column`, `schedule_column`, `row_dates_aria`, `row_date_aria`, `row_no_dates_aria`, `no_dates`, `today`, `empty`) to the five locale files (`de-DE`, `en-US`, `es-ES`, `fr-FR`, `nl-NL`) under `components.gantt`; `yarn check-locales` green.
+4. Create `Gantt.tsx`, `index.tsx`, `types.ts` additions (`GanttProps`: `tasks`, `zoom?`, `today?`, `aria-label`, `className`, div attributes), and `index.scss` (BEM, tokens only: the sticky grid, one-background grid lines, bars, today line, hover, ring, forced-colors, reduced motion). Rows are `role="row"` with `rowheader` + `gridcell`; custom properties, no per-cell DOM; `content-visibility: auto` + `contain-intrinsic-size` on rows; the grid-line background is one `repeating-linear-gradient`. (a)-(i), (k), (l) turn green. Add `@use "./components/gantt";` to `src/library.scss` and `Gantt`, `GanttProps`, `GanttTask`, `GanttZoom` (`export type`) to `src/index.ts`.
+5. Create `gantt.stories.tsx` (`title: "Components/Gantt"`): `Default`, `WithoutDates`, `OneDayTasks`, `LongSchedule` (100 tasks over 18 months), `Empty`. Open them in Storybook on the port from `bash .dm/lib/dm-port.sh` (never 6006), run the a11y addon on each story in `default`, `dark`, `dsfr-light`, stop the server. What the agent cannot check (no human browser) goes in the PR description.
+6. Add `.changeset/<name>.md` for `@gouvfr-lasuite/ui-components`: **minor**, gitmoji line `✨(gantt) add read-only Gantt chart`.
+7. Run `yarn lint`, `yarn check-locales`, `yarn test --concurrency=1`, `yarn build`; restore `cunningham-tokens-sass.scss` if the build rewrote it. The PR description carries `Artifact: updated (version <id>)` (Gantt page with props and tokens read from the code, entry in the `Composants` catalogue, `project/canvas.json`): done by the main agent after the implementer, reading the published index again before merging.
+
+### t03-gantt-zoom-scroll
+- **size:** M
+- **estimate:** 1.5d
+- **depends on:** t02-gantt-static
+- **scope:** the zoom control (controlled/uncontrolled), axis re-tiering, scroll anchoring on zoom, and the real-browser check that the task list stays fixed while the timeline scrolls horizontally. Covers AC2.
+
+Tasks:
+1. Extend `Gantt.spec.tsx` and write the Playwright CT test first, and see them fail: unit (jsdom): (a) a labelled `group` with three buttons Day/Week/Month, `aria-pressed` true on the current zoom (default Week) [fails: no control]; (b) uncontrolled: clicking Day sets `aria-pressed` and the bars' `--gantt-span`/axis ticks switch to the day scale (tick count equals the day count); `onZoomChange` is called with `"day"`; (c) controlled: `zoom="month"` ignores clicks (still month) until the prop changes, and `onZoomChange` receives the requested value; (d) the zoom buttons are native buttons reachable by `Tab`, Enter and Space toggle; (e) labels in fr-FR (`Jour`, `Semaine`, `Mois`) come from the locale, key parity checked by `yarn check-locales`. CT (`e2e/gantt/gantt.spec.tsx` + `e2e/helpers/mount-gantt.tsx`, chromium, throwaway uncommitted config on the port from `dm-port.sh`): (f) with a wide schedule, scrolling the box horizontally by 400px leaves each `__task` cell's bounding-box `x` unchanged (fixed list) while the bar's `x` moves; (g) scrolling vertically leaves the axis row's `y` unchanged (sticky header); (h) there is no horizontal page scroll (`document.scrollingElement.scrollWidth <= clientWidth`); (i) after switching Week to Day the leftmost visible date is the same before and after (scroll anchoring); (j) under `reducedMotion: "reduce"` the bar `transition-duration` is `0s`; (k) at a narrow viewport the task column is not wider than 40% and a bar stays reachable by scroll.
+2. Add the i18n keys `zoom_aria_label`, `zoom_day`, `zoom_week`, `zoom_month` to the five locales.
+3. Implement the zoom control with the existing `Button` (`aria-pressed`), `zoom`/`defaultZoom`/`onZoomChange` through `useControllableState`; re-tier the axis from `scale.ticks`; on a zoom change recompute `scrollLeft` from the left-most visible date (a `useLayoutEffect`, no scroll listener); no `scroll` event synchronisation anywhere (single scroll box). Extend `index.scss` (toolbar, transition on `left`/`width` with the duration/ease tokens, removed under reduced motion). Tests (a)-(k) turn green; the sticky assertions (f), (g) are the regression guard for the "fixed list" claim (jsdom cannot measure them: this is the only place Playwright CT is justified besides focus).
+4. Stories `Zoomed` (controlled) and `WideSchedule`; a11y addon pass in the three themes; stop the server.
+5. Run `yarn lint`, `yarn check-locales`, `yarn test --concurrency=1`, `yarn build`, and `yarn test:ct` (chromium) for `e2e/gantt/`; restore `cunningham-tokens-sass.scss` if rewritten. No second changeset (t02's minor covers the component). The PR carries `Artifact: updated (version <id>)` (zoom prop, toolbar, keyboard notes added), done by the main agent.
+
+### t04-gantt-keyboard
+- **size:** M
+- **estimate:** 1d
+- **depends on:** t03-gantt-zoom-scroll
+- **scope:** roving-tabindex keyboard model over the task rows, accessible-name announcement checks, focus-ring verification in a real browser, the MDX docs page. Covers AC4 (the ARIA/name half is in t02: this ticket adds navigation and the end-to-end announcement check).
+
+Tasks:
+1. Extend `Gantt.spec.tsx` first and see it fail: (a) only one task row has `tabindex="0"` (the first initially), the rest `-1`; `Tab` from before the chart focuses that row and the next `Tab` lands on the zoom control or leaves the chart, not on the second row [fails: rows not focusable]; (b) `{ArrowDown}` focuses the next row, `{ArrowUp}` the previous, and the roving `tabindex` follows focus; (c) no wrap: `ArrowUp` on the first row and `ArrowDown` on the last keep focus and are not `defaultPrevented`; (d) `{Home}` / `{End}` focus the first / last task row; (e) the handler ignores events from the zoom buttons and with `altKey`/`shiftKey`/`ctrlKey`/`metaKey` (reserved for s23): arrows with a modifier are not `defaultPrevented`; (f) the focused row's `aria-label` equals the composed string for a dated, a one-day and a no-dates task (AC4 announces name and dates), fr-FR and en-US; (g) navigation never changes the data or fires `onZoomChange`; (h) rows added/removed (rerender) keep exactly one tab stop and a valid focus (removing the focused row moves the tab stop to the nearest row); (i) axe (`jest-axe` is **not** installed: use the Storybook a11y/axe-core run as in s11, not a new dependency) — assert the DOM structure instead: header row and task rows are direct `row` children of the `grid`, every `row` has a `rowheader`/`gridcell` or `columnheader`.
+2. Write the Playwright CT test first: `Tab` focuses the first row, `ArrowDown`/`ArrowUp`/`End`/`Home` move focus (`toBeFocused`); the focused row's computed `outline-style` is `solid`, `outline-width` `2px`, the ring is **fully inside** the scroller's bounding box and not hidden under the sticky task column; after a mouse click the outline is not shown; the focused row scrolls into view horizontally when its bar is off-screen (focus does not jump the sticky column).
+3. Implement the roving tabindex in `Gantt.tsx`: a native `onKeyDown` on the grid (RAC is not involved here, so React's handler works), acting only when `event.target.closest('[role="row"][data-task-row]')` belongs to this grid and no modifier key is held; `ArrowDown/Up`, `Home/End`; `preventDefault` only when focus moved; state is the index of the tab stop (a ref, not state, to avoid rerender per key). Inline, ~25 lines, no new hook. Tests (a)-(i) and the CT keyboard assertions turn green.
+4. Add `Gantt.mdx` (structure, data model and the calendar-date contract with inclusive end, zoom, `today`, no-dates behaviour, keyboard table: Tab, Arrow Up/Down, Home, End, announcement format, performance ceiling and `content-visibility`, tokens table, forward-compat note); remove `autodocs` from the stories (the MDX is the Docs page, as Accordion/Card). Run the a11y addon on every story in `default`, `dark`, `dsfr-light`, drive the stories once with the keyboard; stop the server.
+5. Run `yarn lint`, `yarn check-locales`, `yarn test --concurrency=1`, `yarn build`, `yarn test:ct` (chromium, `e2e/gantt/`); restore `cunningham-tokens-sass.scss` if rewritten. No second changeset. The PR carries `Artifact: updated (version <id>)`, done by the main agent.
+
+## US totals
+- **Person-days:** 5.0 (1.0 + 1.5 + 1.5 + 1.0)
+- **Size mix:** 1×S, 3×M
+
+## Run interdicts
+- **No new dependency** (`@internationalized/date`, `react-aria-components`, already installed, suffice); **no virtualiser**; no ADR needed, so ADR 005 stays free. If virtualisation proves necessary, stop: that is an ADR and an owner decision.
+- No editing, no drag and drop, no `components/dnd/` (s23); no dependency arrows or overlay layer (s24); no per-task colour; no hierarchy/`treegrid`.
+- Do not edit generated `src/cunningham-tokens.*`; regenerate with `yarn build-theme`.
+- No literal colour, spacing or radius in `index.scss`; literals only in `tokens.ts` (`1px`, `2px`, `-2px`, `4px`, `2.5rem`, `1.25rem`, `16rem`, `0.75rem`, `0.25rem`, `2.5rem` day widths: documented design-system gaps).
+- No change to any existing component, token, hook (`useArrowRoving`, `useControllableState` untouched), story or locale key.
+- No time-zone arithmetic on `Date`: calendar dates and `CalendarDate` only.
+- A ticket never merges with a red test; no `it.fails` is expected (new component).
+
+## The point everything turns on
+Single scroll box with CSS `position: sticky` instead of two panes: it removes the scroll synchronisation, keeps one DOM row per task (one `aria-rowindex`, one announcement) and makes the fixed list a pure-CSS guarantee, verified in a real browser by t03 (jsdom cannot). If the owner prefers two panes, t02/t03 change (a scroll sync layer and a doubled a11y tree), not t01. Second: a `grid` role with a roving tabindex on rows, and the row's composed `aria-label` as the single announcement of name and dates.
+
+## Files touched
+- t01: `components/gantt/{scale.ts,types.ts,scale.spec.ts}` (new).
+- t02: `components/gantt/{index.tsx,Gantt.tsx,types.ts,tokens.ts,index.scss,gantt.stories.tsx,Gantt.spec.tsx}` (new/extended); `packages/ui-components/cunningham.ts`; `src/library.scss`; `src/index.ts`; the five `src/locales/*.json`; regenerated `src/cunningham-tokens.{css,scss,ts}` (and `-sass.scss`: only the gantt hunks); `.changeset/<name>.md` (new); the artifact.
+- t03: `Gantt.tsx`, `index.scss`, `Gantt.spec.tsx`, stories, locales; `e2e/gantt/gantt.spec.tsx` and `e2e/helpers/mount-gantt.tsx` (new); the artifact.
+- t04: `Gantt.tsx`, `Gantt.spec.tsx`, `e2e/gantt/gantt.spec.tsx`, `Gantt.mdx` (new), stories; the artifact.
+
+## Test strategy
+- Unit (Vitest + Testing Library, jsdom): scale maths including DST and `TZ`, ARIA structure, bar/today geometry from custom properties, no-dates rows, zoom (controlled/uncontrolled), keyboard, composed names in two locales, token existence, textual stylesheet checks, contrast over six themes. jsdom has no layout: sticky and scroll are not tested there.
+- Component (Playwright, chromium): fixed task list under horizontal scroll, sticky header, no page scroll, scroll anchoring on zoom, real `Tab`/arrow focus, ring inside the box, reduced motion. Webkit/firefox not installed locally: not verified.
+- Manual: Storybook a11y addon on every story in `default`, `dark`, `dsfr-light`; one keyboard pass; performance smoke on `LongSchedule` (100 rows) by eye, recorded as a limit in the PR (no profiler run).
+- Prerequisite: dependencies installed; a chromium for Playwright CT.
+
+## Definition of Done
+Single PR into `next` per ticket, structured description with `Artifact: updated (version <id>)` for t02-t04 (the Gantt page, its `Composants` entry and `project/canvas.json`, updated by the main agent after the implementer; `/dm-review` refuses the ticket without the line), readable diff, `yarn lint`, `yarn check-locales`, `yarn test --concurrency=1`, `yarn build` pass (t03/t04 also `yarn test:ct` on chromium), one changeset (minor) shipped with t02, review passed (no open critical or major), merged to `next`.
