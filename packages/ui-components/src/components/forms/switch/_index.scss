@@ -98,4 +98,36 @@
   &--full-width {
     width: 100%;
   }
+
+  // Small size: label font and gap come from the shared `.c__checkbox--small`.
+  &.c__checkbox--small {
+    .c__switch__rail {
+      width: var(--c--components--forms-switch--small-rail-width);
+      height: var(--c--components--forms-switch--small-rail-height);
+
+      &:before {
+        width: var(--c--components--forms-switch--small-handle-size);
+        height: var(--c--components--forms-switch--small-handle-size);
+        left: var(--c--components--forms-switch--small-handle-offset);
+        top: var(--c--components--forms-switch--small-handle-offset);
+      }
+    }
+
+    input:checked + .c__switch__rail:before {
+      transform: translateX(
+        calc(
+          var(--c--components--forms-switch--small-rail-width) -
+            var(--c--components--forms-switch--small-handle-size) - 2 *
+            var(--c--components--forms-switch--small-handle-offset)
+        )
+      );
+    }
+
+    &.c__switch--right .c__field__footer {
+      padding-left: calc(
+        var(--c--components--forms-switch--small-rail-width) +
+          var(--c--globals--spacings--xs)
+      );
+    }
+  }
 }
