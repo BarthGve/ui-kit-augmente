@@ -333,7 +333,8 @@
       "announce_changed": "{name} reprogramada: del {start} al {end}",
       "announce_cancelled": "{name}: cambio cancelado, fechas restablecidas",
       "limit_axis": "Límite del gráfico alcanzado",
-      "limit_end_before_start": "El final no puede ser anterior al inicio"
+      "limit_end_before_start": "El final no puede ser anterior al inicio",
+      "edit_instructions": "Alt con flecha izquierda o derecha mueve la tarea un paso del zoom. Mayús con flecha izquierda o derecha cambia su fecha de fin. Intro confirma, Escape cancela."
     }
   }
 }

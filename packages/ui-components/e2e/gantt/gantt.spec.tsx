@@ -720,3 +720,80 @@ test.describe("Gantt pointer resize", () => {
     expect(calls[0]).toEqual(["s", { start: "2026-04-10", end: "2026-04-13" }]);
   });
 });
+
+// Keyboard editing (s23): real keys on a focused row.
+test.describe("Gantt keyboard edit", () => {
+  type Call = [string, GanttTaskChange];
+  const recorder = () => {
+    const calls: Call[] = [];
+    return {
+      calls,
+      onTaskChange: (id: string, c: GanttTaskChange) => calls.push([id, c]),
+    };
+  };
+  const perDay = async (page: Page, id: string) => {
+    const b = bar(page, id);
+    const span = Number(
+      await b.evaluate((el) =>
+        (el as HTMLElement).style.getPropertyValue("--gantt-span"),
+      ),
+    );
+    return (await box(b)).width / span;
+  };
+
+  test("Alt+ArrowRight then Enter moves the bar one week; Escape puts it back; no history move", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onTaskChange } = recorder();
+    await mount(<EditableGantt onTaskChange={onTaskChange} />);
+    const url = page.url();
+    const px = await perDay(page, "t1");
+    const before = await box(bar(page, "t1"));
+    await row(page, 3).focus();
+    await page.keyboard.press("Alt+ArrowRight");
+    expect((await box(bar(page, "t1"))).x).toBeCloseTo(before.x + 7 * px, 0);
+    expect(calls).toEqual([]);
+    await page.keyboard.press("Enter");
+    await expect.poll(() => calls.length).toBe(1);
+    // t1: 2026-01-17 to 2026-01-26.
+    expect(calls[0]).toEqual([
+      "t1",
+      { start: "2026-01-24", end: "2026-02-02" },
+    ]);
+    const moved = await box(bar(page, "t1"));
+    expect(moved.x).toBeCloseTo(before.x + 7 * px, 0);
+
+    await page.keyboard.press("Alt+ArrowLeft");
+    await page.keyboard.press("Alt+ArrowLeft");
+    expect((await box(bar(page, "t1"))).x).toBeCloseTo(moved.x - 14 * px, 0);
+    await page.keyboard.press("Escape");
+    expect((await box(bar(page, "t1"))).x).toBeCloseTo(moved.x, 0);
+    await page.waitForTimeout(100);
+    expect(calls).toHaveLength(1);
+    expect(page.url()).toBe(url);
+    await expect(row(page, 3)).toBeFocused();
+  });
+
+  test("after Enter the row keeps the focus and the tab stop, and its bar is in view", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<EditableGantt />);
+    await scrollBy(scroller(page), 3000, 0);
+    // Focused without scrolling: the bar of t0 is out of view.
+    await row(page, 2).evaluate((el) =>
+      (el as HTMLElement).focus({ preventScroll: true }),
+    );
+    const column = await box(taskCells(page).first());
+    const box_ = await box(scroller(page));
+    expect((await box(bar(page, "t0"))).x).toBeLessThan(column.x);
+    await page.keyboard.press("Alt+ArrowRight");
+    await page.keyboard.press("Enter");
+    await expect(row(page, 2)).toBeFocused();
+    await expect(row(page, 2)).toHaveAttribute("tabindex", "0");
+    const after = await box(bar(page, "t0"));
+    expect(after.x).toBeGreaterThanOrEqual(column.x + column.width - 1);
+    expect(after.x + after.width).toBeLessThanOrEqual(box_.x + box_.width);
+  });
+});
