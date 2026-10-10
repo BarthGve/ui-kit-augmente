@@ -13,7 +13,7 @@ export const tokens = (defaults: DefaultTokens) => ({
   "trigger-padding": defaults.globals.spacings.base,
   "panel-padding": defaults.globals.spacings.base,
   "icon-size": "1.5rem",
-  "focus-ring-color": defaults.contextuals.border.semantic.brand.primary,
+  "focus-ring-color": defaults.contextuals.content.semantic.brand.tertiary,
   "focus-ring-width": "2px",
   "focus-ring-offset": "-2px",
 });
