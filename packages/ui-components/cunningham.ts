@@ -16,6 +16,7 @@ import { tokens as radioTokens } from "./src/components/forms/radio/tokens";
 import { tokens as selectTokens } from "./src/components/forms/select/tokens";
 import { tokens as switchTokens } from "./src/components/forms/switch/tokens";
 import { tokens as textAreaTokens } from "./src/components/forms/text-area/tokens";
+import { tokens as ganttTokens } from "./src/components/gantt/tokens";
 import { tokens as modalTokens } from "./src/components/modal/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
 import { tokens as tooltipTokens } from "./src/components/tooltip/tokens";
@@ -36,6 +37,7 @@ const componentTokenDefaults = {
   "forms-select": selectTokens(defaultTokenRefs),
   "forms-switch": switchTokens(defaultTokenRefs),
   "forms-textarea": textAreaTokens(defaultTokenRefs),
+  gantt: ganttTokens(defaultTokenRefs),
   modal: modalTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
   tooltip: tooltipTokens(defaultTokenRefs),

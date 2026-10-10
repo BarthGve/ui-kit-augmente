@@ -17,6 +17,16 @@ const MS_PER_DAY = 86_400_000;
 // 16px), kept for the pixel-to-date inverse (s23); keep both in sync.
 const DAY_WIDTH: Record<GanttZoom, number> = { day: 40, week: 12, month: 4 };
 
+/**
+ * Widest span drawn, in days (about ten years): the dates are caller data, so
+ * the axis, its ticks and the track width must stay bounded. A wider schedule
+ * is windowed around today (or from its earliest start when today is before
+ * it); bars are clipped to the window, and a task wholly outside it keeps its
+ * row and announced dates but draws no bar. The axis padding to whole weeks
+ * or months adds at most 37 days.
+ */
+export const MAX_DAYS = 3660;
+
 export type Tick = { date: CalendarDate; index: number };
 export type Position = { start: number; span: number };
 
@@ -61,6 +71,13 @@ export const buildScale = ({
     if (end.compare(last) > 0) last = end;
   }
 
+  if (dayIndex(first, last) >= MAX_DAYS) {
+    const floor = today.subtract({ days: MAX_DAYS / 2 });
+    if (first.compare(floor) < 0) first = floor;
+    const ceiling = first.add({ days: MAX_DAYS - 1 });
+    if (last.compare(ceiling) > 0) last = ceiling;
+  }
+
   const origin = startOfWeek(first, locale);
   const end = zoom === "month" ? endOfMonth(last) : endOfWeek(last, locale);
   const days = dayIndex(origin, end) + 1;
@@ -90,10 +107,10 @@ export const buildScale = ({
     positionOf: (task: GanttTask): Position | null => {
       const span = spanOf(task);
       if (!span) return null;
-      return {
-        start: dayIndex(origin, span.start),
-        span: dayIndex(span.start, span.end) + 1,
-      };
+      // Clipped to the window (a no-op unless the range exceeds MAX_DAYS).
+      const start = Math.max(dayIndex(origin, span.start), 0);
+      const stop = Math.min(dayIndex(origin, span.end), days - 1);
+      return stop < start ? null : { start, span: stop - start + 1 };
     },
   };
 };

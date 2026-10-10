@@ -314,6 +314,16 @@
       "region": "Mededeling",
       "close": "Sluit",
       "newWindow": "(opent in een nieuw venster)"
+    },
+    "gantt": {
+      "task_column": "Taak",
+      "schedule_column": "Planning",
+      "row_dates_aria": "{name}, van {start} tot {end}",
+      "row_date_aria": "{name}, op {date}",
+      "row_no_dates_aria": "{name}, geen datums",
+      "no_dates": "Geen datums",
+      "today": "Vandaag",
+      "empty": "Geen taken"
     }
   }
 }

@@ -314,6 +314,16 @@
       "region": "Hinweis",
       "close": "Schließen",
       "newWindow": "(öffnet in einem neuen Fenster)"
+    },
+    "gantt": {
+      "task_column": "Aufgabe",
+      "schedule_column": "Zeitplan",
+      "row_dates_aria": "{name}, vom {start} bis {end}",
+      "row_date_aria": "{name}, am {date}",
+      "row_no_dates_aria": "{name}, ohne Datum",
+      "no_dates": "Ohne Datum",
+      "today": "Heute",
+      "empty": "Keine Aufgaben"
     }
   }
 }
