@@ -316,6 +316,10 @@
       "newWindow": "(opens in a new window)"
     },
     "gantt": {
+      "zoom_aria_label": "Zoom level",
+      "zoom_day": "Day",
+      "zoom_week": "Week",
+      "zoom_month": "Month",
       "task_column": "Task",
       "schedule_column": "Schedule",
       "row_dates_aria": "{name}, from {start} to {end}",

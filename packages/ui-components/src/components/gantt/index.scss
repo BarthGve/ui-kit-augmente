@@ -8,13 +8,19 @@
   // gradient cannot follow irregular months; months are marked in the axis).
   --gantt-grid-step: calc(7 * var(--gantt-day-width));
   --gantt-line-color: var(--c--components--gantt--border-color);
-  --gantt-task-width: var(--c--components--gantt--task-column-width);
+  // At most 40% of the chart: container units, so the grid width, the task
+  // column and the today line all resolve against the same box.
+  --gantt-task-width: min(
+    var(--c--components--gantt--task-column-width),
+    40cqi
+  );
 
   // Bounded by a sized parent, so the scroller (not the page) scrolls.
   display: flex;
   flex-direction: column;
   max-block-size: 100%;
   min-width: 0;
+  container-type: inline-size;
   color: var(--c--components--gantt--color);
 
   &[data-zoom="day"] {
@@ -24,6 +30,20 @@
 
   &[data-zoom="month"] {
     --gantt-day-width: var(--c--components--gantt--day-width--month);
+  }
+
+  &__zoom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--c--globals--spacings--3xs);
+    padding-block-end: var(--c--globals--spacings--3xs);
+
+    // Button has no pressed look and its secondary fill is under 3:1 on the
+    // page: the underline is the non-colour cue (>= 3:1, six themes).
+    [aria-pressed="true"] {
+      text-decoration: underline var(--c--components--gantt--focus-ring-width)
+        var(--c--components--gantt--focus-ring-color);
+    }
   }
 
   &__scroller {
@@ -199,6 +219,13 @@
       var(--c--components--gantt--bar-border-color);
     border-radius: var(--c--components--gantt--bar-radius);
     background-color: var(--c--components--gantt--bar-background-color);
+    // Only the bars move on a zoom change: the grid width must not lag, or
+    // the anchored scroll offset would be clamped to the old width.
+    transition:
+      inset-inline-start var(--c--globals--transitions--duration)
+        var(--c--globals--transitions--ease-out),
+      inline-size var(--c--globals--transitions--duration)
+        var(--c--globals--transitions--ease-out);
   }
 
   // Before the rows in the DOM and without z-index: each row is a stacking
@@ -241,11 +268,16 @@
     &__row:focus-visible::after {
       outline-color: Highlight;
     }
+
+    &__zoom [aria-pressed="true"] {
+      text-decoration-color: Highlight;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     &__task,
-    &__track {
+    &__track,
+    &__bar {
       transition: none;
     }
   }

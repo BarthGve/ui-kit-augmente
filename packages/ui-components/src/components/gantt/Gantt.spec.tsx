@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CunninghamProvider } from ":/components/provider";
 import { Gantt, GanttProps, GanttTask } from "./index";
 import { MAX_DAYS } from "./scale";
@@ -159,8 +159,127 @@ describe("Gantt axis", () => {
   });
 });
 
+describe("Gantt zoom (AC2)", () => {
+  const zoomButton = (name: string) => screen.getByRole("button", { name });
+  const pressed = () =>
+    within(screen.getByRole("group", { name: "Zoom level" }))
+      .getAllByRole("button")
+      .filter((b) => b.getAttribute("aria-pressed") === "true")
+      .map((b) => b.textContent);
+  const axisTicks = (container: HTMLElement) =>
+    container.querySelectorAll(
+      ".c__gantt__axis-tier[aria-hidden] .c__gantt__axis-label",
+    ).length;
+
+  it("offers Day, Week and Month in a labelled group, Week pressed by default", () => {
+    renderGantt();
+    const group = screen.getByRole("group", { name: "Zoom level" });
+    expect(
+      within(group)
+        .getAllByRole("button")
+        .map((b) => [b.textContent, b.getAttribute("aria-pressed")]),
+    ).toEqual([
+      ["Day", "false"],
+      ["Week", "true"],
+      ["Month", "false"],
+    ]);
+  });
+
+  it("uncontrolled: a click switches the scale and reports the zoom", async () => {
+    const user = userEvent.setup();
+    const onZoomChange = vi.fn();
+    const { container } = renderGantt({ onZoomChange });
+    // Week zoom, en-US, 2026-03-01 to 2026-04-11: 6 week ticks.
+    expect(axisTicks(container)).toBe(6);
+    await user.click(zoomButton("Day"));
+    expect(pressed()).toEqual(["Day"]);
+    expect(onZoomChange).toHaveBeenCalledWith("day");
+    // Day zoom: one tick per day of the range.
+    expect(axisTicks(container)).toBe(42);
+    expect(screen.getByRole("grid").closest("[data-zoom]")).toHaveAttribute(
+      "data-zoom",
+      "day",
+    );
+  });
+
+  it("uncontrolled: starts at defaultZoom", () => {
+    renderGantt({ defaultZoom: "month" });
+    expect(pressed()).toEqual(["Month"]);
+  });
+
+  it("controlled: clicks only request a zoom, the prop decides", async () => {
+    const user = userEvent.setup();
+    const onZoomChange = vi.fn();
+    const { container, rerender } = renderGantt({
+      zoom: "month",
+      onZoomChange,
+    });
+    await user.click(zoomButton("Day"));
+    expect(onZoomChange).toHaveBeenCalledWith("day");
+    expect(pressed()).toEqual(["Month"]);
+    expect(screen.getByRole("grid").closest("[data-zoom]")).toHaveAttribute(
+      "data-zoom",
+      "month",
+    );
+    rerender(
+      <CunninghamProvider currentLocale="en-US">
+        <Gantt
+          aria-label="Project schedule"
+          tasks={TASKS}
+          today="2026-03-23"
+          zoom="day"
+          onZoomChange={onZoomChange}
+        />
+      </CunninghamProvider>,
+    );
+    expect(pressed()).toEqual(["Day"]);
+    expect(axisTicks(container)).toBe(42);
+  });
+
+  it("controlled without a callback: follows the prop, ignores clicks", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderGantt({ zoom: "month" });
+    await user.click(zoomButton("Day"));
+    expect(pressed()).toEqual(["Month"]);
+    rerender(
+      <CunninghamProvider currentLocale="en-US">
+        <Gantt
+          aria-label="Project schedule"
+          tasks={TASKS}
+          today="2026-03-23"
+          zoom="week"
+        />
+      </CunninghamProvider>,
+    );
+    expect(pressed()).toEqual(["Week"]);
+  });
+
+  it("native buttons: Tab reaches them, Enter and Space switch", async () => {
+    const user = userEvent.setup();
+    renderGantt();
+    await user.tab();
+    expect(zoomButton("Day")).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(pressed()).toEqual(["Day"]);
+    await user.tab();
+    expect(zoomButton("Week")).toHaveFocus();
+    await user.keyboard(" ");
+    expect(pressed()).toEqual(["Week"]);
+  });
+
+  it("labels the control in the active locale", () => {
+    renderGantt({}, "fr-FR");
+    const group = screen.getByRole("group", { name: "Niveau de zoom" });
+    expect(
+      within(group)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["Jour", "Semaine", "Mois"]);
+  });
+});
+
 describe("Gantt tab stop", () => {
-  it("is a single tab stop on the first task row; the next Tab leaves the grid", async () => {
+  it("is a single tab stop on the first task row, after the zoom buttons; the next Tab leaves the grid", async () => {
     const user = userEvent.setup();
     render(
       <CunninghamProvider>
@@ -175,6 +294,10 @@ describe("Gantt tab stop", () => {
       .slice(1)
       .forEach((row) => expect(row).toHaveAttribute("tabindex", "-1"));
     screen.getByRole("button", { name: "Before" }).focus();
+    // Day, Week, Month, then the first row (DOM order = visual order).
+    await user.tab();
+    await user.tab();
+    await user.tab();
     await user.tab();
     expect(rows[0]).toHaveFocus();
     await user.tab();
@@ -310,6 +433,17 @@ describe("Gantt stylesheet", () => {
     expect(source).not.toMatch(/\d(px|rem)\b/);
   });
 
+  it("marks the pressed zoom with an underline in the ring tokens, kept in forced colors", () => {
+    const source = scss();
+    const pressed = blocks(source, /\[aria-pressed="true"\]/);
+    expect(pressed).toMatch(
+      /text-decoration:\s*underline\s+var\(--c--components--gantt--focus-ring-width\)\s+var\(--c--components--gantt--focus-ring-color\);/,
+    );
+    expect(blocks(source, /@media \(forced-colors: active\)/)).toMatch(
+      /\[aria-pressed="true"\][^{]*\{\s*text-decoration-color:\s*Highlight;/,
+    );
+  });
+
   it("freezes the task column and the axis with sticky positioning", () => {
     const source = scss();
     expect(blocks(source, /&__task\b/)).toMatch(/position:\s*sticky;/);
@@ -405,6 +539,20 @@ describe("Gantt contrast", () => {
           resolveVar(vars, gantt("header-background-color")),
         ),
       ).toBeGreaterThanOrEqual(3);
+      // Pressed zoom cue (underline drawn with the ring colour, see the
+      // stylesheet test) on the page and on the pressed button's fill.
+      for (const background of [
+        "--c--contextuals--background--surface--primary",
+        "--c--contextuals--background--semantic--brand--secondary",
+      ]) {
+        expect(
+          contrast(
+            resolveVar(vars, gantt("focus-ring-color")),
+            resolveVar(vars, background),
+          ),
+          `pressed cue on ${background}`,
+        ).toBeGreaterThanOrEqual(3);
+      }
     },
   );
 });

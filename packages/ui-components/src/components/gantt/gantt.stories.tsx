@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 import { CalendarDate } from "@internationalized/date";
 import { Gantt } from "./index";
-import type { GanttTask } from "./types";
+import type { GanttTask, GanttZoom } from "./types";
 
 const TASKS: GanttTask[] = [
   {
@@ -70,7 +71,7 @@ export const WithoutDates: Story = {
 
 export const OneDayTasks: Story = {
   args: {
-    zoom: "day",
+    defaultZoom: "day",
     tasks: [
       { id: "a", name: "Kick-off", start: "2026-03-23", end: "2026-03-23" },
       { id: "b", name: "Demo", start: "2026-03-26", end: "2026-03-26" },
@@ -85,9 +86,22 @@ export const OneDayTasks: Story = {
 };
 
 export const LongSchedule: Story = {
-  args: { tasks: LONG, zoom: "month", today: "2026-09-01" },
+  args: { tasks: LONG, defaultZoom: "month", today: "2026-09-01" },
 };
 
 export const Empty: Story = {
   args: { tasks: [] },
+};
+
+// Controlled: the story owns the zoom and shows it.
+export const Zoomed: Story = {
+  render: function Render(args) {
+    const [zoom, setZoom] = useState<GanttZoom>("day");
+    return <Gantt {...args} zoom={zoom} onZoomChange={setZoom} />;
+  },
+};
+
+// 30 tasks over five months in day zoom: both axes scroll.
+export const WideSchedule: Story = {
+  args: { tasks: LONG.slice(0, 30), defaultZoom: "day" },
 };

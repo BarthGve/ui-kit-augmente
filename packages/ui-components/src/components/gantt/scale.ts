@@ -21,7 +21,7 @@ const DAY_WIDTH: Record<GanttZoom, number> = { day: 40, week: 12, month: 4 };
  * Widest span drawn, in days (about ten years): the dates are caller data, so
  * the axis, its ticks and the track width must stay bounded. A wider schedule
  * is windowed around today (or from its earliest start when today is before
- * it); bars are clipped to the window, and a task wholly outside it keeps its
+ * it, or on its last days when it ends before that window); bars are clipped to the window, and a task wholly outside it keeps its
  * row and announced dates but draws no bar. The axis padding to whole weeks
  * or months adds at most 37 days.
  */
@@ -72,7 +72,11 @@ export const buildScale = ({
   }
 
   if (dayIndex(first, last) >= MAX_DAYS) {
-    const floor = today.subtract({ days: MAX_DAYS / 2 });
+    // Around today, but never past the data: data wholly before that keeps
+    // the window on its last days.
+    let floor = today.subtract({ days: MAX_DAYS / 2 });
+    const lastWindow = last.subtract({ days: MAX_DAYS - 1 });
+    if (lastWindow.compare(floor) < 0) floor = lastWindow;
     if (first.compare(floor) < 0) first = floor;
     const ceiling = first.add({ days: MAX_DAYS - 1 });
     if (last.compare(ceiling) > 0) last = ceiling;
