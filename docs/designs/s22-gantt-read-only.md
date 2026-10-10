@@ -23,6 +23,7 @@ Anatomy of one `Gantt`: a single scroll box (both axes) with a sticky header and
 - **Bar**: a rounded rectangle positioned by `--gantt-start` and sized by `--gantt-span` (integers, in days) times `--gantt-day-width`. Minimum drawn width 1 unit of the zoom. Bar height smaller than the row so rows read as lanes.
 - **Today marker**: a 2px vertical line spanning header + rows at today's column, with a small label chip "Today" in the axis; not drawn when today is outside the axis range. Marked by line + label (shape), not colour alone.
 - **Task without dates** (no dates, one date only, or `end < start`): the row exists, the track is empty, the task cell shows the name and a muted "No dates" text. No bar, no placeholder shape.
+- **Bounded range** (t02, security review): the dates are caller data, so the drawn range is capped at `MAX_DAYS` = 3660 days (about ten years, plus at most 37 days of week/month padding) in `scale.ts`; ticks, axis labels and track width are bounded with it. A wider schedule is windowed around today (from today minus five years, or from the earliest start when that is later); bars are clipped at the window edges; a task wholly outside the window keeps its row and its announced dates, shows no bar and no "No dates" text. The task count is not capped (caller-controlled; documented performance ceiling, see the MDX in t04).
 - Zoom control: a group of three toggle buttons (`role="group"` labelled, `aria-pressed`) using the existing `Button` (variant `tertiary`/`secondary`, size `small`), not a new component. Day = 40px per day, Week = 12px per day, Month = 4px per day (`--gantt-day-width`, literal gap 4).
 - Row height 40px (touch target above 24px); first column width `min(16rem, 40%)`, truncated names with `text-overflow: ellipsis` and a `title`-free full name through the accessible name.
 - Variants: **none**. One look, one bar colour (no per-task colour in the data model).
@@ -61,8 +62,8 @@ Declared in `src/components/gantt/tokens.ts`, registered as `gantt` in `cunningh
 | `border-color` | `contextuals.border.surface.primary` | gray-100 |
 | `border-width` | `1px` | literal (gap 2) |
 | `row-background-color--hover` | `contextuals.background.semantic.neutral.tertiary` | gray-050 |
-| `bar-background-color` | `contextuals.background.semantic.brand.primary` | brand-550 |
-| `bar-border-color` | `contextuals.border.semantic.brand.primary` | brand-550 |
+| `bar-background-color` | `contextuals.content.semantic.brand.tertiary` | brand-550 (see note below) |
+| `bar-border-color` | `contextuals.content.semantic.brand.tertiary` | brand-550 (see note below) |
 | `bar-radius` | `4px` | literal (gap 2; Button radius) |
 | `bar-height` | `1.25rem` | literal (gap 3) |
 | `row-height` | `2.5rem` | literal (gap 3), 40px |
@@ -75,10 +76,12 @@ Declared in `src/components/gantt/tokens.ts`, registered as `gantt` in `cunningh
 | `focus-ring-width` | `2px` | literal (gap 2) |
 | `focus-ring-offset` | `-2px` | literal (gap 2): inside the row |
 
-BEM classes: `c__gantt`, `__toolbar`, `__zoom`, `__scroller`, `__axis`, `__axis-tier`, `__axis-label`, `__row`, `__task`, `__track`, `__bar`, `__today`, `__empty`; state through attributes (`[data-no-dates]`, `[data-today]`). No literal colour, spacing or radius in `index.scss`. Contrast of the bar (>= 3:1 vs `surface.secondary` and the row hover) and of the ring (>= 3:1 vs surface and hover) is checked numerically in the six themes in the plan (technique of `button/focus-ring.spec.tsx`); the today colour is checked against the axis background.
+BEM classes: `c__gantt`, `__toolbar`, `__zoom`, `__scroller`, `__axis`, `__axis-tier`, `__axis-label`, `__row`, `__task`, `__track`, `__bar`, `__today`, `__empty`; state through attributes (`[data-no-dates]`, `[data-today]`). No literal colour, spacing or radius in `index.scss`. Contrast of the bar fill (>= 3:1 vs `surface.secondary` and the row hover) and of the ring (>= 3:1 vs surface and hover) is checked numerically in the six themes in the plan (technique of `button/focus-ring.spec.tsx`); the today colour is checked against the axis background.
 
 ## Dark theme and the six themes
-All colours are contextual tokens, so dark/DSFR/ANCT follow without per-theme code. The bar's `brand.primary` background is dark-theme-validated by contrast check, not assumed. The hover tint and the sticky column both use opaque tokens (never `rgba`) so a scrolling bar never shows through the task name.
+All colours are contextual tokens, so dark/DSFR/ANCT follow without per-theme code. The bar colour is dark-theme-validated by contrast check, not assumed.
+
+**Bar colour (decided at t02, main agent, same route as the s11 ring; owner to confirm).** The first proposal, `background.semantic.brand.primary` (fill) and `border.semantic.brand.primary` (border), fails 3:1 in the three dark themes: fill 2.82-2.83 on `surface.secondary` and 2.07-2.08 on the hover `neutral.tertiary`, border 2.95-2.98 on the hover. Retained (A): fill and border `content.semantic.brand.tertiary`, >= 4.70 on both backgrounds in all six themes, the same brand-550 as before in the light themes (only the dark themes get a lighter bar); an existing token, no new value. Rejected: (B) keep the `background` fill and move only the border to `content.semantic.brand.tertiary` (the border carries the 3:1 and the fill is decorative): two colours per bar and the contrast test would target the border, not the fill; (C) `content.semantic.brand.secondary` / `primary` (>= 5.59 / 7.92): passes, but changes the light-theme look too. The hover tint and the sticky column both use opaque tokens (never `rgba`) so a scrolling bar never shows through the task name.
 
 ## Responsive behaviour
 Fluid width inside the consumer's container; the box scrolls on both axes, the task column shrinks to `min(16rem, 40%)` below the tablet breakpoint (never below 8rem). The zoom toolbar wraps. No breakpoint-specific layout otherwise; the consumer sets the block-size (default `max-height: 100%` of a sized parent; documented).

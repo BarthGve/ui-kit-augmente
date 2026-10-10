@@ -4,7 +4,9 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import { describe, expect, it } from "vitest";
-import { buildScale, dayIndex, formatDates, toDay } from "./scale";
+import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
+import { buildScale, dayIndex, formatDates, MAX_DAYS, toDay } from "./scale";
+import { tokens } from "./tokens";
 
 const d = (iso: string) => toDay(iso)!;
 const task = (start?: string, end?: string) => ({
@@ -148,6 +150,13 @@ describe("buildScale", () => {
       expect(at("month").dayWidth).toBeGreaterThan(0);
     });
 
+    it("matches the day-width tokens at 16px per rem, so they cannot drift", () => {
+      const t = tokens(defaultTokenRefs);
+      for (const zoom of ["day", "week", "month"] as const) {
+        expect(`${at(zoom).dayWidth / 16}rem`).toBe(t[`day-width--${zoom}`]);
+      }
+    });
+
     it("ticks every day in day zoom", () => {
       const scale = at("day");
       expect(scale.ticks).toHaveLength(scale.days);
@@ -188,6 +197,53 @@ describe("buildScale", () => {
         "2026-02-01",
         "2026-03-01",
       ]);
+    });
+  });
+
+  describe("bounded range", () => {
+    // Worst case of the end padding: up to 6 days before, a month after.
+    const LIMIT = MAX_DAYS + 37;
+    const forever = task("0001-01-01", "9999-12-31");
+
+    it.each(["day", "week", "month"] as const)(
+      "%s zoom: extreme dates give at most MAX_DAYS (+ padding) days and ticks, today inside",
+      (zoom) => {
+        const scale = buildScale({
+          tasks: [forever],
+          zoom,
+          today: today_,
+          locale: "fr-FR",
+        });
+        expect(scale.days).toBeLessThanOrEqual(LIMIT);
+        expect(scale.ticks.length).toBeLessThanOrEqual(LIMIT);
+        expect(scale.todayOffset).not.toBeNull();
+        // The bar is clipped to the window.
+        expect(scale.positionOf(forever)).toEqual({
+          start: 0,
+          span: scale.days,
+        });
+      },
+    );
+
+    it("keeps the earliest start when the window can start there", () => {
+      const scale = buildScale({
+        tasks: [task("2026-03-02", "9999-12-31")],
+        zoom: "week",
+        today: today_,
+        locale: "fr-FR",
+      });
+      expect(scale.origin).toEqual(d("2026-03-02"));
+      expect(scale.days).toBeLessThanOrEqual(LIMIT);
+    });
+
+    it("gives no bar to a valid task wholly outside the window", () => {
+      const scale = buildScale({
+        tasks: [forever, task("0001-01-01", "0001-01-10")],
+        zoom: "week",
+        today: today_,
+        locale: "fr-FR",
+      });
+      expect(scale.positionOf(task("0001-01-01", "0001-01-10"))).toBeNull();
     });
   });
 

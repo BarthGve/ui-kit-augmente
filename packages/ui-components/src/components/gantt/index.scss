@@ -1,0 +1,252 @@
+// Single scroll box: the task column and the axis are sticky, so the list
+// stays fixed while the timeline scrolls, without any scroll synchronisation.
+// Geometry comes from custom properties set in Gantt.tsx, in days:
+// --gantt-days (grid), --gantt-start and --gantt-span (bars, labels, today).
+.c__gantt {
+  --gantt-day-width: var(--c--components--gantt--day-width--week);
+  // Vertical guides: every day in day zoom, every week otherwise (a repeating
+  // gradient cannot follow irregular months; months are marked in the axis).
+  --gantt-grid-step: calc(7 * var(--gantt-day-width));
+  --gantt-line-color: var(--c--components--gantt--border-color);
+  --gantt-task-width: var(--c--components--gantt--task-column-width);
+
+  // Bounded by a sized parent, so the scroller (not the page) scrolls.
+  display: flex;
+  flex-direction: column;
+  max-block-size: 100%;
+  min-width: 0;
+  color: var(--c--components--gantt--color);
+
+  &[data-zoom="day"] {
+    --gantt-day-width: var(--c--components--gantt--day-width--day);
+    --gantt-grid-step: var(--gantt-day-width);
+  }
+
+  &[data-zoom="month"] {
+    --gantt-day-width: var(--c--components--gantt--day-width--month);
+  }
+
+  &__scroller {
+    min-block-size: 0;
+    overflow: auto;
+    border: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--border-color);
+    background-color: var(--c--components--gantt--background-color);
+  }
+
+  // Explicit width: off-screen rows are size-contained (content-visibility),
+  // so the width must not come from their content.
+  &__grid {
+    position: relative;
+    inline-size: calc(
+      var(--gantt-task-width) + var(--gantt-days) * var(--gantt-day-width)
+    );
+    min-inline-size: 100%;
+  }
+
+  &__axis,
+  &__row {
+    display: grid;
+    grid-template-columns: var(--gantt-task-width) 1fr;
+    border-block-end: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--border-color);
+  }
+
+  &__axis {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background-color: var(--c--components--gantt--header-background-color);
+    font-weight: var(--c--globals--font--weights--bold);
+  }
+
+  &__row {
+    position: relative;
+    block-size: var(--c--components--gantt--row-height);
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto var(--c--components--gantt--row-height);
+
+    &:hover > .c__gantt__task,
+    &:hover > .c__gantt__track {
+      background-color: var(
+        --c--components--gantt--row-background-color--hover
+      );
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    // Drawn on a layer above the sticky task cell, which would hide a plain
+    // outline of the row.
+    &:focus-visible::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      outline: var(--c--components--gantt--focus-ring-width) solid
+        var(--c--components--gantt--focus-ring-color);
+      outline-offset: var(--c--components--gantt--focus-ring-offset);
+      pointer-events: none;
+    }
+  }
+
+  // Opaque, so bars scroll under it.
+  &__task {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--c--components--gantt--padding);
+    min-width: 0;
+    padding-inline: var(--c--components--gantt--padding);
+    border-inline-end: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--border-color);
+    background-color: var(--c--components--gantt--background-color);
+    transition: background-color var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+  }
+
+  // Above the today chip, which scrolls under the corner cell.
+  &__axis > &__task {
+    z-index: 2;
+    background-color: var(--c--components--gantt--header-background-color);
+  }
+
+  &__task-name {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__no-dates {
+    flex: none;
+    color: var(--c--components--gantt--color--muted);
+    font-size: var(--c--globals--font--sizes--xs);
+  }
+
+  &__track {
+    position: relative;
+    background-image: repeating-linear-gradient(
+      to right,
+      transparent 0
+        calc(var(--gantt-grid-step) - var(--c--components--gantt--border-width)),
+      var(--gantt-line-color)
+        calc(var(--gantt-grid-step) - var(--c--components--gantt--border-width))
+        var(--gantt-grid-step)
+    );
+    transition: background-color var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+  }
+
+  &__axis > &__track {
+    background-image: none;
+  }
+
+  &__axis-tier {
+    position: relative;
+    block-size: calc(var(--c--components--gantt--row-height) / 2);
+
+    & + & {
+      border-block-start: var(--c--components--gantt--border-width) solid
+        var(--c--components--gantt--border-color);
+    }
+  }
+
+  &__axis-label {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--gantt-start) * var(--gantt-day-width));
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    inline-size: calc(var(--gantt-span) * var(--gantt-day-width));
+    padding-inline-start: var(--c--globals--spacings--3xs);
+    overflow: hidden;
+    border-inline-start: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--border-color);
+    color: var(--c--components--gantt--color--muted);
+    font-size: var(--c--globals--font--sizes--xs);
+    font-weight: var(--c--globals--font--weights--regular);
+    white-space: nowrap;
+
+    // Chip on top of the upper tier, starting at today's column.
+    &[data-today] {
+      z-index: 1;
+      inset-block-end: auto;
+      block-size: calc(var(--c--components--gantt--row-height) / 2);
+      inline-size: auto;
+      padding-inline-end: var(--c--globals--spacings--3xs);
+      border-inline-start: var(--c--components--gantt--today-width) solid
+        var(--c--components--gantt--today-color);
+      background-color: var(--c--components--gantt--header-background-color);
+      color: var(--c--components--gantt--today-color);
+      font-weight: var(--c--globals--font--weights--bold);
+    }
+  }
+
+  &__bar {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--gantt-start) * var(--gantt-day-width));
+    box-sizing: border-box;
+    inline-size: calc(var(--gantt-span) * var(--gantt-day-width));
+    block-size: var(--c--components--gantt--bar-height);
+    margin-block: auto;
+    border: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--bar-border-color);
+    border-radius: var(--c--components--gantt--bar-radius);
+    background-color: var(--c--components--gantt--bar-background-color);
+  }
+
+  // Before the rows in the DOM and without z-index: each row is a stacking
+  // context (content-visibility), so the line passes under the task column.
+  &__today {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      var(--gantt-task-width) + var(--gantt-start) * var(--gantt-day-width)
+    );
+    inline-size: var(--c--components--gantt--today-width);
+    background-color: var(--c--components--gantt--today-color);
+    pointer-events: none;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: var(--c--components--gantt--padding);
+    color: var(--c--components--gantt--color--muted);
+    text-align: center;
+  }
+
+  @media (forced-colors: active) {
+    --gantt-line-color: GrayText;
+
+    &__bar,
+    &__today {
+      forced-color-adjust: none;
+    }
+
+    &__bar {
+      border-color: CanvasText;
+      background-color: Highlight;
+    }
+
+    &__today {
+      background-color: Highlight;
+    }
+
+    &__row:focus-visible::after {
+      outline-color: Highlight;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__task,
+    &__track {
+      transition: none;
+    }
+  }
+}

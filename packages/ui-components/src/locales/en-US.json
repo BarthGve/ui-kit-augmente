@@ -314,6 +314,16 @@
       "region": "Announcement",
       "close": "Close",
       "newWindow": "(opens in a new window)"
+    },
+    "gantt": {
+      "task_column": "Task",
+      "schedule_column": "Schedule",
+      "row_dates_aria": "{name}, from {start} to {end}",
+      "row_date_aria": "{name}, {date}",
+      "row_no_dates_aria": "{name}, no dates",
+      "no_dates": "No dates",
+      "today": "Today",
+      "empty": "No tasks"
     }
   }
 }

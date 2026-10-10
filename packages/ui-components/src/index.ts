@@ -342,6 +342,16 @@ export type {
 } from "./components/accordion";
 
 export {
+  Gantt,
+} from "./components/gantt";
+
+export type {
+  GanttProps,
+  GanttTask,
+  GanttZoom,
+} from "./components/gantt";
+
+export {
   HeaderBanner,
 } from "./components/header-banner";
 
