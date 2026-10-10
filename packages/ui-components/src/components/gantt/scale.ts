@@ -121,6 +121,9 @@ export const buildScale = ({
 
 export type GanttScale = ReturnType<typeof buildScale>;
 
+/** Inclusive bounds of the drawn axis (a `GanttScale` is one). */
+export type Axis = Pick<GanttScale, "origin" | "end">;
+
 /** Long, localised start and end labels of a task, or null without a valid span. */
 export const formatDates = (task: GanttTask, locale: string) => {
   const span = spanOf(task);
