@@ -1164,6 +1164,381 @@ describe("Gantt pointer move (s23)", () => {
       expect(root()).toHaveAttribute("data-editing", "move");
     });
   });
+
+  describe("keyboard", () => {
+    // jsdom has no layout: the bar scrolled into view after Enter is the CT's.
+    beforeEach(() => {
+      Element.prototype.scrollIntoView = vi.fn();
+    });
+
+    const press = (
+      row: HTMLElement,
+      key: string,
+      modifiers: Record<string, boolean> = {},
+    ) => fireEvent.keyDown(row, { key, ...modifiers });
+    const alt = (row: HTMLElement, key: string) =>
+      press(row, key, { altKey: true });
+    const shift = (row: HTMLElement, key: string) =>
+      press(row, key, { shiftKey: true });
+    const focused = (name: string) => {
+      const row = taskRow(name);
+      row.focus();
+      return row;
+    };
+    const status = () => screen.getByRole("status");
+
+    it("Alt+Arrow previews a move from the original dates; Enter commits it once (AC3)", () => {
+      const onTaskChange = vi.fn();
+      editGantt({ onTaskChange });
+      const original = start("Write the brief");
+      const row = focused("Write the brief");
+      expect(alt(row, "ArrowRight")).toBe(false);
+      expect(root()).toHaveAttribute("data-editing", "move");
+      expect(Number(cssVar(ghost(), "--gantt-start"))).toBe(original);
+      expect(tip()).toHaveTextContent("March 3, 2026 to March 14, 2026");
+      expect(onTaskChange).not.toHaveBeenCalled();
+      alt(row, "ArrowRight");
+      alt(row, "ArrowLeft");
+      expect(start("Write the brief")).toBe(original + 1);
+      expect(press(row, "Enter")).toBe(false);
+      expect(onTaskChange).toHaveBeenCalledTimes(1);
+      expect(onTaskChange).toHaveBeenCalledWith("a", {
+        start: "2026-03-03",
+        end: "2026-03-14",
+      });
+      expect(root()).not.toHaveAttribute("data-editing");
+      expect(ghost()).toBeNull();
+      expect(row).toHaveFocus();
+      // No session: Enter is the page's again.
+      expect(press(row, "Enter")).toBe(true);
+      expect(onTaskChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("Shift+Arrow changes only the end, never before the start; Alt and Shift compose (AC2, AC3)", () => {
+      const onTaskChange = vi.fn();
+      const { unmount } = editGantt({ zoom: "week", onTaskChange });
+      let row = focused("Write the brief");
+      expect(shift(row, "ArrowRight")).toBe(false);
+      expect(root()).toHaveAttribute("data-editing", "resize-end");
+      press(row, "Enter");
+      expect(onTaskChange).toHaveBeenLastCalledWith("a", {
+        start: "2026-03-02",
+        end: "2026-03-20",
+      });
+      // Mar 13 - 1 week = Mar 6; - 2 weeks is before Mar 2: one day wide.
+      shift(row, "ArrowLeft");
+      shift(row, "ArrowLeft");
+      expect(barOf("Write the brief")).toHaveAttribute("data-clamped");
+      expect(tip()).toHaveTextContent("The end cannot be before the start");
+      expect(status()).toHaveTextContent("The end cannot be before the start");
+      shift(row, "ArrowLeft");
+      shift(row, "ArrowRight");
+      press(row, "Enter");
+      // Bounded: the refused step did not count, one step back is Mar 6.
+      expect(onTaskChange).toHaveBeenLastCalledWith("a", {
+        start: "2026-03-02",
+        end: "2026-03-06",
+      });
+      unmount();
+
+      editGantt({ onTaskChange });
+      row = focused("Write the brief");
+      alt(row, "ArrowRight");
+      shift(row, "ArrowLeft");
+      press(row, "Enter");
+      expect(onTaskChange).toHaveBeenCalledTimes(3);
+      expect(onTaskChange).toHaveBeenLastCalledWith("a", {
+        start: "2026-03-03",
+        end: "2026-03-13",
+      });
+    });
+
+    it("steps by the zoom unit: a week, or a clamped month undone exactly (AC4)", () => {
+      const onTaskChange = vi.fn();
+      const { unmount } = editGantt({ zoom: "week", onTaskChange });
+      let row = focused("Write the brief");
+      alt(row, "ArrowRight");
+      press(row, "Enter");
+      expect(onTaskChange).toHaveBeenLastCalledWith("a", {
+        start: "2026-03-09",
+        end: "2026-03-20",
+      });
+      unmount();
+
+      editGantt({ zoom: "month", onTaskChange });
+      row = focused("Build");
+      alt(row, "ArrowRight");
+      press(row, "Enter");
+      expect(onTaskChange).toHaveBeenLastCalledWith("b", {
+        start: "2026-02-28",
+        end: "2026-03-05",
+      });
+      // From the original: Jan 31 +1 -1 month is Jan 31, not Jan 28.
+      alt(row, "ArrowRight");
+      alt(row, "ArrowLeft");
+      press(row, "Enter");
+      expect(onTaskChange).toHaveBeenCalledTimes(2);
+    });
+
+    it("Escape cancels: original dates, announced, nothing reported, focus kept (AC5)", () => {
+      const onTaskChange = vi.fn();
+      const outer = vi.fn();
+      document.addEventListener("keydown", outer);
+      try {
+        editGantt({ onTaskChange });
+        const original = start("Write the brief");
+        const row = focused("Write the brief");
+        alt(row, "ArrowRight");
+        alt(row, "ArrowRight");
+        outer.mockClear();
+        expect(press(row, "Escape")).toBe(false);
+        expect(outer).not.toHaveBeenCalled();
+        expect(start("Write the brief")).toBe(original);
+        expect(root()).not.toHaveAttribute("data-editing");
+        expect(ghost()).toBeNull();
+        expect(tip()).toBeNull();
+        expect(status()).toHaveTextContent(
+          "Write the brief: change cancelled, dates restored",
+        );
+        expect(row).toHaveFocus();
+        press(row, "Enter");
+        expect(onTaskChange).not.toHaveBeenCalled();
+        outer.mockClear();
+        expect(press(row, "Escape")).toBe(true);
+        expect(outer).toHaveBeenCalledTimes(1);
+      } finally {
+        document.removeEventListener("keydown", outer);
+      }
+    });
+
+    it("leaving the row, the window, or navigating rows cancels; navigation is unchanged", () => {
+      const onTaskChange = vi.fn();
+      editGantt({ onTaskChange });
+      const original = start("Write the brief");
+      let row = focused("Write the brief");
+      const open = () => {
+        alt(row, "ArrowRight");
+        expect(root()).toHaveAttribute("data-editing", "move");
+      };
+      open();
+      focused("Build");
+      expect(root()).not.toHaveAttribute("data-editing");
+      expect(start("Write the brief")).toBe(original);
+
+      row = focused("Write the brief");
+      open();
+      fireEvent.blur(window);
+      expect(root()).not.toHaveAttribute("data-editing");
+
+      // The first row: ArrowUp moves nowhere, yet ends the session.
+      open();
+      expect(press(row, "ArrowUp")).toBe(true);
+      expect(root()).not.toHaveAttribute("data-editing");
+      expect(row).toHaveFocus();
+
+      open();
+      expect(press(row, "ArrowDown")).toBe(false);
+      expect(taskRow("Build")).toHaveFocus();
+      expect(root()).not.toHaveAttribute("data-editing");
+      expect(start("Write the brief")).toBe(original);
+      expect(onTaskChange).not.toHaveBeenCalled();
+      // Without a session the keys navigate as in s22.
+      expect(press(taskRow("Build"), "Home")).toBe(false);
+      expect(row).toHaveFocus();
+    });
+
+    it("leaves the chords to the browser when it cannot edit (guard)", () => {
+      const onTaskChange = vi.fn();
+      const chords = (row: HTMLElement) =>
+        [
+          alt(row, "ArrowRight"),
+          shift(row, "ArrowLeft"),
+          press(row, "ArrowRight", { ctrlKey: true }),
+          press(row, "ArrowRight", { metaKey: true }),
+          press(row, "ArrowRight", { altKey: true, shiftKey: true }),
+        ].every(Boolean) && !root().hasAttribute("data-editing");
+      const { unmount } = renderGantt({
+        tasks: EDIT_TASKS,
+        zoom: "day",
+        onTaskChange,
+      });
+      expect(chords(focused("Write the brief"))).toBe(true);
+      unmount();
+
+      const view = editGantt({
+        onTaskChange,
+        tasks: [
+          ...EDIT_TASKS,
+          { id: "f", name: "Forever", start: "0001-01-01", end: "9999-12-31" },
+        ],
+      });
+      expect(chords(focused("Plan the launch"))).toBe(true);
+      expect(chords(focused("Forever"))).toBe(true);
+      const day = screen.getByRole("button", { name: "Day" });
+      day.focus();
+      expect(alt(day, "ArrowRight")).toBe(true);
+      // Ctrl/Meta/Alt+Shift on an editable row (Alt alone does act).
+      const row = focused("Write the brief");
+      expect(
+        [
+          press(row, "ArrowRight", { ctrlKey: true, altKey: true }),
+          press(row, "ArrowRight", { metaKey: true, shiftKey: true }),
+          press(row, "ArrowRight", { altKey: true, shiftKey: true }),
+        ].every(Boolean),
+      ).toBe(true);
+      expect(root()).not.toHaveAttribute("data-editing");
+      expect(alt(row, "ArrowRight")).toBe(false);
+      press(row, "Escape");
+      view.unmount();
+
+      // Right-to-left: editing is off altogether.
+      render(
+        <div dir="rtl">
+          <CunninghamProvider>
+            <Gantt
+              aria-label="Plan"
+              tasks={EDIT_TASKS}
+              zoom="day"
+              today="2026-03-23"
+              editable
+              onTaskChange={onTaskChange}
+            />
+          </CunninghamProvider>
+        </div>,
+      );
+      expect(chords(focused("Write the brief"))).toBe(true);
+      expect(taskRow("Write the brief")).not.toHaveAttribute(
+        "aria-keyshortcuts",
+      );
+      expect(document.querySelector(".c__gantt__handle")).toBeNull();
+      expect(screen.queryByRole("status")).toBeNull();
+      expect(onTaskChange).not.toHaveBeenCalled();
+    });
+
+    it("a chord during a pointer drag is left alone and the drag goes on", () => {
+      const onTaskChange = vi.fn();
+      editGantt({ onTaskChange });
+      const row = focused("Write the brief");
+      const el = barOf("Write the brief");
+      down(el);
+      moveTo(el, 100 + 2 * 40);
+      expect(alt(row, "ArrowRight")).toBe(true);
+      expect(press(row, "Enter")).toBe(true);
+      up(el, 100 + 2 * 40);
+      expect(onTaskChange).toHaveBeenCalledTimes(1);
+      expect(onTaskChange).toHaveBeenCalledWith("a", {
+        start: "2026-03-04",
+        end: "2026-03-15",
+      });
+    });
+
+    it("describes the shortcuts on editable rows only; the row name stays during a session", () => {
+      editGantt({
+        tasks: [
+          ...EDIT_TASKS,
+          { id: "f", name: "Forever", start: "0001-01-01", end: "9999-12-31" },
+        ],
+      });
+      const row = taskRow("Write the brief");
+      expect(row).toHaveAttribute(
+        "aria-keyshortcuts",
+        "Alt+ArrowLeft Alt+ArrowRight Shift+ArrowLeft Shift+ArrowRight Enter Escape",
+      );
+      expect(row).toHaveAccessibleDescription(
+        "Alt plus Left or Right arrow moves the task by one step of the zoom. Shift plus Left or Right arrow changes its end date. Enter confirms, Escape cancels.",
+      );
+      for (const name of ["Plan the launch", "Forever"]) {
+        expect(taskRow(name)).not.toHaveAttribute("aria-keyshortcuts");
+        expect(taskRow(name)).not.toHaveAttribute("aria-describedby");
+      }
+      const label = row.getAttribute("aria-label");
+      row.focus();
+      alt(row, "ArrowRight");
+      shift(row, "ArrowRight");
+      expect(row).toHaveAttribute("aria-label", label!);
+    });
+
+    it.each([
+      [
+        "en-US",
+        [
+          "Write the brief: March 3, 2026 to March 14, 2026",
+          "Write the brief: March 4, 2026 to March 15, 2026",
+          "Write the brief rescheduled: March 4, 2026 to March 15, 2026",
+          "Write the brief: change cancelled, dates restored",
+        ],
+      ],
+      [
+        "fr-FR",
+        [
+          "Write the brief : du 3 mars 2026 au 14 mars 2026",
+          "Write the brief : du 4 mars 2026 au 15 mars 2026",
+          "Write the brief replanifiée : du 4 mars 2026 au 15 mars 2026",
+          "Write the brief : modification annulée, dates rétablies",
+        ],
+      ],
+    ])("%s: announces each step, the commit and the cancel", (locale, said) => {
+      renderGantt(
+        {
+          tasks: EDIT_TASKS,
+          zoom: "day",
+          editable: true,
+          onTaskChange: vi.fn(),
+        },
+        locale,
+      );
+      const row = focused("Write the brief");
+      const heard: (string | null)[] = [];
+      alt(row, "ArrowRight");
+      heard.push(status().textContent);
+      alt(row, "ArrowRight");
+      heard.push(status().textContent);
+      press(row, "Enter");
+      heard.push(status().textContent);
+      alt(row, "ArrowRight");
+      press(row, "Escape");
+      heard.push(status().textContent);
+      expect(heard).toEqual(said);
+    });
+
+    it("stops at the edges of the axis, also for a move after a longer end", () => {
+      const onTaskChange = vi.fn();
+      editGantt({ onTaskChange });
+      // Frame starts on the axis origin.
+      const row = focused("Frame");
+      alt(row, "ArrowLeft");
+      expect(start("Frame")).toBe(0);
+      expect(barOf("Frame")).toHaveAttribute("data-clamped");
+      expect(tip()).toHaveTextContent("Limit of the chart reached");
+      expect(status()).toHaveTextContent("Limit of the chart reached");
+      press(row, "Enter");
+      expect(onTaskChange).not.toHaveBeenCalled();
+      // The end pushed to the axis end, a move would cross it: refused.
+      for (let i = 0; i < 10; i++) shift(row, "ArrowRight");
+      expect(tip()).toHaveTextContent("Limit of the chart reached");
+      alt(row, "ArrowRight");
+      expect(start("Frame")).toBe(0);
+      expect(tip()).toHaveTextContent("Limit of the chart reached");
+      press(row, "Enter");
+      expect(onTaskChange).toHaveBeenCalledTimes(1);
+      expect(onTaskChange.mock.calls[0][1].start).toBe("2026-01-04");
+    });
+
+    it("unmounted mid-session, it leaves Escape and blur to the page", () => {
+      const outer = vi.fn();
+      try {
+        const { unmount } = editGantt();
+        alt(focused("Write the brief"), "ArrowRight");
+        expect(root()).toHaveAttribute("data-editing", "move");
+        unmount();
+        document.addEventListener("keydown", outer);
+        fireEvent.keyDown(document.body, { key: "Escape" });
+        expect(outer).toHaveBeenCalledTimes(1);
+      } finally {
+        document.removeEventListener("keydown", outer);
+      }
+    });
+  });
 });
 
 describe("Gantt tokens", () => {

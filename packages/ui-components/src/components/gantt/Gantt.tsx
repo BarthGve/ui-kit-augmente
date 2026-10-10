@@ -6,6 +6,7 @@ import {
   memo,
   PointerEvent,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -104,6 +105,10 @@ const KEYS: Record<string, (from: number, last: number) => number> = {
   End: (_, last) => last,
 };
 const noop = () => {};
+// Keyboard editing (s23): Alt moves, Shift changes the end, one zoom unit.
+const CHORDS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
+const SHORTCUTS =
+  "Alt+ArrowLeft Alt+ArrowRight Shift+ArrowLeft Shift+ArrowRight Enter Escape";
 
 /** The limit an edit ran into: its key under `components.gantt`. */
 type Limit = "limit_axis" | "limit_end_before_start";
@@ -158,6 +163,8 @@ type RowProps = {
   scale: GanttScale;
   locale: string;
   editable: boolean;
+  /** Id of the editing instructions, described by every editable row. */
+  instructions: string;
   preview?: Preview;
 };
 
@@ -169,6 +176,7 @@ const GanttRow = memo(function GanttRow({
   scale,
   locale,
   editable,
+  instructions,
   preview,
 }: RowProps) {
   const { t } = useCunningham();
@@ -188,17 +196,17 @@ const GanttRow = memo(function GanttRow({
         })
       : t("components.gantt.row_dates_aria", { name: task.name, ...dates });
   const previewDates = preview && formatDates({ ...task, ...preview }, locale);
+  const editableRow = editable && editableSpan(task, scale) !== null;
   // Edge handles: a bar narrower than one target has none (moving only).
   const handles =
-    editable &&
-    position &&
-    position.span * scale.dayWidth >= HANDLE_MIN &&
-    editableSpan(task, scale);
+    editableRow && position && position.span * scale.dayWidth >= HANDLE_MIN;
   return (
     <div
       role="row"
       aria-rowindex={index + 2}
       aria-label={label}
+      aria-keyshortcuts={editableRow ? SHORTCUTS : undefined}
+      aria-describedby={editableRow ? instructions : undefined}
       // A single tab stop, so Tab leaves the chart (roving).
       tabIndex={tabIndex}
       className="c__gantt__row"
@@ -261,12 +269,30 @@ const GanttRow = memo(function GanttRow({
   );
 });
 
-/** A pointer edit in progress (refs: read synchronously by every exit). */
-type Drag = {
+/** An edit in progress (refs: read synchronously by every exit). */
+type Session = {
   id: string;
   name: string;
   mode: GanttEditMode;
   bar: HTMLElement;
+  zoom: GanttZoom;
+  axis: GanttScale;
+  original: GanttUnitSpan;
+  // Units of `mode` from the original (keyboard: of the move).
+  unitDelta: number;
+  limit?: Limit;
+  unlisten: () => void;
+};
+
+/** From the keyboard, on a focused row: a move, then an end change. */
+type KeyEdit = Session & {
+  row: HTMLElement;
+  endDelta: number;
+  span: GanttUnitSpan;
+};
+
+/** From the pointer. */
+type Drag = Session & {
   pointerId: number;
   // Pointer and scroll offset at the start, and the pointer now: the dates
   // follow both, so an auto-scroll moves them with a still pointer.
@@ -278,12 +304,19 @@ type Drag = {
   edges: { left: number; right: number } | null;
   frame: number;
   pxPerDay: number;
-  zoom: GanttZoom;
-  axis: GanttScale;
-  original: GanttUnitSpan;
-  unitDelta: number;
-  limit?: Limit;
-  unlisten: () => void;
+};
+
+// The keyboard span: `move` units of a move, then `end` units of the end,
+// both from the original. Null when it leaves the axis (whole units only).
+const keySpan = (
+  { original, zoom, axis }: Session,
+  move: number,
+  end: number,
+): (GanttUnitSpan & { clamped: boolean }) | null => {
+  if (clampToAxis(original, axis, move, zoom, "move") !== move) return null;
+  const moved = moveSpan(original, zoom, move);
+  if (clampToAxis(moved, axis, end, zoom, "resize-end") !== end) return null;
+  return resizeEnd(moved, zoom, end);
 };
 
 export const Gantt = ({
@@ -416,6 +449,7 @@ export const Gantt = ({
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const rows = taskRows();
     const from = rows.indexOf(event.target as HTMLElement);
+    if (from >= 0 && onEditKey(event, rows[from], from)) return;
     const move = KEYS[event.key];
     // Modified keys are left to the browser and to s23 (move/resize).
     if (
@@ -437,13 +471,33 @@ export const Gantt = ({
       ?.scrollIntoView({ block: "nearest", inline: "nearest" });
   };
 
-  // Pointer edit (s23): `drag` drives it, `preview` only draws it.
-  const drag = useRef<Drag | null>(null);
+  // Editing is off right-to-left: the dates would run against the pointer
+  // and the arrows. ponytail: reads the `dir` attribute once, at mount; a
+  // CSS-only `direction` or a later change is not seen.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [rtl, setRtl] = useState(false);
+  useLayoutEffect(() => {
+    setRtl(rootRef.current?.closest("[dir]")?.getAttribute("dir") === "rtl");
+  }, []);
+  const canEdit = editable && !rtl;
+  const instructions = useId();
+
+  // Edit (s23), pointer or keyboard: `session` drives it, `preview` only
+  // draws it. One session at a time.
+  const session = useRef<Drag | KeyEdit | null>(null);
+  const dragOf = () => {
+    const current = session.current;
+    return current && "pointerId" in current ? current : null;
+  };
+  const keyEditOf = () => {
+    const current = session.current;
+    return current && "row" in current ? current : null;
+  };
   const [preview, setPreview] = useState<
     (Preview & { id: string; mode: GanttEditMode }) | null
   >(null);
   const [announcement, setAnnouncement] = useState("");
-  useEffect(() => () => drag.current?.unlisten(), []);
+  useEffect(() => () => session.current?.unlisten(), []);
 
   const say = (key: string, name: string, span: GanttUnitSpan) => {
     const dates = formatDates({ id: "", name, ...span }, locale);
@@ -454,8 +508,8 @@ export const Gantt = ({
   // `commit` renders in the same pass, so an applied change never shows the
   // original dates in between.
   const close = (commit?: () => void) => {
-    const current = drag.current;
-    drag.current = null;
+    const current = session.current;
+    session.current = null;
     if (!current) return null;
     current.unlisten();
     // The bar jumps to its final place: the zoom tween stays off until the
@@ -473,10 +527,137 @@ export const Gantt = ({
   const cancel = () => {
     const current = close();
     if (!current) return;
-    if (current.bar.hasPointerCapture(current.pointerId)) {
+    if (
+      "pointerId" in current &&
+      current.bar.hasPointerCapture(current.pointerId)
+    ) {
       current.bar.releasePointerCapture(current.pointerId);
     }
     say("announce_cancelled", current.name, current.original);
+  };
+
+  // Escape and leaving the window cancel any session; returns the undo.
+  const listen = () => {
+    const onKey = (key: globalThis.KeyboardEvent) => {
+      if (key.key !== "Escape") return;
+      // Ours while the session runs: an enclosing dialog stays open.
+      key.stopPropagation();
+      key.preventDefault();
+      cancel();
+    };
+    document.addEventListener("keydown", onKey, true);
+    window.addEventListener("blur", cancel);
+    return () => {
+      document.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("blur", cancel);
+    };
+  };
+
+  // The one commit of a session: reported unless nothing changed. `pxPerDay`
+  // keeps the leftmost visible day if the change moves the axis origin.
+  const finish = (span: GanttUnitSpan, pxPerDay: number) => {
+    const current = session.current;
+    if (!current) return;
+    const report = isNoop(current.original, span) ? undefined : onTaskChange;
+    close(
+      report
+        ? () => {
+            const el = scrollerRef.current;
+            if (el) {
+              anchor.current = {
+                zoom,
+                left: el.scrollLeft,
+                origin: scale.origin,
+                pxPerDay,
+              };
+            }
+            report(current.id, toChange(span));
+          }
+        : undefined,
+    );
+    if (report) say("announce_changed", current.name, span);
+  };
+
+  // One keyboard step of `mode`, counted from the original dates. Refused
+  // past the axis or once the end sits on the start, so it stays bounded.
+  const step = (edit: KeyEdit, mode: "move" | "resize-end", dir: number) => {
+    const move = edit.unitDelta + (mode === "move" ? dir : 0);
+    const end = edit.endDelta + (mode === "move" ? 0 : dir);
+    const next = keySpan(edit, move, end);
+    if (next && !isNoop(edit.span, next)) {
+      edit.unitDelta = move;
+      edit.endDelta = end;
+      edit.span = { start: next.start, end: next.end };
+    }
+    edit.mode = mode;
+    edit.limit = !next
+      ? "limit_axis"
+      : next.clamped
+        ? "limit_end_before_start"
+        : undefined;
+    setPreview({ id: edit.id, mode, ...edit.span, limit: edit.limit });
+    if (edit.limit) setAnnouncement(t(`components.gantt.${edit.limit}`));
+    else say("announce_preview", edit.name, edit.span);
+  };
+
+  // In front of the row navigation: Alt/Shift+Left/Right edit the focused
+  // row, Enter commits, a navigation key cancels first. True when consumed
+  // (only then is the key kept from the browser: Alt+Arrow is history
+  // back/forward on Windows and Linux).
+  const onEditKey = (
+    event: KeyboardEvent<HTMLDivElement>,
+    row: HTMLElement,
+    index: number,
+  ) => {
+    const keyEdit = keyEditOf();
+    if (keyEdit && event.key === "Enter") {
+      event.preventDefault();
+      finish(keyEdit.span, px(scale.dayWidth));
+      keyEdit.bar.scrollIntoView({ block: "nearest", inline: "nearest" });
+      return true;
+    }
+    if (keyEdit && KEYS[event.key]) {
+      cancel();
+      return false;
+    }
+    const dir = CHORDS[event.key];
+    if (
+      !canEdit ||
+      !dir ||
+      event.altKey === event.shiftKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      (session.current && !keyEdit)
+    )
+      return false;
+    const edit = keyEdit ?? startKeyEdit(row, index);
+    if (!edit) return false;
+    event.preventDefault();
+    step(edit, event.altKey ? "move" : "resize-end", dir);
+    return true;
+  };
+
+  const startKeyEdit = (row: HTMLElement, index: number) => {
+    const task = tasks[index];
+    const original = editableSpan(task, scale);
+    const bar = row.querySelector<HTMLElement>(".c__gantt__bar");
+    if (!original || !bar) return null;
+    const edit: KeyEdit = {
+      id: task.id,
+      name: task.name,
+      mode: "move",
+      bar,
+      row,
+      zoom,
+      axis: scale,
+      original,
+      span: original,
+      unitDelta: 0,
+      endDelta: 0,
+      unlisten: listen(),
+    };
+    session.current = edit;
+    return edit;
   };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -484,9 +665,9 @@ export const Gantt = ({
       ".c__gantt__bar",
     );
     if (
-      !editable ||
+      !canEdit ||
       event.button !== 0 ||
-      drag.current ||
+      session.current ||
       !bar ||
       bar.closest('[role="grid"]') !== gridRef.current
     )
@@ -510,16 +691,8 @@ export const Gantt = ({
       .getBoundingClientRect().right;
     const right = box.left + scroller.clientLeft + scroller.clientWidth;
     bar.setPointerCapture(event.pointerId);
-    const onKey = (key: globalThis.KeyboardEvent) => {
-      if (key.key !== "Escape") return;
-      // Ours while the session runs: an enclosing dialog stays open.
-      key.stopPropagation();
-      key.preventDefault();
-      cancel();
-    };
-    document.addEventListener("keydown", onKey, true);
-    window.addEventListener("blur", cancel);
-    const session: Drag = {
+    const off = listen();
+    const current: Drag = {
       id: task.id,
       name: task.name,
       mode,
@@ -536,12 +709,11 @@ export const Gantt = ({
       original,
       unitDelta: 0,
       unlisten: () => {
-        document.removeEventListener("keydown", onKey, true);
-        window.removeEventListener("blur", cancel);
-        cancelAnimationFrame(session.frame);
+        off();
+        cancelAnimationFrame(current.frame);
       },
     };
-    drag.current = session;
+    session.current = current;
     setPreview({ id: task.id, mode, ...original });
   };
 
@@ -597,7 +769,7 @@ export const Gantt = ({
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const current = drag.current;
+    const current = dragOf();
     if (!current || event.pointerId !== current.pointerId) return;
     current.lastX = event.clientX;
     update(current);
@@ -607,40 +779,24 @@ export const Gantt = ({
   };
 
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerId !== drag.current?.pointerId) return;
-    const { id, name, mode, original, unitDelta, pxPerDay } = drag.current;
-    const span = editSpan(mode, original, drag.current.zoom, unitDelta);
-    const report = isNoop(original, span) ? undefined : onTaskChange;
-    close(
-      report
-        ? () => {
-            const el = scrollerRef.current;
-            if (el) {
-              anchor.current = {
-                zoom,
-                left: el.scrollLeft,
-                origin: scale.origin,
-                pxPerDay,
-              };
-            }
-            report(id, toChange(span));
-          }
-        : undefined,
-    );
-    if (report) say("announce_changed", name, span);
+    const current = dragOf();
+    if (event.pointerId !== current?.pointerId) return;
+    const { mode, original, zoom, unitDelta, pxPerDay } = current;
+    finish(editSpan(mode, original, zoom, unitDelta), pxPerDay);
   };
 
   // Released elsewhere than by pointerup (which closes the session first).
   const onPointerLost = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerId === drag.current?.pointerId) cancel();
+    if (event.pointerId === dragOf()?.pointerId) cancel();
   };
 
   return (
     <div
       {...props}
+      ref={rootRef}
       className={clsx("c__gantt", className)}
       data-zoom={zoom}
-      data-editable={editable || undefined}
+      data-editable={canEdit || undefined}
       data-editing={preview?.mode}
     >
       <div
@@ -673,6 +829,8 @@ export const Gantt = ({
           onFocus={onFocus}
           onBlur={(event) => {
             if (event.relatedTarget) focusedId.current = undefined;
+            // Focus leaving the edited row cancels its keyboard session.
+            if (event.target === keyEditOf()?.row) cancel();
           }}
           onKeyDown={onKeyDown}
           onPointerDown={onPointerDown}
@@ -736,7 +894,8 @@ export const Gantt = ({
               tabIndex={i === stopIndex ? 0 : -1}
               scale={scale}
               locale={locale}
-              editable={editable}
+              editable={canEdit}
+              instructions={instructions}
               preview={preview?.id === task.id ? preview : undefined}
             />
           ))}
@@ -745,10 +904,15 @@ export const Gantt = ({
           <p className="c__gantt__empty">{t("components.gantt.empty")}</p>
         )}
       </div>
-      {editable && (
-        <VisuallyHidden role="status" className="c__gantt__live">
-          {announcement}
-        </VisuallyHidden>
+      {canEdit && (
+        <>
+          <VisuallyHidden role="status" className="c__gantt__live">
+            {announcement}
+          </VisuallyHidden>
+          <VisuallyHidden id={instructions}>
+            {t("components.gantt.edit_instructions")}
+          </VisuallyHidden>
+        </>
       )}
     </div>
   );

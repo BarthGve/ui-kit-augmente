@@ -333,7 +333,8 @@
       "announce_changed": "{name} verplaatst: {start} tot {end}",
       "announce_cancelled": "{name}: wijziging geannuleerd, datums hersteld",
       "limit_axis": "Grens van de grafiek bereikt",
-      "limit_end_before_start": "Het einde kan niet vóór het begin liggen"
+      "limit_end_before_start": "Het einde kan niet vóór het begin liggen",
+      "edit_instructions": "Alt met pijl links of rechts verplaatst de taak één stap van de zoom. Shift met pijl links of rechts wijzigt de einddatum. Enter bevestigt, Escape annuleert."
     }
   }
 }

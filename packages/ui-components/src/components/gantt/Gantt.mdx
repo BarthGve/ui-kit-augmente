@@ -7,8 +7,8 @@ import * as GanttStories from "./gantt.stories";
 
 `Gantt` shows tasks on a time axis: one row per task, a bar from its start to
 its end date, a marker on today. It is read-only by default. With `editable`
-and `onTaskChange`, bars can be moved with the pointer, by whole zoom units;
-resizing and keyboard editing come in a later version.
+and `onTaskChange`, bars can be moved and resized, with the pointer or the
+keyboard, by whole zoom units (see [Editing](#editing)).
 
 ## Structure
 
@@ -111,8 +111,9 @@ not come from the control keeps the scroll offset.
 The chart is one tab stop: `Tab` enters on the current row (the first one
 initially, then the last row focused, by keyboard or by click) and the next
 `Tab` leaves the chart. Moving to a row scrolls its bar into view. Arrow keys
-with `Alt`, `Shift`, `Ctrl` or `Meta` are left to the browser (reserved for
-keyboard editing in a later version).
+with `Ctrl` or `Meta` are always left to the browser; with `Alt` or `Shift`
+they edit the task when the chart is `editable` (see
+[Editing](#editing)), and are left to the browser otherwise.
 
 The focused row announces the task and its dates, formatted for the active
 locale:
@@ -127,6 +128,115 @@ Keyboard focus draws a ring around the visible part of the row, also in
 forced-colors mode; there is no ring after a mouse click. The bars, the today
 marker and the dense lower axis labels are hidden from assistive technologies:
 the row's name carries the dates.
+
+## Editing
+
+<Canvas of={GanttStories.Editable} />
+
+```tsx
+const [tasks, setTasks] = useState(initialTasks);
+
+<Gantt
+  aria-label="Project schedule"
+  tasks={tasks}
+  editable
+  onTaskChange={(id, change) =>
+    setTasks((all) =>
+      all.map((task) => (task.id === id ? { ...task, ...change } : task)),
+    )
+  }
+/>;
+```
+
+| Prop           | Type                                                           | Default |
+| -------------- | -------------------------------------------------------------- | ------- |
+| `editable`     | `boolean`                                                      | `false` |
+| `onTaskChange` | `(id: string, change: { start: string; end: string }) => void` | none    |
+
+- **Controlled.** The chart never modifies `tasks`. An edit shows a preview
+  (the bar at its new dates, a dashed outline at the old ones, a date chip),
+  then calls `onTaskChange` **once**, when it is confirmed. Apply the change to
+  your data: otherwise the bar goes back to its dates. A cancelled edit, or one
+  that ends on the original dates, calls nothing.
+- **Payload.** `start` and `end` are ISO calendar days (`"2026-03-09"`), the end
+  inclusive, as in `GanttTask`.
+- **Without `editable`** (the default) the chart is exactly the read-only
+  chart: no handles, no shortcuts, the modified arrows left to the browser.
+  `editable` without `onTaskChange` previews edits and reports nothing.
+
+### Steps follow the zoom
+
+| Zoom    | One step                                                                |
+| ------- | ----------------------------------------------------------------------- |
+| `day`   | 1 day                                                                   |
+| `week`  | 7 days                                                                  |
+| `month` | 1 calendar month, clamped to the month's last day (Jan 31 + 1 = Feb 28) |
+
+A move keeps the length in days. Every step is counted from the dates the edit
+started from, so one step forward and one back always returns to them (Jan 31,
+not Jan 28).
+
+### Limits
+
+- **The end never goes before the start**: a task is at least one day long.
+  The edit stops there and says "The end cannot be before the start".
+- **The axis does not grow during an edit**: a task stops at the first or last
+  day drawn, with "Limit of the chart reached". Confirm, then edit again from
+  the new axis.
+- A task without dates, or cut by the ten-year window, cannot be edited.
+- **Right-to-left** (`dir="rtl"` on the chart or an ancestor, read once when it
+  mounts): editing is not supported and `editable` is ignored.
+
+### Pointer
+
+- Drag a bar to move it; drag one of its edge handles (shown on hover and on
+  the focused row) to change only that date. The bar jumps by whole steps.
+- Each handle is a 24px-wide target (`handle-hit-size`) over the row's height.
+  Under 72px a bar's handles shrink to a third of it, and a bar narrower than
+  24px has none (it still moves): zoom in, or use the keyboard.
+- Held near the edge of the visible timeline (48px), the box scrolls and the
+  dates follow.
+- Touch: a finger on a bar or a handle drags it; on the timeline or the task
+  column it scrolls. There is no long press.
+- `Escape`, a lost pointer (cancelled touch, another window) or leaving the
+  window cancel the drag. While a drag runs, `Escape` is not passed on: in a
+  dialog, the first `Escape` cancels the drag, the next one closes the dialog.
+
+### Keyboard
+
+On a focused task row of an `editable` chart:
+
+| Key                          | Action                                                  |
+| ---------------------------- | ------------------------------------------------------- |
+| `Alt+Arrow Right` / `Left`   | Previews the task one step later / earlier (both dates) |
+| `Shift+Arrow Right` / `Left` | Previews the end one step later / earlier               |
+| `Enter`                      | Confirms the edit: `onTaskChange` is called once        |
+| `Escape`                     | Cancels the edit: the dates are restored                |
+
+`Alt` and `Shift` steps combine in one edit (to change only the start, move
+then shorten the end). Moving to another row (`Arrow Up`, `Arrow Down`,
+`Home`, `End`, `Tab`, a click) or leaving the window cancels the edit, then
+navigates as usual. The row keeps the focus after `Enter` and `Escape`, and its
+bar is scrolled into view after `Enter`.
+
+`Alt+Arrow Left` / `Right` is history back / forward in browsers on Windows and
+Linux. The chart keeps the key from the browser only when it edits (an
+editable row with dates is focused): elsewhere the browser shortcut works.
+
+### Assistive technologies
+
+Editable rows expose the shortcuts (`aria-keyshortcuts`) and a short
+instruction as their description. The row's name does not change during an
+edit; a polite status region announces the new dates at each step, the limit
+reached, the confirmed dates ("Write the brief rescheduled: March 9, 2026 to
+March 20, 2026") and a cancel ("Write the brief: change cancelled, dates
+restored"), in the active locale. Repeating the same limit is announced once.
+
+Dragging has no pointer-only alternative without the keyboard (WCAG 2.5.7):
+a pointer user who cannot drag edits the dates with the keyboard, or in your
+own form.
+
+<Canvas of={GanttStories.EditableByMonth} />
 
 ## Size and performance
 
@@ -175,14 +285,20 @@ Transitions are removed when reduced motion is requested.
 | `today-width`                       | `2px`                                              |
 | `focus-ring-width`                  | `2px`                                              |
 | `focus-ring-offset`                 | `-2px`                                             |
+| `ghost-border-color`                | `contextuals.content.semantic.brand.tertiary`      |
+| `drag-outline-color`                | `contextuals.content.semantic.neutral.primary`     |
+| `tooltip-background-color`          | `contextuals.content.semantic.neutral.primary`     |
+| `tooltip-color`                     | `contextuals.background.surface.secondary`         |
+| `handle-grip-color`                 | `contextuals.background.surface.secondary`         |
+| `invalid-color`                     | `contextuals.content.semantic.error.tertiary`      |
+| `handle-hit-size`                   | `1.5rem`                                           |
+| `handle-grip-width`                 | `2px`                                              |
 
 ## Later versions
 
-`id` is stable and `tasks` is never modified: moving a bar calls
-`onTaskChange(id, { start, end })` with ISO dates, and the caller applies it
-(otherwise the bar goes back to its dates). Resizing, keyboard editing and
-dependencies between tasks are additive. The bar is a stable element
-(`.c__gantt__bar[data-task-id]`) in its row.
+Dependencies between tasks are additive: `id` is stable, `tasks` is never
+modified, and the bar is a stable element (`.c__gantt__bar[data-task-id]`) in
+its row. An edit does not move other tasks.
 
 ## Props
 

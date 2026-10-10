@@ -333,7 +333,8 @@
       "announce_changed": "{name} verschoben: {start} bis {end}",
       "announce_cancelled": "{name}: Änderung abgebrochen, Daten wiederhergestellt",
       "limit_axis": "Grenze des Diagramms erreicht",
-      "limit_end_before_start": "Das Ende kann nicht vor dem Beginn liegen"
+      "limit_end_before_start": "Das Ende kann nicht vor dem Beginn liegen",
+      "edit_instructions": "Alt mit Pfeil nach links oder rechts verschiebt die Aufgabe um einen Schritt des Zooms. Umschalt mit Pfeil nach links oder rechts ändert ihr Enddatum. Eingabe bestätigt, Escape bricht ab."
     }
   }
 }

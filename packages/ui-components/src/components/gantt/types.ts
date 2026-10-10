@@ -33,8 +33,9 @@ export type GanttProps = Omit<
   /** Day of the today marker. Default: today in the local time zone. */
   today?: DateInput;
   /**
-   * Lets the user move task bars with the pointer. Default: `false`
-   * (read-only, exactly as without the prop).
+   * Lets the user move and resize task bars, with the pointer or from a
+   * focused row with the keyboard. Default: `false` (read-only, exactly as
+   * without the prop). Ignored in a right-to-left (`dir="rtl"`) container.
    */
   editable?: boolean;
   /**

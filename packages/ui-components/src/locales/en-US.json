@@ -333,7 +333,8 @@
       "announce_changed": "{name} rescheduled: {start} to {end}",
       "announce_cancelled": "{name}: change cancelled, dates restored",
       "limit_axis": "Limit of the chart reached",
-      "limit_end_before_start": "The end cannot be before the start"
+      "limit_end_before_start": "The end cannot be before the start",
+      "edit_instructions": "Alt plus Left or Right arrow moves the task by one step of the zoom. Shift plus Left or Right arrow changes its end date. Enter confirms, Escape cancels."
     }
   }
 }

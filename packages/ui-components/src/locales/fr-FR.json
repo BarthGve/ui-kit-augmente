@@ -333,7 +333,8 @@
       "announce_changed": "{name} replanifiée : du {start} au {end}",
       "announce_cancelled": "{name} : modification annulée, dates rétablies",
       "limit_axis": "Limite du graphique atteinte",
-      "limit_end_before_start": "La fin ne peut pas précéder le début"
+      "limit_end_before_start": "La fin ne peut pas précéder le début",
+      "edit_instructions": "Alt avec flèche gauche ou droite déplace la tâche d'un pas du zoom. Maj avec flèche gauche ou droite modifie sa date de fin. Entrée valide, Échap annule."
     }
   }
 }
