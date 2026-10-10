@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>s23 gantt move and resize — reference mockup</title>
+<style>/* Reference only, not code. Resolved hexes of the --c--contextuals tokens (default theme / dark). Bar = content.semantic.brand.tertiary. */
+:root{--font:"Hanken Grotesk",Inter,sans-serif;--page:#FFFFFF;--surface:#FFFFFF;--head:#F8F8F9;--border:#E2E2EA;--text:#25252F;--muted:#5D5D70;--hover:#F0F0F3;--bar:#5E5CD0;--ring:#5E5CD0;--grip:#FFFFFF;--invalid:#D7010E;--tip-bg:#25252F;--tip-fg:#FFFFFF}
+.dark{--page:#2F303D;--surface:#25252F;--head:#1B1B23;--border:#3A3A4C;--text:#F0F0F3;--muted:#B7B7CB;--hover:#3A3A4C;--bar:#AFB5F1;--ring:#A0A5F6;--grip:#25252F;--invalid:#EEA99D;--tip-bg:#F0F0F3;--tip-fg:#25252F}
+*{box-sizing:border-box}body{margin:0;font-family:var(--font);background:#fff;color:#25252F}
+header.top{padding:24px 32px 0}header.top h1{margin:0 0 4px;font-size:1.25rem}header.top p{margin:0;font-size:.875rem;color:#5D5D70;max-width:75ch}
+.theme{background:var(--page);color:var(--text);padding:24px 32px 32px;margin-top:24px}.theme h2{margin:0 0 12px;font-size:1rem;font-weight:600}
+.scroller{--day:12px;--task:11rem;overflow:auto;border:1px solid var(--border);background:var(--surface);position:relative}
+.grid{width:max-content;min-width:100%;position:relative}
+.row{display:grid;grid-template-columns:var(--task) calc(var(--day)*49);height:40px;border-bottom:1px solid var(--border);position:relative}
+.row.hover .task,.row.hover .track{background:var(--hover)}
+.row.focus{outline:2px solid var(--ring);outline-offset:-2px}
+.head{background:var(--head);height:auto}.head .task{background:var(--head);font-weight:600}
+.task{padding:0 .75rem;display:flex;align-items:center;font-size:.875rem;border-right:1px solid var(--border);background:var(--surface)}
+.track{position:relative;background:repeating-linear-gradient(90deg,transparent 0 calc(var(--day)*7 - 1px),var(--border) calc(var(--day)*7 - 1px) calc(var(--day)*7))}
+.head .track{background:none;font-size:.75rem;color:var(--muted);padding:4px}
+.bar{position:absolute;top:10px;height:20px;border-radius:4px;background:var(--bar);border:1px solid var(--bar);left:calc(var(--s)*var(--day));width:calc(var(--n)*var(--day));cursor:grab}
+.handle{position:absolute;top:-10px;bottom:-10px;width:24px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;gap:2px}
+.handle.s{left:-8px}.handle.e{right:-8px}
+.handle i{display:block;width:2px;height:10px;background:var(--grip)}
+.dragging{outline:2px solid var(--text);cursor:grabbing}
+.invalid{outline:2px solid var(--invalid)}
+.ghost{position:absolute;top:10px;height:20px;border-radius:4px;border:1px dashed var(--bar);left:calc(var(--s)*var(--day));width:calc(var(--n)*var(--day))}
+.tip{position:absolute;top:8px;height:24px;display:flex;align-items:center;padding:0 6px;border-radius:4px;font-size:.75rem;white-space:nowrap;background:var(--tip-bg);color:var(--tip-fg);left:calc(var(--s)*var(--day))}
+.cap{font-size:.75rem;color:var(--muted);margin:6px 0 14px}
+.today{position:absolute;top:0;bottom:0;width:2px;background:var(--invalid);opacity:.0}
+@media(forced-colors:active){.bar{background:Highlight;border-color:CanvasText}.dragging{outline-color:Highlight}.ghost{border-color:CanvasText}.handle i{background:CanvasText}.tip{background:Canvas;color:CanvasText;border:1px solid CanvasText}.invalid{outline-color:Highlight}}
+</style></head>
+<body>
+<header class="top"><h1>Gantt move and resize — reference mockup (s23)</h1>
+<p>Week zoom. Row 1: idle with edge handles shown (hover or row focus). Row 2: moving, ghost at the original place, tooltip with the new dates beside the bar (inside the row). Row 3: resizing the end. Row 4: invalid, the end cannot go before the start (outline and sentence). Row 5: keyboard session on a focused row (same preview as a drag).</p></header>
+
+<section class="theme"><h2>Light — states</h2>
+<div class="scroller"><div class="grid">
+<div class="row head"><div class="task">Task</div><div class="track">March 2026 · April 2026</div></div>
+<div class="row hover"><div class="task">Idle (handles on hover)</div><div class="track"><div class="bar" style="--s:2;--n:14"><span class="handle s"><i></i><i></i></span><span class="handle e"><i></i><i></i></span></div></div></div>
+<div class="row"><div class="task">Moving</div><div class="track"><div class="ghost" style="--s:3;--n:14"></div><div class="bar dragging" style="--s:10;--n:14"></div><div class="tip" style="--s:25">Mar 16 to Mar 29</div></div></div>
+<div class="row"><div class="task">Resizing the end</div><div class="track"><div class="ghost" style="--s:6;--n:10"></div><div class="bar dragging" style="--s:6;--n:21"><span class="handle e"><i></i><i></i></span></div><div class="tip" style="--s:28">Mar 9 to Mar 29</div></div></div>
+<div class="row"><div class="task">Invalid (clamped)</div><div class="track"><div class="ghost" style="--s:14;--n:10"></div><div class="bar invalid" style="--s:14;--n:1"></div><div class="tip" style="--s:16">The end cannot be before the start</div></div></div>
+<div class="row focus"><div class="task">Keyboard session</div><div class="track"><div class="ghost" style="--s:4;--n:7"></div><div class="bar dragging" style="--s:11;--n:7"><span class="handle s"><i></i><i></i></span><span class="handle e"><i></i><i></i></span></div><div class="tip" style="--s:19">Mar 16 to Mar 22 — Enter confirms, Escape cancels</div></div></div>
+</div></div>
+<p class="cap">Ghost = dashed outline of the original dates. Tooltip is inside the row (rows clip paint outside their box). Grips are the surface colour on the bar fill (>= 5.35:1 in all six themes).</p></section>
+
+<section class="theme dark"><h2>Dark — moving</h2>
+<div class="scroller"><div class="grid">
+<div class="row head"><div class="task">Task</div><div class="track">March 2026 · April 2026</div></div>
+<div class="row"><div class="task">Moving</div><div class="track"><div class="ghost" style="--s:3;--n:14"></div><div class="bar dragging" style="--s:10;--n:14"><span class="handle s"><i></i><i></i></span><span class="handle e"><i></i><i></i></span></div><div class="tip" style="--s:25">Mar 16 to Mar 29</div></div></div>
+<div class="row"><div class="task">Invalid (clamped)</div><div class="track"><div class="ghost" style="--s:14;--n:10"></div><div class="bar invalid" style="--s:14;--n:1"></div><div class="tip" style="--s:16">The end cannot be before the start</div></div></div>
+</div></div>
+<p class="cap">Dark themes use the lighter brand and inverted tooltip tokens; the invalid colour appears only on the bar outline (as tooltip text it would fail contrast).</p></section>
+</body></html>
