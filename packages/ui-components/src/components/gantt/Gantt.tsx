@@ -3,10 +3,16 @@ import {
   CSSProperties,
   FocusEvent,
   KeyboardEvent,
+  memo,
+  PointerEvent,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
+import { flushSync } from "react-dom";
+import { VisuallyHidden } from "react-aria";
 import {
   CalendarDate,
   DateFormatter,
@@ -16,6 +22,14 @@ import {
 import { Button } from ":/components/button";
 import { useCunningham } from ":/components/provider";
 import { useControllableState } from ":/hooks/useControllableState";
+import {
+  clampToAxis,
+  GanttUnitSpan,
+  isNoop,
+  moveSpan,
+  toChange,
+  unitsFromPixels,
+} from "./edit";
 import { buildScale, dayIndex, formatDates, GanttScale, toDay } from "./scale";
 import { GanttProps, GanttTask, GanttZoom } from "./types";
 
@@ -88,12 +102,126 @@ const KEYS: Record<string, (from: number, last: number) => number> = {
 };
 const noop = () => {};
 
+/** What the dragged row draws instead of the task's dates. */
+type Preview = GanttUnitSpan & { clamped: boolean };
+
+type RowProps = {
+  task: GanttTask;
+  index: number;
+  tabIndex: number;
+  scale: GanttScale;
+  locale: string;
+  preview?: Preview;
+};
+
+// Memoised: a drag re-renders the dragged row only.
+const GanttRow = memo(function GanttRow({
+  task,
+  index,
+  tabIndex,
+  scale,
+  locale,
+  preview,
+}: RowProps) {
+  const { t } = useCunningham();
+  // "No dates" follows the dates; the bar can also be absent when the task
+  // lies outside a bounded window (MAX_DAYS).
+  const dates = formatDates(task, locale);
+  const original = scale.positionOf(task);
+  const position = preview
+    ? scale.positionOf({ ...task, start: preview.start, end: preview.end })
+    : original;
+  const label = !dates
+    ? t("components.gantt.row_no_dates_aria", { name: task.name })
+    : dates.start === dates.end
+      ? t("components.gantt.row_date_aria", {
+          name: task.name,
+          date: dates.start,
+        })
+      : t("components.gantt.row_dates_aria", { name: task.name, ...dates });
+  const previewDates = preview && formatDates({ ...task, ...preview }, locale);
+  return (
+    <div
+      role="row"
+      aria-rowindex={index + 2}
+      aria-label={label}
+      // A single tab stop, so Tab leaves the chart (roving).
+      tabIndex={tabIndex}
+      className="c__gantt__row"
+      data-no-dates={dates ? undefined : true}
+    >
+      <div role="rowheader" className="c__gantt__task">
+        <span className="c__gantt__task-name">{task.name}</span>
+        {!dates && (
+          <span className="c__gantt__no-dates">
+            {t("components.gantt.no_dates")}
+          </span>
+        )}
+      </div>
+      {/* Fixed child slots: the bar node holds the pointer capture and must
+          survive every preview render. */}
+      <div role="gridcell" className="c__gantt__track">
+        {preview && original && (
+          <div
+            className="c__gantt__ghost"
+            aria-hidden="true"
+            style={place(original.start, original.span)}
+          />
+        )}
+        {position && (
+          <div
+            className="c__gantt__bar"
+            data-task-id={task.id}
+            data-preview={preview ? true : undefined}
+            data-clamped={preview?.clamped || undefined}
+            aria-hidden="true"
+            style={place(position.start, position.span)}
+          />
+        )}
+        {position && previewDates && (
+          <div
+            className="c__gantt__tip"
+            aria-hidden="true"
+            // Beside the bar, on its wider side of the track.
+            data-side={
+              position.start > scale.days - position.start - position.span
+                ? "start"
+                : "end"
+            }
+            style={place(position.start, position.span)}
+          >
+            {preview.clamped
+              ? t("components.gantt.limit_axis")
+              : t("components.gantt.tooltip_dates", previewDates)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
+/** A pointer edit in progress (refs: read synchronously by every exit). */
+type Drag = {
+  id: string;
+  name: string;
+  bar: HTMLElement;
+  pointerId: number;
+  x: number;
+  pxPerDay: number;
+  original: GanttUnitSpan;
+  unitDelta: number;
+  clamped: boolean;
+  unlisten: () => void;
+};
+
 export const Gantt = ({
   tasks,
   zoom: zoomProp,
   defaultZoom = "week",
   onZoomChange,
   today,
+  editable = false,
+  onTaskChange,
   "aria-label": ariaLabel,
   className,
   ...props
@@ -109,12 +237,15 @@ export const Gantt = ({
   );
   const scrollerRef = useRef<HTMLDivElement>(null);
   // Leftmost visible day, taken before a requested zoom: once the grid has
-  // narrowed, the old offset is already clamped.
-  const anchor = useRef<{
-    zoom: GanttZoom;
-    date: CalendarDate;
-    left: number;
-  } | null>(null);
+  // narrowed, the old offset is already clamped. After a committed edit, the
+  // origin it was taken against instead: the edit may move the axis origin.
+  const anchor = useRef<
+    | ({ zoom: GanttZoom; left: number } & (
+        | { date: CalendarDate }
+        | { origin: CalendarDate; pxPerDay: number }
+      ))
+    | null
+  >(null);
   const todayKey = today?.toString();
   const scale = useMemo(
     () =>
@@ -164,9 +295,12 @@ export const Gantt = ({
   // Before paint, so the new zoom is never drawn at the old offset.
   useLayoutEffect(() => {
     const el = scrollerRef.current;
-    if (el && !anchorStale && anchor.current?.zoom === zoom) {
+    const kept = anchor.current;
+    if (el && !anchorStale && kept?.zoom === zoom) {
       el.scrollLeft =
-        dayIndex(scale.origin, anchor.current.date) * px(scale.dayWidth);
+        "date" in kept
+          ? dayIndex(scale.origin, kept.date) * px(scale.dayWidth)
+          : kept.left + dayIndex(scale.origin, kept.origin) * kept.pxPerDay;
     }
     anchor.current = null;
   }, [zoom, scale, anchorStale]);
@@ -231,20 +365,162 @@ export const Gantt = ({
       ?.scrollIntoView({ block: "nearest", inline: "nearest" });
   };
 
-  const rowLabel = (task: GanttTask, dates: ReturnType<typeof formatDates>) => {
-    if (!dates)
-      return t("components.gantt.row_no_dates_aria", { name: task.name });
-    if (dates.start === dates.end) {
-      return t("components.gantt.row_date_aria", {
-        name: task.name,
-        date: dates.start,
-      });
+  // Pointer edit (s23): `drag` drives it, `preview` only draws it.
+  const drag = useRef<Drag | null>(null);
+  const [preview, setPreview] = useState<(Preview & { id: string }) | null>(
+    null,
+  );
+  const [announcement, setAnnouncement] = useState("");
+  useEffect(() => () => drag.current?.unlisten(), []);
+
+  const say = (key: string, name: string, span: GanttUnitSpan) => {
+    const dates = formatDates({ id: "", name, ...span }, locale);
+    setAnnouncement(t(`components.gantt.${key}`, { name, ...dates }));
+  };
+
+  // Every exit closes the session first, so a later event finds none.
+  // `commit` renders in the same pass, so an applied change never shows the
+  // original dates in between.
+  const close = (commit?: () => void) => {
+    const current = drag.current;
+    drag.current = null;
+    if (!current) return null;
+    current.unlisten();
+    // The bar jumps to its final place: the zoom tween stays off until the
+    // jump is laid out.
+    current.bar.style.setProperty("transition", "none");
+    flushSync(() => {
+      setPreview(null);
+      commit?.();
+    });
+    void current.bar.offsetWidth;
+    current.bar.style.removeProperty("transition");
+    return current;
+  };
+
+  const cancel = () => {
+    const current = close();
+    if (!current) return;
+    if (current.bar.hasPointerCapture(current.pointerId)) {
+      current.bar.releasePointerCapture(current.pointerId);
     }
-    return t("components.gantt.row_dates_aria", { name: task.name, ...dates });
+    say("announce_cancelled", current.name, current.original);
+  };
+
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    const bar = (event.target as HTMLElement).closest<HTMLElement>(
+      ".c__gantt__bar",
+    );
+    if (
+      !editable ||
+      event.button !== 0 ||
+      drag.current ||
+      !bar ||
+      bar.closest('[role="grid"]') !== gridRef.current
+    )
+      return;
+    const task = tasks.find((item) => item.id === bar.dataset.taskId);
+    const start = toDay(task?.start);
+    const end = toDay(task?.end);
+    // A bar clipped by the window has no real geometry to drag.
+    if (
+      !task ||
+      !start ||
+      !end ||
+      start.compare(scale.origin) < 0 ||
+      end.compare(scale.end) > 0
+    )
+      return;
+    // Measured, never the rem constant; unmeasured geometry starts nothing.
+    const pxPerDay =
+      bar.parentElement!.getBoundingClientRect().width / scale.days;
+    if (!Number.isFinite(pxPerDay) || pxPerDay <= 0) return;
+    bar.setPointerCapture(event.pointerId);
+    const onKey = (key: globalThis.KeyboardEvent) => {
+      if (key.key !== "Escape") return;
+      // Ours while the session runs: an enclosing dialog stays open.
+      key.stopPropagation();
+      key.preventDefault();
+      cancel();
+    };
+    document.addEventListener("keydown", onKey, true);
+    window.addEventListener("blur", cancel);
+    drag.current = {
+      id: task.id,
+      name: task.name,
+      bar,
+      pointerId: event.pointerId,
+      x: event.clientX,
+      pxPerDay,
+      original: { start, end },
+      unitDelta: 0,
+      clamped: false,
+      unlisten: () => {
+        document.removeEventListener("keydown", onKey, true);
+        window.removeEventListener("blur", cancel);
+      },
+    };
+    setPreview({ id: task.id, start, end, clamped: false });
+  };
+
+  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const current = drag.current;
+    if (!current || event.pointerId !== current.pointerId) return;
+    const wanted = unitsFromPixels(
+      event.clientX - current.x,
+      current.pxPerDay,
+      zoom,
+      current.original.start,
+    );
+    const n = clampToAxis(current.original, scale, wanted, zoom, "move");
+    const clamped = n !== wanted;
+    // Once per snapped step, not per pixel.
+    if (n === current.unitDelta && clamped === current.clamped) return;
+    current.unitDelta = n;
+    current.clamped = clamped;
+    const span = moveSpan(current.original, zoom, n);
+    setPreview({ id: current.id, ...span, clamped });
+    if (clamped) setAnnouncement(t("components.gantt.limit_axis"));
+    else say("announce_preview", current.name, span);
+  };
+
+  const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerId !== drag.current?.pointerId) return;
+    const { id, name, original, unitDelta, pxPerDay } = drag.current;
+    const span = moveSpan(original, zoom, unitDelta);
+    const report = isNoop(original, span) ? undefined : onTaskChange;
+    close(
+      report
+        ? () => {
+            const el = scrollerRef.current;
+            if (el) {
+              anchor.current = {
+                zoom,
+                left: el.scrollLeft,
+                origin: scale.origin,
+                pxPerDay,
+              };
+            }
+            report(id, toChange(span));
+          }
+        : undefined,
+    );
+    if (report) say("announce_changed", name, span);
+  };
+
+  // Released elsewhere than by pointerup (which closes the session first).
+  const onPointerLost = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerId === drag.current?.pointerId) cancel();
   };
 
   return (
-    <div {...props} className={clsx("c__gantt", className)} data-zoom={zoom}>
+    <div
+      {...props}
+      className={clsx("c__gantt", className)}
+      data-zoom={zoom}
+      data-editable={editable || undefined}
+      data-editing={preview ? "move" : undefined}
+    >
       <div
         role="group"
         aria-label={t("components.gantt.zoom_aria_label")}
@@ -277,6 +553,11 @@ export const Gantt = ({
             if (event.relatedTarget) focusedId.current = undefined;
           }}
           onKeyDown={onKeyDown}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerLost}
+          onLostPointerCapture={onPointerLost}
         >
           {scale.todayOffset !== null && (
             <div
@@ -325,48 +606,27 @@ export const Gantt = ({
               )}
             </div>
           </div>
-          {tasks.map((task, i) => {
-            // "No dates" follows the dates; the bar can also be absent when
-            // the task lies outside a bounded window (MAX_DAYS).
-            const dates = formatDates(task, locale);
-            const position = scale.positionOf(task);
-            return (
-              <div
-                key={task.id}
-                role="row"
-                aria-rowindex={i + 2}
-                aria-label={rowLabel(task, dates)}
-                // A single tab stop, so Tab leaves the chart (roving).
-                tabIndex={i === stopIndex ? 0 : -1}
-                className="c__gantt__row"
-                data-no-dates={dates ? undefined : true}
-              >
-                <div role="rowheader" className="c__gantt__task">
-                  <span className="c__gantt__task-name">{task.name}</span>
-                  {!dates && (
-                    <span className="c__gantt__no-dates">
-                      {t("components.gantt.no_dates")}
-                    </span>
-                  )}
-                </div>
-                <div role="gridcell" className="c__gantt__track">
-                  {position && (
-                    <div
-                      className="c__gantt__bar"
-                      data-task-id={task.id}
-                      aria-hidden="true"
-                      style={place(position.start, position.span)}
-                    />
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {tasks.map((task, i) => (
+            <GanttRow
+              key={task.id}
+              task={task}
+              index={i}
+              tabIndex={i === stopIndex ? 0 : -1}
+              scale={scale}
+              locale={locale}
+              preview={preview?.id === task.id ? preview : undefined}
+            />
+          ))}
         </div>
         {tasks.length === 0 && (
           <p className="c__gantt__empty">{t("components.gantt.empty")}</p>
         )}
       </div>
+      {editable && (
+        <VisuallyHidden role="status" className="c__gantt__live">
+          {announcement}
+        </VisuallyHidden>
+      )}
     </div>
   );
 };

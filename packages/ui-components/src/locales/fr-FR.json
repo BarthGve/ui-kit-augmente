@@ -327,7 +327,12 @@
       "row_no_dates_aria": "{name}, sans dates",
       "no_dates": "Sans dates",
       "today": "Aujourd'hui",
-      "empty": "Aucune tâche"
+      "empty": "Aucune tâche",
+      "tooltip_dates": "du {start} au {end}",
+      "announce_preview": "{name} : du {start} au {end}",
+      "announce_changed": "{name} replanifiée : du {start} au {end}",
+      "announce_cancelled": "{name} : modification annulée, dates rétablies",
+      "limit_axis": "Limite du graphique atteinte"
     }
   }
 }

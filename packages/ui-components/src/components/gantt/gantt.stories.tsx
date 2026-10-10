@@ -105,3 +105,22 @@ export const Zoomed: Story = {
 export const WideSchedule: Story = {
   args: { tasks: LONG.slice(0, 30), defaultZoom: "day" },
 };
+
+// Editable and controlled: the story applies every change to its tasks.
+export const Editable: Story = {
+  args: { editable: true, defaultZoom: "day" },
+  render: function Render(args) {
+    const [tasks, setTasks] = useState(args.tasks);
+    return (
+      <Gantt
+        {...args}
+        tasks={tasks}
+        onTaskChange={(id, change) =>
+          setTasks((all) =>
+            all.map((task) => (task.id === id ? { ...task, ...change } : task)),
+          )
+        }
+      />
+    );
+  },
+};

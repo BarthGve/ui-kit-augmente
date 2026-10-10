@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/experimental-ct-react";
 import type { Locator, Page } from "@playwright/test";
-import { ControlledGantt, TestGantt } from "../helpers/mount-gantt";
+import type { GanttTaskChange } from "../../src/components/gantt/types";
+import {
+  ControlledGantt,
+  EditableGantt,
+  GanttInModal,
+  TestGantt,
+} from "../helpers/mount-gantt";
 
 // What jsdom cannot measure: sticky layout, scrolling, media queries.
 
@@ -308,5 +314,154 @@ test.describe("Gantt", () => {
     await scroller(page).evaluate((el) => (el.scrollLeft = 0));
     await component.update(<TestGantt zoom="day" onZoomChange={refuse} />);
     expect(await leftDay(page)).toBe(0);
+  });
+});
+
+// Editing (s23): real mouse, capture, scroll and Escape.
+test.describe("Gantt pointer move", () => {
+  type Call = [string, GanttTaskChange];
+  const recorder = () => {
+    const calls: Call[] = [];
+    return {
+      calls,
+      onTaskChange: (id: string, c: GanttTaskChange) => calls.push([id, c]),
+    };
+  };
+  // Pixels per day of the rendered chart, measured from a bar.
+  const perDay = async (page: Page, id = "t0") => {
+    const b = bar(page, id);
+    const span = Number(
+      await b.evaluate((el) =>
+        (el as HTMLElement).style.getPropertyValue("--gantt-span"),
+      ),
+    );
+    return (await box(b)).width / span;
+  };
+  const grab = async (page: Page, id: string) => {
+    const b = await box(bar(page, id));
+    const at = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    return at;
+  };
+  const editing = (page: Page) =>
+    page.getByTestId("gantt").getAttribute("data-editing");
+
+  test("a real drag moves the bar by whole weeks and reports both dates", async ({
+    mount,
+    page,
+  }) => {
+    // Motion on: an applied change must not tween from the old dates.
+    const { calls, onTaskChange } = recorder();
+    await mount(<EditableGantt onTaskChange={onTaskChange} />);
+    const px = await perDay(page);
+    const before = await box(bar(page, "t1"));
+    const at = await grab(page, "t1");
+    // 2.4 weeks: snaps to 2 weeks.
+    await page.mouse.move(at.x + 2.4 * 7 * px, at.y, { steps: 8 });
+    expect(await editing(page)).toBe("move");
+    await page.mouse.up();
+    expect((await box(bar(page, "t1"))).x).toBeCloseTo(before.x + 14 * px, 0);
+    await expect.poll(() => calls.length).toBe(1);
+    // t1: 2026-01-17 to 2026-01-26.
+    expect(calls[0]).toEqual([
+      "t1",
+      { start: "2026-01-31", end: "2026-02-09" },
+    ]);
+    expect((await box(bar(page, "t1"))).x).toBeCloseTo(before.x + 14 * px, 0);
+    expect(await editing(page)).toBeNull();
+  });
+
+  test("Escape with the button still down puts the bar back and commits nothing", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onTaskChange } = recorder();
+    await mount(<EditableGantt onTaskChange={onTaskChange} />);
+    const px = await perDay(page);
+    const before = await box(bar(page, "t1"));
+    const at = await grab(page, "t1");
+    await page.mouse.move(at.x + 3 * 7 * px, at.y, { steps: 6 });
+    expect((await box(bar(page, "t1"))).x).toBeGreaterThan(before.x + 10);
+    await page.keyboard.press("Escape");
+    expect((await box(bar(page, "t1"))).x).toBeCloseTo(before.x, 0);
+    await page.mouse.move(at.x + 5 * 7 * px, at.y, { steps: 3 });
+    await page.mouse.up();
+    expect((await box(bar(page, "t1"))).x).toBeCloseTo(before.x, 0);
+    await page.waitForTimeout(100);
+    expect(calls).toEqual([]);
+  });
+
+  test("after scrolling the box, the drag still maps the pointer to the right dates", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onTaskChange } = recorder();
+    await mount(<EditableGantt onTaskChange={onTaskChange} />);
+    await scrollBy(scroller(page), 400, 0);
+    const px = await perDay(page);
+    const at = await grab(page, "t4");
+    await page.mouse.move(at.x + 7 * px, at.y, { steps: 4 });
+    await page.mouse.up();
+    await expect.poll(() => calls.length).toBe(1);
+    // t4: 2026-02-22 to 2026-03-03, one week later.
+    expect(calls[0]).toEqual([
+      "t4",
+      { start: "2026-03-01", end: "2026-03-10" },
+    ]);
+  });
+
+  test("released outside the chart, the captured pointer still ends the drag", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onTaskChange } = recorder();
+    await mount(<EditableGantt onTaskChange={onTaskChange} />);
+    const px = await perDay(page);
+    const chart = await box(page.getByTestId("gantt"));
+    const at = await grab(page, "t1");
+    await page.mouse.move(at.x + 7 * px, at.y, { steps: 3 });
+    await page.mouse.move(at.x + 7 * px, chart.y + chart.height + 200, {
+      steps: 3,
+    });
+    await page.mouse.up();
+    await expect.poll(() => calls.length).toBe(1);
+    expect(calls[0]).toEqual([
+      "t1",
+      { start: "2026-01-24", end: "2026-02-02" },
+    ]);
+    expect(await editing(page)).toBeNull();
+  });
+
+  test("dragging across the task names selects no text", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<EditableGantt />);
+    const cell = await box(taskCells(page).first());
+    await grab(page, "t1");
+    await page.mouse.move(cell.x + 4, cell.y + cell.height * 3, { steps: 10 });
+    expect(await page.evaluate(() => getSelection()?.toString())).toBe("");
+    await page.mouse.up();
+    expect(await page.evaluate(() => getSelection()?.toString())).toBe("");
+  });
+
+  test("in a dialog, Escape cancels a running drag and only then closes the dialog", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<GanttInModal />);
+    const dialog = page.getByRole("dialog", { name: "Plan" });
+    await expect(dialog).toBeVisible();
+    const px = await perDay(page);
+    const at = await grab(page, "t1");
+    await page.mouse.move(at.x + 7 * px, at.y, { steps: 3 });
+    await page.keyboard.press("Escape");
+    await page.mouse.up();
+    await expect(dialog).toBeVisible();
+    expect(await editing(page)).toBeNull();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText("Closed")).toBeVisible();
   });
 });

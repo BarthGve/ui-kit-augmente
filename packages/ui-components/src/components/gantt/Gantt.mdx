@@ -6,7 +6,9 @@ import * as GanttStories from "./gantt.stories";
 # Gantt
 
 `Gantt` shows tasks on a time axis: one row per task, a bar from its start to
-its end date, a marker on today. It is read-only: no editing, no drag and drop.
+its end date, a marker on today. It is read-only by default. With `editable`
+and `onTaskChange`, bars can be moved with the pointer, by whole zoom units;
+resizing and keyboard editing come in a later version.
 
 ## Structure
 
@@ -110,7 +112,7 @@ The chart is one tab stop: `Tab` enters on the current row (the first one
 initially, then the last row focused, by keyboard or by click) and the next
 `Tab` leaves the chart. Moving to a row scrolls its bar into view. Arrow keys
 with `Alt`, `Shift`, `Ctrl` or `Meta` are left to the browser (reserved for
-editing in a later version).
+keyboard editing in a later version).
 
 The focused row announces the task and its dates, formatted for the active
 locale:
@@ -176,9 +178,11 @@ Transitions are removed when reduced motion is requested.
 
 ## Later versions
 
-`id` is stable and `tasks` is never modified, so moving and resizing bars
-(`onTaskChange`) and dependencies between tasks are additive props. The bar is
-a stable element (`.c__gantt__bar[data-task-id]`) in its row.
+`id` is stable and `tasks` is never modified: moving a bar calls
+`onTaskChange(id, { start, end })` with ISO dates, and the caller applies it
+(otherwise the bar goes back to its dates). Resizing, keyboard editing and
+dependencies between tasks are additive. The bar is a stable element
+(`.c__gantt__bar[data-task-id]`) in its row.
 
 ## Props
 

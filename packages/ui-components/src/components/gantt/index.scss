@@ -249,6 +249,75 @@
         var(--c--globals--transitions--ease-out);
   }
 
+  // Editing (s23), opt-in: the bar is the move surface.
+  &[data-editable] &__bar {
+    cursor: grab;
+  }
+
+  // During a session the bar jumps unit by unit (no tween, or it would lag
+  // behind the pointer) and dragging across names selects nothing.
+  &[data-editing] {
+    user-select: none;
+  }
+
+  &[data-editing] &__bar {
+    transition: none;
+  }
+
+  &[data-editing="move"],
+  &[data-editing="move"] &__bar {
+    cursor: grabbing;
+  }
+
+  &__bar[data-preview] {
+    outline: var(--c--components--gantt--focus-ring-width) solid
+      var(--c--components--gantt--drag-outline-color);
+  }
+
+  // The original dates: a shape (dashed), not a colour.
+  &__ghost {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--gantt-start) * var(--gantt-day-width));
+    box-sizing: border-box;
+    inline-size: calc(var(--gantt-span) * var(--gantt-day-width));
+    block-size: var(--c--components--gantt--bar-height);
+    margin-block: auto;
+    border: var(--c--components--gantt--border-width) dashed
+      var(--c--components--gantt--ghost-border-color);
+    border-radius: var(--c--components--gantt--bar-radius);
+    pointer-events: none;
+  }
+
+  // Inside the row, never a popover: rows clip their paint
+  // (content-visibility). After the bar, or before it on its wider side.
+  &__tip {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      (var(--gantt-start) + var(--gantt-span)) * var(--gantt-day-width)
+    );
+    display: flex;
+    align-items: center;
+    block-size: var(--c--components--gantt--bar-height);
+    margin-block: auto;
+    margin-inline: var(--c--globals--spacings--3xs);
+    padding-inline: var(--c--globals--spacings--3xs);
+    border-radius: var(--c--components--gantt--bar-radius);
+    background-color: var(--c--components--gantt--tooltip-background-color);
+    color: var(--c--components--gantt--tooltip-color);
+    font-size: var(--c--globals--font--sizes--xs);
+    white-space: nowrap;
+    pointer-events: none;
+
+    &[data-side="start"] {
+      inset-inline-start: auto;
+      inset-inline-end: calc(
+        (var(--gantt-days) - var(--gantt-start)) * var(--gantt-day-width)
+      );
+    }
+  }
+
   // Before the rows in the DOM and without z-index: each row is a stacking
   // context (content-visibility), so the line passes under the task column.
   &__today {
@@ -292,6 +361,21 @@
 
     &__zoom [aria-pressed="true"] {
       text-decoration-color: Highlight;
+    }
+
+    &__bar[data-preview] {
+      outline-color: Highlight;
+    }
+
+    &__ghost {
+      border-color: CanvasText;
+    }
+
+    &__tip {
+      forced-color-adjust: none;
+      border: var(--c--components--gantt--border-width) solid CanvasText;
+      background-color: Canvas;
+      color: CanvasText;
     }
   }
 

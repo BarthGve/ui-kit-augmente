@@ -348,6 +348,7 @@ export {
 export type {
   GanttProps,
   GanttTask,
+  GanttTaskChange,
   GanttZoom,
 } from "./components/gantt";
 

@@ -327,7 +327,12 @@
       "row_no_dates_aria": "{name}, no dates",
       "no_dates": "No dates",
       "today": "Today",
-      "empty": "No tasks"
+      "empty": "No tasks",
+      "tooltip_dates": "{start} to {end}",
+      "announce_preview": "{name}: {start} to {end}",
+      "announce_changed": "{name} rescheduled: {start} to {end}",
+      "announce_cancelled": "{name}: change cancelled, dates restored",
+      "limit_axis": "Limit of the chart reached"
     }
   }
 }
