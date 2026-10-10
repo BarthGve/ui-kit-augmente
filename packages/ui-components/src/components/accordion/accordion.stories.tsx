@@ -3,6 +3,8 @@ import { useState } from "react";
 import type { Key } from "react-aria-components";
 import { Badge } from "../badge";
 import { Button } from "../button";
+import { Input } from "../forms/input";
+import { TextArea } from "../forms/text-area";
 import { Accordion, AccordionItem } from "./index";
 
 const sections = (
@@ -27,7 +29,6 @@ const sections = (
 const meta = {
   title: "Components/Accordion",
   component: Accordion,
-  tags: ["autodocs"],
   parameters: { layout: "padded" },
   args: { children: sections },
 } satisfies Meta<typeof Accordion>;
@@ -119,4 +120,46 @@ export const LongContent: Story = {
       <Accordion {...args} />
     </div>
   ),
+};
+
+export const Nested: Story = {
+  args: {
+    defaultExpandedKeys: ["orders"],
+    children: (
+      <>
+        <AccordionItem id="orders" title="Orders">
+          <Accordion>
+            <AccordionItem id="tracking" title="Tracking" headingLevel={4}>
+              Follow a parcel from the order page.
+            </AccordionItem>
+            <AccordionItem id="cancel" title="Cancellation" headingLevel={4}>
+              An order can be cancelled until it ships.
+            </AccordionItem>
+          </Accordion>
+        </AccordionItem>
+        <AccordionItem id="account" title="Account">
+          Manage your profile and password.
+        </AccordionItem>
+      </>
+    ),
+  },
+};
+
+export const WithFormControls: Story = {
+  args: {
+    defaultExpandedKeys: ["contact"],
+    children: (
+      <>
+        <AccordionItem id="contact" title="Contact details">
+          <div style={{ display: "grid", gap: "1rem" }}>
+            <Input label="Name" />
+            <TextArea label="Message" />
+          </div>
+        </AccordionItem>
+        <AccordionItem id="billing" title="Billing">
+          Invoices are sent by email.
+        </AccordionItem>
+      </>
+    ),
+  },
 };

@@ -9,8 +9,42 @@ import {
 import { Icon } from ":/components/icon";
 import { AccordionItemProps, AccordionProps } from "./types";
 
+const TRIGGER = ".c__accordion__trigger";
+
+// React Aria gives no arrow navigation between disclosure triggers (AC3), and
+// `DisclosureGroup` drops keyboard props from its root, hence a native
+// listener. Only triggers owned by this root are visited, so nested
+// accordions and fields inside panels keep their own keys.
+const arrowKeys = (root: HTMLDivElement | null) => {
+  if (!root) return;
+  const onKeyDown = (event: KeyboardEvent) => {
+    const current = (event.target as Element).closest(TRIGGER);
+    if (!current || current.closest(".c__accordion") !== root) return;
+    const triggers = Array.from(
+      root.querySelectorAll<HTMLButtonElement>(`${TRIGGER}:not(:disabled)`),
+    ).filter((trigger) => trigger.closest(".c__accordion") === root);
+    const index = triggers.indexOf(current as HTMLButtonElement);
+    const last = triggers.length - 1;
+    const next = {
+      ArrowDown: index === last ? 0 : index + 1,
+      ArrowUp: index <= 0 ? last : index - 1,
+      Home: 0,
+      End: last,
+    }[event.key];
+    if (next === undefined || !triggers[next]) return;
+    event.preventDefault();
+    triggers[next].focus();
+  };
+  root.addEventListener("keydown", onKeyDown);
+  return () => root.removeEventListener("keydown", onKeyDown);
+};
+
 export const Accordion = ({ className, ...props }: AccordionProps) => (
-  <DisclosureGroup {...props} className={clsx("c__accordion", className)} />
+  <DisclosureGroup
+    {...props}
+    ref={arrowKeys}
+    className={clsx("c__accordion", className)}
+  />
 );
 
 export const AccordionItem = ({

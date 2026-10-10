@@ -58,14 +58,14 @@ All declared in `src/components/accordion/tokens.ts`, registered as `accordion` 
 | `trigger-padding` | `globals.spacings.base` | 1rem, applied to the trigger |
 | `panel-padding` | `globals.spacings.base` | 1rem, applied to the inner panel wrapper |
 | `icon-size` | `1.5rem` | literal (gap 3), Material Icons' native 24px |
-| `focus-ring-color` | `contextuals.border.semantic.brand.primary` | brand-550 / brand-450 |
+| `focus-ring-color` | `contextuals.content.semantic.brand.tertiary` | brand-550 / brand-250 (was `border.semantic.brand.primary`, changed in t02: see the contrast note) |
 | `focus-ring-width` | `2px` | literal (gap 2), same as Card/Tabs |
 | `focus-ring-offset` | `-2px` | literal (gap 2): inside the row |
 
 BEM classes: `c__accordion`, `c__accordion__item`, `c__accordion__heading`, `c__accordion__trigger`, `c__accordion__title`, `c__accordion__icon`, `c__accordion__panel`, `c__accordion__panel-content`; state through RAC attributes (`[data-expanded]`, `[data-disabled]`, `[data-focus-visible]`). No literal colour, spacing or radius in `index.scss`. No radius token (flush list, no rounded container).
 
 ## Dark theme and the six themes
-- Text, dividers and hover come from contextual tokens, so dark/DSFR/ANCT follow. Ring contrast against the adjacent surface is checked numerically in t02 (>= 3:1 in the six themes, technique of `button/focus-ring.spec.tsx`).
+- Text, dividers and hover come from contextual tokens, so dark/DSFR/ANCT follow. Ring contrast against the adjacent surface is checked numerically in t02 (>= 3:1 in the six themes, technique of `button/focus-ring.spec.tsx`). In t02 the first token, `border.semantic.brand.primary`, failed that check on the hover background in the three dark themes (2.95 / 2.96 / 2.98 against gray-750). Owner-delegated decision: the ring uses `content.semantic.brand.tertiary`, unchanged in the light themes and at least 4.70:1 against both `surface.secondary` and the hover tertiary in all six themes.
 - With a negative offset the ring is drawn over the trigger's own background: the ring colour must contrast with `surface.secondary` and the hover tertiary, not with the page; the t02 check uses both.
 - Hover cue is the tertiary background plus the cursor; the focus ring is the non-colour signal. Expanded state is conveyed by the chevron rotation (shape), not colour alone.
 

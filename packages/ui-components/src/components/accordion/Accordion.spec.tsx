@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
 import { describe, expect, it, vi } from "vitest";
@@ -41,9 +41,7 @@ describe("Accordion structure (AC3)", () => {
       trigger("Bravo"),
     );
     expect(alpha).toHaveAttribute("aria-expanded", "false");
-    const panel = document.getElementById(
-      alpha.getAttribute("aria-controls")!,
-    );
+    const panel = document.getElementById(alpha.getAttribute("aria-controls")!);
     expect(panel).toHaveTextContent("A content");
     expect(panel).toHaveAttribute("aria-labelledby", alpha.id);
   });
@@ -251,5 +249,209 @@ describe("Accordion stylesheet", () => {
     expect(blocks(source, /@media \(prefers-reduced-motion: reduce\)/)).toMatch(
       /transition:\s*none;/,
     );
+  });
+});
+
+describe("Accordion arrow keys (AC3)", () => {
+  const Three = ({ disabled }: { disabled?: string }) => (
+    <Accordion>
+      {["Alpha", "Bravo", "Charlie", "Delta"].map((name) => (
+        <AccordionItem
+          key={name}
+          id={name}
+          title={name}
+          isDisabled={name === disabled}
+        >
+          <input aria-label={`${name} field`} />
+          <textarea aria-label={`${name} notes`} />
+        </AccordionItem>
+      ))}
+    </Accordion>
+  );
+
+  it("moves focus to the next and previous trigger", async () => {
+    const user = userEvent.setup();
+    render(<Three />);
+    trigger("Alpha").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(trigger("Bravo")).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(trigger("Alpha")).toHaveFocus();
+    // Handled arrows are cancelled, so the page does not scroll.
+    expect(fireEvent.keyDown(trigger("Alpha"), { key: "ArrowDown" })).toBe(
+      false,
+    );
+  });
+
+  it("wraps from the last trigger to the first and back", async () => {
+    const user = userEvent.setup();
+    render(<Three />);
+    trigger("Delta").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(trigger("Alpha")).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(trigger("Delta")).toHaveFocus();
+  });
+
+  it("jumps to the first and last enabled trigger with Home and End", async () => {
+    const user = userEvent.setup();
+    render(
+      <Accordion>
+        <AccordionItem id="a" title="Alpha" isDisabled>
+          A
+        </AccordionItem>
+        <AccordionItem id="b" title="Bravo">
+          B
+        </AccordionItem>
+        <AccordionItem id="c" title="Charlie">
+          C
+        </AccordionItem>
+        <AccordionItem id="d" title="Delta" isDisabled>
+          D
+        </AccordionItem>
+      </Accordion>,
+    );
+    trigger("Bravo").focus();
+    await user.keyboard("{End}");
+    expect(trigger("Charlie")).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(trigger("Bravo")).toHaveFocus();
+  });
+
+  it("skips a disabled trigger in both directions", async () => {
+    const user = userEvent.setup();
+    render(<Three disabled="Bravo" />);
+    trigger("Alpha").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(trigger("Charlie")).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(trigger("Alpha")).toHaveFocus();
+  });
+
+  it("leaves arrow keys alone in an input or a textarea of an open panel", async () => {
+    const user = userEvent.setup();
+    render(<Three />);
+    await user.click(trigger("Bravo"));
+    for (const field of [
+      screen.getByRole("textbox", { name: "Bravo field" }),
+      screen.getByRole("textbox", { name: "Bravo notes" }),
+    ]) {
+      field.focus();
+      for (const key of ["ArrowDown", "ArrowUp", "Home", "End"]) {
+        // fireEvent returns false when a handler called preventDefault.
+        expect(fireEvent.keyDown(field, { key })).toBe(true);
+        expect(field).toHaveFocus();
+      }
+    }
+  });
+
+  it("never crosses into an outer accordion from a nested one", async () => {
+    const user = userEvent.setup();
+    render(
+      <Accordion defaultExpandedKeys={["outer-b"]}>
+        <AccordionItem id="outer-a" title="Outer A">
+          A
+        </AccordionItem>
+        <AccordionItem id="outer-b" title="Outer B">
+          <Accordion>
+            <AccordionItem id="inner-a" title="Inner A">
+              IA
+            </AccordionItem>
+            <AccordionItem id="inner-b" title="Inner B">
+              IB
+            </AccordionItem>
+          </Accordion>
+        </AccordionItem>
+        <AccordionItem id="outer-c" title="Outer C">
+          C
+        </AccordionItem>
+      </Accordion>,
+    );
+    trigger("Inner B").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(trigger("Inner A")).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(trigger("Inner B")).toHaveFocus();
+    await user.keyboard("{End}");
+    expect(trigger("Inner B")).toHaveFocus();
+
+    trigger("Outer B").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(trigger("Outer C")).toHaveFocus();
+  });
+
+  it("moves focus without toggling, then Enter toggles the focused trigger once", async () => {
+    const user = userEvent.setup();
+    const onExpandedChange = vi.fn();
+    render(<Items onExpandedChange={onExpandedChange} />);
+    trigger("Alpha").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(trigger("Alpha")).toHaveAttribute("aria-expanded", "false");
+    expect(trigger("Bravo")).toHaveAttribute("aria-expanded", "false");
+    expect(onExpandedChange).not.toHaveBeenCalled();
+    await user.keyboard("{Enter}");
+    expect(trigger("Bravo")).toHaveAttribute("aria-expanded", "true");
+    expect(trigger("Alpha")).toHaveAttribute("aria-expanded", "false");
+    expect(onExpandedChange).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Focus ring contrast, technique of `button/focus-ring.spec.tsx` (helpers
+// copied: known duplication, kept local to each spec).
+describe("Accordion focus ring contrast", () => {
+  const css = read("../../cunningham-tokens.css");
+  // Theme blocks hold flat declarations only: the first `}` closes the block.
+  const declarations = (selector: string) => {
+    const body = css.split(`${selector}{`)[1]?.split("}")[0];
+    if (!body) throw new Error(`No ${selector} block in cunningham-tokens.css`);
+    return Object.fromEntries(
+      [...body.matchAll(/(--c--[\w-]+):\s*([^;]+);/g)].map(([, k, v]) => [
+        k,
+        v.trim(),
+      ]),
+    );
+  };
+  const root = declarations(":root ");
+  const resolveVar = (theme: Record<string, string>, name: string): string => {
+    const value = theme[name] ?? root[name];
+    if (value === undefined) throw new Error(`Undefined ${name}`);
+    const ref = value.match(/^var\((--[\w-]+)\)$/);
+    return ref ? resolveVar(theme, ref[1]) : value;
+  };
+  const luminance = (hex: string) => {
+    expect(hex).toMatch(/^#[0-9a-f]{6}$/i);
+    const [r, g, b] = [1, 3, 5].map((i) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const contrast = (a: string, b: string) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  it.each([
+    "default",
+    "dark",
+    "dsfr-light",
+    "dsfr-dark",
+    "anct-light",
+    "anct-dark",
+  ])("%s: ring >= 3:1 on the surface and on the hover background", (theme) => {
+    const vars =
+      theme === "default" ? root : declarations(`.cunningham-theme--${theme}`);
+    const ring = resolveVar(
+      vars,
+      "--c--components--accordion--focus-ring-color",
+    );
+    for (const background of [
+      "--c--contextuals--background--surface--secondary",
+      "--c--contextuals--background--semantic--neutral--tertiary",
+    ]) {
+      expect(
+        contrast(ring, resolveVar(vars, background)),
+      ).toBeGreaterThanOrEqual(3);
+    }
   });
 });
