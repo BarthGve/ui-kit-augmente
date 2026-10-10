@@ -124,3 +124,9 @@ export const Editable: Story = {
     );
   },
 };
+
+// Editable from month zoom: short bars carry no handles (move only).
+export const EditableByMonth: Story = {
+  ...Editable,
+  args: { editable: true, defaultZoom: "month" },
+};

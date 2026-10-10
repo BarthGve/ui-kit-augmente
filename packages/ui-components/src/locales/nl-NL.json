@@ -332,7 +332,8 @@
       "announce_preview": "{name}: {start} tot {end}",
       "announce_changed": "{name} verplaatst: {start} tot {end}",
       "announce_cancelled": "{name}: wijziging geannuleerd, datums hersteld",
-      "limit_axis": "Grens van de grafiek bereikt"
+      "limit_axis": "Grens van de grafiek bereikt",
+      "limit_end_before_start": "Het einde kan niet vóór het begin liggen"
     }
   }
 }

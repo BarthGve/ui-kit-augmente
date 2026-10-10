@@ -332,7 +332,8 @@
       "announce_preview": "{name} : du {start} au {end}",
       "announce_changed": "{name} replanifiée : du {start} au {end}",
       "announce_cancelled": "{name} : modification annulée, dates rétablies",
-      "limit_axis": "Limite du graphique atteinte"
+      "limit_axis": "Limite du graphique atteinte",
+      "limit_end_before_start": "La fin ne peut pas précéder le début"
     }
   }
 }

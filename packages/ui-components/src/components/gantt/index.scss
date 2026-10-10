@@ -269,9 +269,79 @@
     cursor: grabbing;
   }
 
+  &[data-editable] &__handle {
+    cursor: ew-resize;
+  }
+
+  &[data-editing^="resize"],
+  &[data-editing^="resize"] &__bar {
+    cursor: ew-resize;
+  }
+
+  // Touch drags the bar at once; fingers on the track or the task column
+  // still scroll the box.
+  &[data-editable] &__bar,
+  &[data-editable] &__handle {
+    touch-action: none;
+  }
+
   &__bar[data-preview] {
     outline: var(--c--components--gantt--focus-ring-width) solid
       var(--c--components--gantt--drag-outline-color);
+  }
+
+  // Clamped (axis or end before start): the colour is a second cue, the
+  // tooltip sentence is the first.
+  &__bar[data-clamped] {
+    outline-color: var(--c--components--gantt--invalid-color);
+  }
+
+  // Edge handles: a transparent target across the row height (not the
+  // 20px bar), a third of it outside the bar; a third of the bar when the
+  // bar is narrower than three targets (Gantt.tsx drops them under one).
+  &__handle {
+    --gantt-handle-width: min(
+      var(--c--components--gantt--handle-hit-size),
+      calc(var(--gantt-span) * var(--gantt-day-width) / 3)
+    );
+
+    position: absolute;
+    inset-block: calc(
+      (
+          var(--c--components--gantt--bar-height) - var(
+              --c--components--gantt--row-height
+            )
+        ) /
+        2 - var(--c--components--gantt--border-width)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--gantt-handle-width);
+
+    &[data-edge="start"] {
+      inset-inline-start: calc(var(--gantt-handle-width) / -3);
+    }
+
+    &[data-edge="end"] {
+      inset-inline-end: calc(var(--gantt-handle-width) / -3);
+    }
+  }
+
+  // The grip, on the bar fill: shown on the row's hover or focus and while
+  // editing, so a static chart stays calm. The target is always live.
+  &__handle::after {
+    content: "";
+    inline-size: var(--c--components--gantt--handle-grip-width);
+    block-size: calc(var(--c--components--gantt--bar-height) / 2);
+    background-color: var(--c--components--gantt--handle-grip-color);
+    visibility: hidden;
+  }
+
+  &__row:hover &__handle::after,
+  &__row:focus-within &__handle::after,
+  &__bar[data-preview] &__handle::after {
+    visibility: visible;
   }
 
   // The original dates: a shape (dashed), not a colour.
@@ -363,8 +433,13 @@
       text-decoration-color: Highlight;
     }
 
-    &__bar[data-preview] {
+    &__bar[data-preview],
+    &__bar[data-clamped] {
       outline-color: Highlight;
+    }
+
+    &__handle::after {
+      background-color: CanvasText;
     }
 
     &__ghost {
