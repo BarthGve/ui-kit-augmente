@@ -332,6 +332,16 @@ export type {
 } from "./components/card";
 
 export {
+  Accordion,
+  AccordionItem,
+} from "./components/accordion";
+
+export type {
+  AccordionProps,
+  AccordionItemProps,
+} from "./components/accordion";
+
+export {
   HeaderBanner,
 } from "./components/header-banner";
 

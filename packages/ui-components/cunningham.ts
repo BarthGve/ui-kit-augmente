@@ -2,6 +2,7 @@ import {
   defaultTokenRefs,
   getThemesFromGlobals,
 } from "@gouvfr-lasuite/ui-tokens";
+import { tokens as accordionTokens } from "./src/components/accordion/tokens";
 import { tokens as alertTokens } from "./src/components/alert/tokens";
 import { tokens as buttonTokens } from "./src/components/button/tokens";
 import { tokens as calendarTokens } from "./src/components/calendar/tokens";
@@ -21,6 +22,7 @@ import { tokens as tooltipTokens } from "./src/components/tooltip/tokens";
 import { deepMerge } from "./src/utils/objects";
 
 const componentTokenDefaults = {
+  accordion: accordionTokens(defaultTokenRefs),
   alert: alertTokens(defaultTokenRefs),
   button: buttonTokens(defaultTokenRefs),
   calendar: calendarTokens(defaultTokenRefs),
