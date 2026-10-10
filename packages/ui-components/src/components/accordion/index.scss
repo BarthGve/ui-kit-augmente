@@ -1,0 +1,100 @@
+.c__accordion {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--c--components--accordion--color);
+  border-top: var(--c--components--accordion--border-width) solid
+    var(--c--components--accordion--border-color);
+
+  &__item {
+    border-bottom: var(--c--components--accordion--border-width) solid
+      var(--c--components--accordion--border-color);
+  }
+
+  &__heading {
+    margin: 0;
+    font-size: inherit;
+  }
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--c--components--accordion--trigger-padding);
+    width: 100%;
+    min-width: 0;
+    padding: var(--c--components--accordion--trigger-padding);
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: var(--c--components--accordion--trigger-font-weight);
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+
+    &:hover,
+    &:active {
+      background-color: var(
+        --c--components--accordion--trigger-background-color--hover
+      );
+    }
+
+    &:focus-visible,
+    &[data-focus-visible] {
+      outline: var(--c--components--accordion--focus-ring-width) solid
+        var(--c--components--accordion--focus-ring-color);
+      outline-offset: var(--c--components--accordion--focus-ring-offset);
+    }
+
+    &[data-disabled] {
+      color: var(--c--components--accordion--color--disabled);
+      cursor: not-allowed;
+      background: none;
+    }
+  }
+
+  &__title {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__icon {
+    flex: none;
+    font-size: var(--c--components--accordion--icon-size);
+    transition: transform var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+  }
+
+  &__item[data-expanded] &__icon {
+    transform: rotate(180deg);
+  }
+
+  // React Aria sets --disclosure-panel-height while animating; never set
+  // `display` here (collapsed panels use hidden="until-found").
+  &__panel {
+    height: var(--disclosure-panel-height);
+    overflow: clip;
+    transition: height var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+  }
+
+  // Padding on the inner wrapper, so the animated height does not cut it.
+  &__panel-content {
+    padding: var(--c--components--accordion--panel-padding);
+  }
+
+  @media (forced-colors: active) {
+    &__trigger:focus-visible,
+    &__trigger[data-focus-visible] {
+      outline-color: Highlight;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__trigger,
+    &__icon,
+    &__panel {
+      transition: none;
+    }
+  }
+}
