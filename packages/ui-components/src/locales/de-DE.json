@@ -332,7 +332,8 @@
       "announce_preview": "{name}: {start} bis {end}",
       "announce_changed": "{name} verschoben: {start} bis {end}",
       "announce_cancelled": "{name}: Änderung abgebrochen, Daten wiederhergestellt",
-      "limit_axis": "Grenze des Diagramms erreicht"
+      "limit_axis": "Grenze des Diagramms erreicht",
+      "limit_end_before_start": "Das Ende kann nicht vor dem Beginn liegen"
     }
   }
 }

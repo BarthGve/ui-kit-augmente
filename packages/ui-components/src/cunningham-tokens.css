@@ -771,6 +771,8 @@
 	--c--components--gantt--drag-outline-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-background-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--handle-grip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--invalid-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -784,6 +786,8 @@
 	--c--components--gantt--today-width: 2px;
 	--c--components--gantt--focus-ring-width: 2px;
 	--c--components--gantt--focus-ring-offset: -2px;
+	--c--components--gantt--handle-hit-size: 1.5rem;
+	--c--components--gantt--handle-grip-width: 2px;
 	--c--components--modal--background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--modal--backdrop-color: #00000099;
 	--c--components--modal--border-radius: 8px;
@@ -1619,6 +1623,8 @@
 	--c--components--gantt--drag-outline-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-background-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--handle-grip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--invalid-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -1632,6 +1638,8 @@
 	--c--components--gantt--today-width: 2px;
 	--c--components--gantt--focus-ring-width: 2px;
 	--c--components--gantt--focus-ring-offset: -2px;
+	--c--components--gantt--handle-hit-size: 1.5rem;
+	--c--components--gantt--handle-grip-width: 2px;
 	--c--components--modal--background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--modal--backdrop-color: #00000099;
 	--c--components--modal--border-radius: 8px;
@@ -2442,6 +2450,8 @@
 	--c--components--gantt--drag-outline-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-background-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--handle-grip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--invalid-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -2455,6 +2465,8 @@
 	--c--components--gantt--today-width: 2px;
 	--c--components--gantt--focus-ring-width: 2px;
 	--c--components--gantt--focus-ring-offset: -2px;
+	--c--components--gantt--handle-hit-size: 1.5rem;
+	--c--components--gantt--handle-grip-width: 2px;
 	--c--components--modal--background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--modal--backdrop-color: #00000099;
 	--c--components--modal--border-radius: 8px;
@@ -3265,6 +3277,8 @@
 	--c--components--gantt--drag-outline-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-background-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--handle-grip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--invalid-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -3278,6 +3292,8 @@
 	--c--components--gantt--today-width: 2px;
 	--c--components--gantt--focus-ring-width: 2px;
 	--c--components--gantt--focus-ring-offset: -2px;
+	--c--components--gantt--handle-hit-size: 1.5rem;
+	--c--components--gantt--handle-grip-width: 2px;
 	--c--components--modal--background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--modal--backdrop-color: #00000099;
 	--c--components--modal--border-radius: 8px;
@@ -4091,6 +4107,8 @@
 	--c--components--gantt--drag-outline-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-background-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--handle-grip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--invalid-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -4104,6 +4122,8 @@
 	--c--components--gantt--today-width: 2px;
 	--c--components--gantt--focus-ring-width: 2px;
 	--c--components--gantt--focus-ring-offset: -2px;
+	--c--components--gantt--handle-hit-size: 1.5rem;
+	--c--components--gantt--handle-grip-width: 2px;
 	--c--components--modal--background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--modal--backdrop-color: #00000099;
 	--c--components--modal--border-radius: 8px;
@@ -4917,6 +4937,8 @@
 	--c--components--gantt--drag-outline-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-background-color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--gantt--tooltip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--handle-grip-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--invalid-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -4930,6 +4952,8 @@
 	--c--components--gantt--today-width: 2px;
 	--c--components--gantt--focus-ring-width: 2px;
 	--c--components--gantt--focus-ring-offset: -2px;
+	--c--components--gantt--handle-hit-size: 1.5rem;
+	--c--components--gantt--handle-grip-width: 2px;
 	--c--components--modal--background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--modal--backdrop-color: #00000099;
 	--c--components--modal--border-radius: 8px;

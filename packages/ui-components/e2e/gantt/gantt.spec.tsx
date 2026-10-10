@@ -465,3 +465,258 @@ test.describe("Gantt pointer move", () => {
     await expect(page.getByText("Closed")).toBeVisible();
   });
 });
+
+// Resizing (s23): handles, hit area, auto-scroll, touch, narrow bars.
+test.describe("Gantt pointer resize", () => {
+  type Call = [string, GanttTaskChange];
+  const recorder = () => {
+    const calls: Call[] = [];
+    return {
+      calls,
+      onTaskChange: (id: string, c: GanttTaskChange) => calls.push([id, c]),
+    };
+  };
+  const span = (locator: Locator) =>
+    locator.evaluate((el) =>
+      Number((el as HTMLElement).style.getPropertyValue("--gantt-span")),
+    );
+  const perDay = async (page: Page, id = "t0") =>
+    (await box(bar(page, id))).width / (await span(bar(page, id)));
+  const handle = (page: Page, id: string, edge: "start" | "end") =>
+    bar(page, id).locator(`.c__gantt__handle[data-edge="${edge}"]`);
+  const center = (b: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
+  // Pixels along a line through the box where the handle is the hit target:
+  // what a pointer can really reach, not the box (sticky column, clipping).
+  const hittable = (target: Locator, axis: "x" | "y") =>
+    target.evaluate((el, along) => {
+      const r = el.getBoundingClientRect();
+      let hits = 0;
+      const [from, to] = along === "x" ? [r.left, r.right] : [r.top, r.bottom];
+      for (let p = Math.floor(from) - 4; p <= to + 4; p++) {
+        const x = along === "x" ? p + 0.5 : r.left + r.width / 2;
+        const y = along === "y" ? p + 0.5 : r.top + r.height / 2;
+        if (document.elementFromPoint(x, y) === el) hits++;
+      }
+      return hits;
+    }, axis);
+  const scrollLeft = (page: Page) =>
+    scroller(page).evaluate((el) => el.scrollLeft);
+  const editing = (page: Page) =>
+    page.getByTestId("gantt").getAttribute("data-editing");
+
+  test("a real drag of the end handle resizes by whole weeks; the target is 24px by the row height", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onTaskChange } = recorder();
+    await mount(<EditableGantt onTaskChange={onTaskChange} />);
+    const px = await perDay(page);
+    const end = handle(page, "t1", "end");
+    const rowHeight = (await box(row(page, 3).locator(".c__gantt__track")))
+      .height;
+    expect(await hittable(end, "x")).toBeGreaterThanOrEqual(24);
+    expect(await hittable(end, "y")).toBeGreaterThanOrEqual(rowHeight - 1);
+    expect(
+      await hittable(handle(page, "t1", "start"), "x"),
+    ).toBeGreaterThanOrEqual(24);
+    const before = await box(bar(page, "t1"));
+    const at = center(await box(end));
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    // 2.4 weeks: snaps to 2 weeks.
+    await page.mouse.move(at.x + 2.4 * 7 * px, at.y, { steps: 8 });
+    expect(await editing(page)).toBe("resize-end");
+    await page.mouse.up();
+    await expect.poll(() => calls.length).toBe(1);
+    // t1: 2026-01-17 to 2026-01-26.
+    expect(calls[0]).toEqual([
+      "t1",
+      { start: "2026-01-17", end: "2026-02-09" },
+    ]);
+    const after = await box(bar(page, "t1"));
+    expect(after.x).toBeCloseTo(before.x, 0);
+    expect(after.width).toBeCloseTo(before.width + 14 * px, 0);
+  });
+
+  test("held at the visible track edge, the box scrolls, the dates follow, and it stops with the session", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onTaskChange } = recorder();
+    await mount(<EditableGantt onTaskChange={onTaskChange} />);
+    const px = await perDay(page);
+    const view = await box(scroller(page));
+    const column = await box(taskCells(page).first());
+    const stable = async () => {
+      const left = await scrollLeft(page);
+      await page.waitForTimeout(250);
+      expect(await scrollLeft(page)).toBe(left);
+    };
+    const hold = async (x: number) => {
+      const at = center(await box(bar(page, "t1")));
+      await page.mouse.move(at.x, at.y);
+      await page.mouse.down();
+      await page.mouse.move(x, at.y, { steps: 4 });
+      return at;
+    };
+
+    // Release: the drop takes the scrolled distance into account.
+    const scroll0 = await scrollLeft(page);
+    const at = await hold(view.x + view.width - 20);
+    await page.waitForTimeout(400);
+    expect(await scrollLeft(page)).toBeGreaterThan(scroll0 + 50);
+    await page.mouse.up();
+    const scrolled = (await scrollLeft(page)) - scroll0;
+    await stable();
+    await expect.poll(() => calls.length).toBe(1);
+    const weeks = Math.round(
+      (view.x + view.width - 20 - at.x + scrolled) / (7 * px),
+    );
+    expect(weeks).toBeGreaterThan(2);
+    const start = new Date(Date.UTC(2026, 0, 17 + 7 * weeks));
+    expect(calls[0][1].start).toBe(start.toISOString().slice(0, 10));
+
+    // Escape, then window blur: no scroll after the session ends.
+    await hold(column.x + column.width + 10);
+    await page.waitForTimeout(150);
+    await page.keyboard.press("Escape");
+    expect(await editing(page)).toBeNull();
+    await stable();
+    await page.mouse.up();
+
+    await scroller(page).evaluate((el) => (el.scrollLeft = 0));
+    await hold(view.x + view.width - 20);
+    await page.waitForTimeout(150);
+    await page.evaluate(() => window.dispatchEvent(new Event("blur")));
+    expect(await editing(page)).toBeNull();
+    await stable();
+    await page.mouse.up();
+    expect(calls).toHaveLength(1);
+  });
+
+  test.describe("touch", () => {
+    test.use({ hasTouch: true });
+
+    test("a finger drags a bar, scrolls the box from the track, and a cancelled touch restores", async ({
+      mount,
+      page,
+    }) => {
+      const { calls, onTaskChange } = recorder();
+      await mount(<EditableGantt onTaskChange={onTaskChange} />);
+      const px = await perDay(page);
+      // Real touch input (pointerType "touch"), not synthetic events.
+      const cdp = await page.context().newCDPSession(page);
+      const touch = (
+        type: "touchStart" | "touchMove" | "touchEnd" | "touchCancel",
+        x?: number,
+        y?: number,
+      ) =>
+        cdp.send("Input.dispatchTouchEvent", {
+          type,
+          touchPoints: x === undefined ? [] : [{ x, y: y! }],
+        });
+      await page.evaluate(() => {
+        const w = window as unknown as { types: string[] };
+        w.types = [];
+        document.addEventListener("pointerdown", (e) =>
+          w.types.push(e.pointerType),
+        );
+      });
+
+      const at = center(await box(bar(page, "t1")));
+      await touch("touchStart", at.x, at.y);
+      for (let i = 1; i <= 6; i++) {
+        await touch("touchMove", at.x + (i * 7 * px) / 6, at.y);
+      }
+      expect(await editing(page)).toBe("move");
+      await touch("touchEnd");
+      await expect.poll(() => calls.length).toBe(1);
+      expect(calls[0]).toEqual([
+        "t1",
+        { start: "2026-01-24", end: "2026-02-02" },
+      ]);
+      expect(
+        await page.evaluate(
+          () => (window as unknown as { types: string[] }).types,
+        ),
+      ).toEqual(["touch"]);
+
+      // On the track, away from any bar: the box scrolls, nothing is edited.
+      const view = await box(scroller(page));
+      const t0 = await box(bar(page, "t0"));
+      const from = { x: view.x + view.width - 60, y: t0.y + t0.height / 2 };
+      const left = await scrollLeft(page);
+      await touch("touchStart", from.x, from.y);
+      for (let i = 1; i <= 8; i++) {
+        await touch("touchMove", from.x - i * 30, from.y);
+      }
+      await touch("touchEnd");
+      await expect.poll(() => scrollLeft(page)).toBeGreaterThan(left + 50);
+      expect(await editing(page)).toBeNull();
+      expect(calls).toHaveLength(1);
+      // Let the fling settle before measuring a bar.
+      let settled = -1;
+      await expect
+        .poll(
+          async () => {
+            const now = await scrollLeft(page);
+            const done = now === settled;
+            settled = now;
+            return done;
+          },
+          { intervals: [200] },
+        )
+        .toBe(true);
+
+      // A cancelled touch (the browser takes the gesture) restores the bar.
+      await scroller(page).evaluate((el) => (el.scrollLeft = 0));
+      const b = await box(bar(page, "t2"));
+      const c = center(b);
+      await touch("touchStart", c.x, c.y);
+      await touch("touchMove", c.x + 7 * px, c.y);
+      expect((await box(bar(page, "t2"))).x).toBeGreaterThan(b.x + 10);
+      await touch("touchCancel");
+      expect((await box(bar(page, "t2"))).x).toBeCloseTo(b.x, 0);
+      expect(await editing(page)).toBeNull();
+      expect(calls).toHaveLength(1);
+    });
+  });
+
+  test("month zoom: a short task has no handles and still moves; a narrow one gets thirds", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onTaskChange } = recorder();
+    await mount(
+      <TestGantt
+        editable
+        defaultZoom="month"
+        onTaskChange={onTaskChange}
+        tasks={[
+          { id: "s", name: "Short", start: "2026-03-10", end: "2026-03-13" },
+          { id: "n", name: "Narrow", start: "2026-03-01", end: "2026-03-10" },
+          { id: "l", name: "Long", start: "2026-01-05", end: "2026-09-30" },
+        ]}
+      />,
+    );
+    const px = await perDay(page, "l");
+    await expect(bar(page, "s").locator(".c__gantt__handle")).toHaveCount(0);
+    const narrow = await box(bar(page, "n"));
+    expect((await box(handle(page, "n", "end"))).width).toBeCloseTo(
+      narrow.width / 3,
+      0,
+    );
+    const at = center(await box(bar(page, "s")));
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 31 * px, at.y, { steps: 4 });
+    await page.mouse.up();
+    await expect.poll(() => calls.length).toBe(1);
+    expect(calls[0]).toEqual(["s", { start: "2026-04-10", end: "2026-04-13" }]);
+  });
+});

@@ -332,7 +332,8 @@
       "announce_preview": "{name}: {start} to {end}",
       "announce_changed": "{name} rescheduled: {start} to {end}",
       "announce_cancelled": "{name}: change cancelled, dates restored",
-      "limit_axis": "Limit of the chart reached"
+      "limit_axis": "Limit of the chart reached",
+      "limit_end_before_start": "The end cannot be before the start"
     }
   }
 }

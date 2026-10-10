@@ -944,6 +944,226 @@ describe("Gantt pointer move (s23)", () => {
     expect(start("Build")).toBe(1);
     expect(scroller.scrollLeft).toBe(400 - 7 * 40);
   });
+
+  describe("resize", () => {
+    const span = (name: string) => Number(cssVar(barOf(name), "--gantt-span"));
+    const handle = (name: string, edge: "start" | "end") =>
+      barOf(name).querySelector<HTMLElement>(
+        `.c__gantt__handle[data-edge="${edge}"]`,
+      )!;
+    const resize = (name: string, edge: "start" | "end", dx: number) => {
+      const el = handle(name, edge);
+      down(el);
+      moveTo(el, 100 + dx);
+      up(el, 100 + dx);
+    };
+    const handles = () => document.querySelectorAll(".c__gantt__handle");
+
+    it("editable: two hidden, unfocusable handles per editable bar, none otherwise", () => {
+      const { unmount } = editGantt({
+        tasks: [
+          ...EDIT_TASKS,
+          { id: "f", name: "Forever", start: "0001-01-01", end: "9999-12-31" },
+        ],
+      });
+      for (const name of ["Write the brief", "Build", "Frame"]) {
+        const edges = [...barOf(name).querySelectorAll(".c__gantt__handle")];
+        expect(edges.map((el) => el.getAttribute("data-edge"))).toEqual([
+          "start",
+          "end",
+        ]);
+        for (const el of edges) {
+          expect(el.closest('[aria-hidden="true"]')).not.toBeNull();
+          expect(el).not.toHaveAttribute("tabindex");
+        }
+      }
+      // No bar, or a bar clipped by the window: nothing to resize.
+      expect(
+        taskRow("Plan the launch").querySelector(".c__gantt__handle"),
+      ).toBeNull();
+      expect(barOf("Forever").querySelector(".c__gantt__handle")).toBeNull();
+      unmount();
+      renderGantt({ tasks: EDIT_TASKS, zoom: "day" });
+      expect(handles()).toHaveLength(0);
+    });
+
+    it("the end handle changes only the end, the start handle only the start (AC2)", () => {
+      const onTaskChange = vi.fn();
+      editGantt({ onTaskChange });
+      resize("Write the brief", "end", 2 * 40);
+      expect(onTaskChange).toHaveBeenLastCalledWith("a", {
+        start: "2026-03-02",
+        end: "2026-03-15",
+      });
+      resize("Write the brief", "start", 2 * 40);
+      expect(onTaskChange).toHaveBeenLastCalledWith("a", {
+        start: "2026-03-04",
+        end: "2026-03-13",
+      });
+      expect(onTaskChange).toHaveBeenCalledTimes(2);
+    });
+
+    it("the end never goes before the start: one unit wide, flagged, committed clamped (AC2)", () => {
+      const onTaskChange = vi.fn();
+      editGantt({ onTaskChange });
+      const original = start("Write the brief");
+      const el = handle("Write the brief", "end");
+      down(el);
+      moveTo(el, 100 - 30 * 40);
+      expect(start("Write the brief")).toBe(original);
+      expect(span("Write the brief")).toBe(1);
+      expect(barOf("Write the brief")).toHaveAttribute("data-clamped");
+      expect(tip()).toHaveTextContent("The end cannot be before the start");
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "The end cannot be before the start",
+      );
+      up(el, 100 - 30 * 40);
+      expect(onTaskChange).toHaveBeenLastCalledWith("a", {
+        start: "2026-03-02",
+        end: "2026-03-02",
+      });
+      resize("Write the brief", "start", 30 * 40);
+      expect(onTaskChange).toHaveBeenLastCalledWith("a", {
+        start: "2026-03-13",
+        end: "2026-03-13",
+      });
+    });
+
+    it("snaps a resize to whole weeks and calendar months, from the edited edge (AC4)", () => {
+      px = 12;
+      const onTaskChange = vi.fn();
+      const { unmount } = editGantt({ zoom: "week", onTaskChange });
+      resize("Write the brief", "end", 50); // 4.17 days: 1 week
+      expect(onTaskChange).toHaveBeenLastCalledWith("a", {
+        start: "2026-03-02",
+        end: "2026-03-20",
+      });
+      unmount();
+      px = 4;
+      onTaskChange.mockClear();
+      editGantt({
+        zoom: "month",
+        onTaskChange,
+        tasks: [
+          { id: "j", name: "January", start: "2026-01-10", end: "2026-01-31" },
+          { id: "f", name: "February", start: "2026-01-10", end: "2026-02-28" },
+          { id: "z", name: "Frame", start: "2026-01-04", end: "2026-06-30" },
+        ],
+      });
+      resize("January", "end", 28 * 4); // Jan 31 + 1 month, clamped
+      expect(onTaskChange).toHaveBeenLastCalledWith("j", {
+        start: "2026-01-10",
+        end: "2026-02-28",
+      });
+      // 14.5 days from Feb 28 is nearer one month (28 days) than none; from
+      // the start (Jan 10, a 31-day month) it would be nearer none.
+      resize("February", "end", 14.5 * 4);
+      expect(onTaskChange).toHaveBeenLastCalledWith("f", {
+        start: "2026-01-10",
+        end: "2026-03-28",
+      });
+      expect(onTaskChange).toHaveBeenCalledTimes(2);
+    });
+
+    it.each([
+      [
+        "Escape",
+        () => fireEvent.keyDown(document.activeElement!, { key: "Escape" }),
+      ],
+      ["pointercancel", (el: HTMLElement) => fireEvent.pointerCancel(el)],
+      ["window blur", () => fireEvent.blur(window)],
+    ])("a resize session, cancelled by %s, restores the dates", (_, cancel) => {
+      const onTaskChange = vi.fn();
+      editGantt({ onTaskChange });
+      const before = [start("Write the brief"), span("Write the brief")];
+      const el = handle("Write the brief", "end");
+      down(el);
+      moveTo(el, 100 + 3 * 40);
+      expect(root()).toHaveAttribute("data-editing", "resize-end");
+      expect(span("Write the brief")).toBe(before[1] + 3);
+      cancel(el);
+      expect([start("Write the brief"), span("Write the brief")]).toEqual(
+        before,
+      );
+      expect(root()).not.toHaveAttribute("data-editing");
+      up(el, 100 + 3 * 40);
+      expect(onTaskChange).not.toHaveBeenCalled();
+      const first = handle("Write the brief", "start");
+      down(first);
+      moveTo(first, 100 - 40);
+      expect(root()).toHaveAttribute("data-editing", "resize-start");
+    });
+
+    it("unmounted mid auto-scroll, no frame is left to run", () => {
+      const frames = new Map<number, FrameRequestCallback>();
+      let next = 0;
+      const raf = vi
+        .spyOn(window, "requestAnimationFrame")
+        .mockImplementation((cb) => (frames.set(++next, cb), next));
+      const caf = vi
+        .spyOn(window, "cancelAnimationFrame")
+        .mockImplementation((id) => void frames.delete(id));
+      // A 1000px box whose visible track starts after a 200px column.
+      const proto = HTMLElement.prototype;
+      const measured = proto.getBoundingClientRect;
+      proto.getBoundingClientRect = function (this: HTMLElement) {
+        if (this.matches(".c__gantt__scroller"))
+          return new DOMRect(0, 0, 1000, 300);
+        if (this.matches(".c__gantt__axis > .c__gantt__task"))
+          return new DOMRect(0, 0, 200, 40);
+        return measured.call(this);
+      };
+      const width = vi
+        .spyOn(proto, "clientWidth", "get")
+        .mockImplementation(function (this: HTMLElement) {
+          return this.matches(".c__gantt__scroller") ? 1000 : 0;
+        });
+      try {
+        const { container, unmount } = editGantt();
+        const scroller = container.querySelector<HTMLElement>(
+          ".c__gantt__scroller",
+        )!;
+        const el = barOf("Write the brief");
+        down(el, 500);
+        moveTo(el, 990); // 10px from the right edge
+        expect(frames.size).toBe(1);
+        // The loop runs: one frame scrolls and asks for the next.
+        const [first] = frames.values();
+        frames.clear();
+        first(0);
+        expect(scroller.scrollLeft).toBeGreaterThan(0);
+        expect(frames.size).toBe(1);
+        unmount();
+        expect(frames.size).toBe(0);
+      } finally {
+        proto.getBoundingClientRect = measured;
+        width.mockRestore();
+        raf.mockRestore();
+        caf.mockRestore();
+      }
+    });
+
+    it("bars narrower than the 24px target carry no handles", () => {
+      px = 12;
+      editGantt({
+        zoom: "week",
+        tasks: [
+          { id: "o", name: "One day", start: "2026-03-10", end: "2026-03-10" },
+          { id: "t", name: "Two days", start: "2026-03-10", end: "2026-03-11" },
+        ],
+      });
+      // Week zoom: 12px a day, at the root font size.
+      expect(barOf("One day").querySelector(".c__gantt__handle")).toBeNull();
+      expect(
+        barOf("Two days").querySelectorAll(".c__gantt__handle"),
+      ).toHaveLength(2);
+      // The bar itself still moves.
+      const el = barOf("One day");
+      down(el);
+      moveTo(el, 100 + 7 * 12);
+      expect(root()).toHaveAttribute("data-editing", "move");
+    });
+  });
 });
 
 describe("Gantt tokens", () => {
@@ -1061,6 +1281,43 @@ describe("Gantt stylesheet", () => {
       /outline-color:\s*Highlight;/,
     );
   });
+
+  it("resizing: handle hit area from tokens, touch-action on bars and handles only, invalid outline", () => {
+    const source = scss();
+    const handle = blocks(source, /&__handle\b/);
+    expect(handle).toMatch(
+      /--gantt-handle-width:\s*min\(\s*var\(--c--components--gantt--handle-hit-size\),\s*calc\(var\(--gantt-span\) \* var\(--gantt-day-width\) \/ 3\)\s*\);/,
+    );
+    expect(handle).toMatch(/inline-size:\s*var\(--gantt-handle-width\);/);
+    expect(handle).toMatch(/--c--components--gantt--row-height/);
+    expect(blocks(source, /&\[data-editable\] &__handle\b/)).toMatch(
+      /cursor:\s*ew-resize;/,
+    );
+    expect(blocks(source, /&\[data-editing\^="resize"\]/)).toMatch(
+      /cursor:\s*ew-resize;/,
+    );
+    // Fingers on the track or the task column still scroll the box.
+    const touch = (text: string) => text.match(/touch-action:/g)?.length ?? 0;
+    const surfaces = blocks(
+      source,
+      /&\[data-editable\] &__bar,\s*&\[data-editable\] &__handle/,
+    );
+    expect(surfaces).toMatch(/touch-action:\s*none;/);
+    expect(touch(surfaces)).toBe(touch(source));
+    expect(blocks(source, /&__handle::after/)).toMatch(
+      /background-color:\s*var\(--c--components--gantt--handle-grip-color\);/,
+    );
+    expect(blocks(source, /&__bar\[data-clamped\]/)).toMatch(
+      /outline-color:\s*var\(--c--components--gantt--invalid-color\);/,
+    );
+    const forced = blocks(source, /@media \(forced-colors: active\)/);
+    expect(blocks(forced, /&__handle::after/)).toMatch(
+      /background-color:\s*CanvasText;/,
+    );
+    expect(blocks(forced, /\[data-clamped\]/)).toMatch(
+      /outline-color:\s*Highlight;/,
+    );
+  });
 });
 
 // Contrast, technique of `button/focus-ring.spec.tsx` (helpers copied: known
@@ -1159,6 +1416,10 @@ describe("Gantt contrast", () => {
         ["ghost-border-color", "row-background-color--hover", 3],
         ["drag-outline-color", "background-color", 3],
         ["tooltip-color", "tooltip-background-color", 4.5],
+        // Resizing: grips on the bar fill, invalid outline on the row.
+        ["handle-grip-color", "bar-background-color", 3],
+        ["invalid-color", "background-color", 3],
+        ["invalid-color", "row-background-color--hover", 3],
       ];
       for (const [foreground, background, min] of pairs) {
         expect(

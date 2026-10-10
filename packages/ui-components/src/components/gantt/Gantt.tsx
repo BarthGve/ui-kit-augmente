@@ -24,9 +24,12 @@ import { useCunningham } from ":/components/provider";
 import { useControllableState } from ":/hooks/useControllableState";
 import {
   clampToAxis,
+  GanttEditMode,
   GanttUnitSpan,
   isNoop,
   moveSpan,
+  resizeEnd,
+  resizeStart,
   toChange,
   unitsFromPixels,
 } from "./edit";
@@ -102,8 +105,51 @@ const KEYS: Record<string, (from: number, last: number) => number> = {
 };
 const noop = () => {};
 
+/** The limit an edit ran into: its key under `components.gantt`. */
+type Limit = "limit_axis" | "limit_end_before_start";
+
 /** What the dragged row draws instead of the task's dates. */
-type Preview = GanttUnitSpan & { clamped: boolean };
+type Preview = GanttUnitSpan & { limit?: Limit };
+
+// The real dates of a task whose bar lies whole on the axis: the only ones
+// an edit can start from (a clipped bar has no real geometry).
+const editableSpan = (
+  task: GanttTask | undefined,
+  scale: GanttScale,
+): GanttUnitSpan | null => {
+  const start = toDay(task?.start);
+  const end = toDay(task?.end);
+  return start &&
+    end &&
+    start.compare(scale.origin) >= 0 &&
+    end.compare(scale.end) <= 0
+    ? { start, end }
+    : null;
+};
+
+// `n` zoom units of `mode` from the original span, with the limit it hit.
+const editSpan = (
+  mode: GanttEditMode,
+  span: GanttUnitSpan,
+  zoom: GanttZoom,
+  n: number,
+): Preview => {
+  if (mode === "move") return moveSpan(span, zoom, n);
+  const next = (mode === "resize-end" ? resizeEnd : resizeStart)(span, zoom, n);
+  return {
+    start: next.start,
+    end: next.end,
+    limit: next.clamped ? "limit_end_before_start" : undefined,
+  };
+};
+
+// The 24px minimum target (WCAG 2.5.8): `handle-hit-size`, in px at a 16px
+// root like `scale.dayWidth`, so the ratio holds at any root font size.
+// ponytail: a consumer overriding the day-width tokens shifts the threshold.
+const HANDLE_MIN = 24;
+// Auto-scroll: zone at each visible track edge, and top speed per frame.
+const EDGE = 48;
+const MAX_SPEED = 20;
 
 type RowProps = {
   task: GanttTask;
@@ -111,6 +157,7 @@ type RowProps = {
   tabIndex: number;
   scale: GanttScale;
   locale: string;
+  editable: boolean;
   preview?: Preview;
 };
 
@@ -121,6 +168,7 @@ const GanttRow = memo(function GanttRow({
   tabIndex,
   scale,
   locale,
+  editable,
   preview,
 }: RowProps) {
   const { t } = useCunningham();
@@ -140,6 +188,12 @@ const GanttRow = memo(function GanttRow({
         })
       : t("components.gantt.row_dates_aria", { name: task.name, ...dates });
   const previewDates = preview && formatDates({ ...task, ...preview }, locale);
+  // Edge handles: a bar narrower than one target has none (moving only).
+  const handles =
+    editable &&
+    position &&
+    position.span * scale.dayWidth >= HANDLE_MIN &&
+    editableSpan(task, scale);
   return (
     <div
       role="row"
@@ -173,10 +227,17 @@ const GanttRow = memo(function GanttRow({
             className="c__gantt__bar"
             data-task-id={task.id}
             data-preview={preview ? true : undefined}
-            data-clamped={preview?.clamped || undefined}
+            data-clamped={preview?.limit ? true : undefined}
             aria-hidden="true"
             style={place(position.start, position.span)}
-          />
+          >
+            {handles && (
+              <>
+                <div className="c__gantt__handle" data-edge="start" />
+                <div className="c__gantt__handle" data-edge="end" />
+              </>
+            )}
+          </div>
         )}
         {position && previewDates && (
           <div
@@ -190,8 +251,8 @@ const GanttRow = memo(function GanttRow({
             }
             style={place(position.start, position.span)}
           >
-            {preview.clamped
-              ? t("components.gantt.limit_axis")
+            {preview.limit
+              ? t(`components.gantt.${preview.limit}`)
               : t("components.gantt.tooltip_dates", previewDates)}
           </div>
         )}
@@ -204,13 +265,24 @@ const GanttRow = memo(function GanttRow({
 type Drag = {
   id: string;
   name: string;
+  mode: GanttEditMode;
   bar: HTMLElement;
   pointerId: number;
+  // Pointer and scroll offset at the start, and the pointer now: the dates
+  // follow both, so an auto-scroll moves them with a still pointer.
   x: number;
+  scroll: number;
+  lastX: number;
+  // Visible track, in client px (sticky column excluded); null: too narrow
+  // for two auto-scroll zones.
+  edges: { left: number; right: number } | null;
+  frame: number;
   pxPerDay: number;
+  zoom: GanttZoom;
+  axis: GanttScale;
   original: GanttUnitSpan;
   unitDelta: number;
-  clamped: boolean;
+  limit?: Limit;
   unlisten: () => void;
 };
 
@@ -367,9 +439,9 @@ export const Gantt = ({
 
   // Pointer edit (s23): `drag` drives it, `preview` only draws it.
   const drag = useRef<Drag | null>(null);
-  const [preview, setPreview] = useState<(Preview & { id: string }) | null>(
-    null,
-  );
+  const [preview, setPreview] = useState<
+    (Preview & { id: string; mode: GanttEditMode }) | null
+  >(null);
   const [announcement, setAnnouncement] = useState("");
   useEffect(() => () => drag.current?.unlisten(), []);
 
@@ -420,21 +492,23 @@ export const Gantt = ({
     )
       return;
     const task = tasks.find((item) => item.id === bar.dataset.taskId);
-    const start = toDay(task?.start);
-    const end = toDay(task?.end);
-    // A bar clipped by the window has no real geometry to drag.
-    if (
-      !task ||
-      !start ||
-      !end ||
-      start.compare(scale.origin) < 0 ||
-      end.compare(scale.end) > 0
-    )
-      return;
+    const original = editableSpan(task, scale);
+    if (!task || !original) return;
+    const edge = (event.target as HTMLElement).closest<HTMLElement>(
+      ".c__gantt__handle",
+    )?.dataset.edge;
+    const mode: GanttEditMode =
+      edge === "end" ? "resize-end" : edge ? "resize-start" : "move";
     // Measured, never the rem constant; unmeasured geometry starts nothing.
     const pxPerDay =
       bar.parentElement!.getBoundingClientRect().width / scale.days;
     if (!Number.isFinite(pxPerDay) || pxPerDay <= 0) return;
+    const scroller = scrollerRef.current!;
+    const box = scroller.getBoundingClientRect();
+    const left = gridRef
+      .current!.querySelector(":scope > .c__gantt__axis > .c__gantt__task")!
+      .getBoundingClientRect().right;
+    const right = box.left + scroller.clientLeft + scroller.clientWidth;
     bar.setPointerCapture(event.pointerId);
     const onKey = (key: globalThis.KeyboardEvent) => {
       if (key.key !== "Escape") return;
@@ -445,49 +519,97 @@ export const Gantt = ({
     };
     document.addEventListener("keydown", onKey, true);
     window.addEventListener("blur", cancel);
-    drag.current = {
+    const session: Drag = {
       id: task.id,
       name: task.name,
+      mode,
       bar,
       pointerId: event.pointerId,
       x: event.clientX,
+      scroll: scroller.scrollLeft,
+      lastX: event.clientX,
+      edges: right - left > 2 * EDGE ? { left, right } : null,
+      frame: 0,
       pxPerDay,
-      original: { start, end },
+      zoom,
+      axis: scale,
+      original,
       unitDelta: 0,
-      clamped: false,
       unlisten: () => {
         document.removeEventListener("keydown", onKey, true);
         window.removeEventListener("blur", cancel);
+        cancelAnimationFrame(session.frame);
       },
     };
-    setPreview({ id: task.id, start, end, clamped: false });
+    drag.current = session;
+    setPreview({ id: task.id, mode, ...original });
+  };
+
+  // The preview from the pointer and the scroll, once per snapped step.
+  const update = (current: Drag) => {
+    const { mode, original, zoom } = current;
+    const scrolled =
+      (scrollerRef.current?.scrollLeft ?? current.scroll) - current.scroll;
+    const wanted = unitsFromPixels(
+      current.lastX - current.x + scrolled,
+      current.pxPerDay,
+      zoom,
+      // The edited edge: months differ in length.
+      mode === "resize-end" ? original.end : original.start,
+    );
+    const n = clampToAxis(original, current.axis, wanted, zoom, mode);
+    const next = editSpan(mode, original, zoom, n);
+    const limit = n !== wanted ? "limit_axis" : next.limit;
+    if (n === current.unitDelta && limit === current.limit) return;
+    current.unitDelta = n;
+    current.limit = limit;
+    setPreview({ id: current.id, mode, ...next, limit });
+    if (limit) setAnnouncement(t(`components.gantt.${limit}`));
+    else say("announce_preview", current.name, next);
+  };
+
+  // How far the pointer is into an edge zone of the visible track (signed).
+  const edgeDepth = ({ edges, lastX }: Drag) =>
+    !edges
+      ? 0
+      : lastX < edges.left + EDGE
+        ? lastX - edges.left - EDGE
+        : lastX > edges.right - EDGE
+          ? lastX - edges.right + EDGE
+          : 0;
+
+  // One frame of auto-scroll, faster deeper into the zone (MAX_SPEED at
+  // most); it stops out of the zone, at the end of the box, and with the
+  // session (`unlisten` cancels the frame).
+  const autoScroll = (current: Drag) => {
+    const el = scrollerRef.current;
+    current.frame = 0;
+    if (!el) return;
+    const depth = edgeDepth(current);
+    if (!depth) return;
+    const before = el.scrollLeft;
+    el.scrollLeft +=
+      Math.sign(depth) *
+      Math.ceil(Math.min(1, Math.abs(depth) / EDGE) * MAX_SPEED);
+    if (el.scrollLeft === before) return;
+    update(current);
+    current.frame = requestAnimationFrame(() => autoScroll(current));
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const current = drag.current;
     if (!current || event.pointerId !== current.pointerId) return;
-    const wanted = unitsFromPixels(
-      event.clientX - current.x,
-      current.pxPerDay,
-      zoom,
-      current.original.start,
-    );
-    const n = clampToAxis(current.original, scale, wanted, zoom, "move");
-    const clamped = n !== wanted;
-    // Once per snapped step, not per pixel.
-    if (n === current.unitDelta && clamped === current.clamped) return;
-    current.unitDelta = n;
-    current.clamped = clamped;
-    const span = moveSpan(current.original, zoom, n);
-    setPreview({ id: current.id, ...span, clamped });
-    if (clamped) setAnnouncement(t("components.gantt.limit_axis"));
-    else say("announce_preview", current.name, span);
+    current.lastX = event.clientX;
+    update(current);
+    if (!current.frame && edgeDepth(current)) {
+      current.frame = requestAnimationFrame(() => autoScroll(current));
+    }
   };
 
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerId !== drag.current?.pointerId) return;
-    const { id, name, original, unitDelta, pxPerDay } = drag.current;
-    const span = moveSpan(original, zoom, unitDelta);
+    const { id, name, mode, original, unitDelta, pxPerDay } = drag.current;
+    const span = editSpan(mode, original, drag.current.zoom, unitDelta);
     const report = isNoop(original, span) ? undefined : onTaskChange;
     close(
       report
@@ -519,7 +641,7 @@ export const Gantt = ({
       className={clsx("c__gantt", className)}
       data-zoom={zoom}
       data-editable={editable || undefined}
-      data-editing={preview ? "move" : undefined}
+      data-editing={preview?.mode}
     >
       <div
         role="group"
@@ -614,6 +736,7 @@ export const Gantt = ({
               tabIndex={i === stopIndex ? 0 : -1}
               scale={scale}
               locale={locale}
+              editable={editable}
               preview={preview?.id === task.id ? preview : undefined}
             />
           ))}

@@ -18,6 +18,10 @@ export const tokens = (defaults: DefaultTokens) => ({
   "tooltip-background-color":
     defaults.contextuals.content.semantic.neutral.primary,
   "tooltip-color": defaults.contextuals.background.surface.secondary,
+  // Resizing (s23): grips on the bar fill, outline of a clamped edit (never
+  // a text colour: it fails on the tooltip chip).
+  "handle-grip-color": defaults.contextuals.background.surface.secondary,
+  "invalid-color": defaults.contextuals.content.semantic.error.tertiary,
   padding: defaults.globals.spacings.sm,
   "focus-ring-color": defaults.contextuals.content.semantic.brand.tertiary,
   // Literals below: no global token exists (design-system gaps 2 to 4).
@@ -33,4 +37,8 @@ export const tokens = (defaults: DefaultTokens) => ({
   "today-width": "2px",
   "focus-ring-width": "2px",
   "focus-ring-offset": "-2px",
+  // The 24px minimum target (WCAG 2.5.8), checked against bar widths in
+  // Gantt.tsx (HANDLE_MIN), and the grip line.
+  "handle-hit-size": "1.5rem",
+  "handle-grip-width": "2px",
 });
