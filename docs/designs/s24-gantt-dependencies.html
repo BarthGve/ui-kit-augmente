@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>s24 gantt dependencies — reference mockup</title>
+<style>/* Reference only, not code. Resolved hexes of the --c--contextuals tokens (default theme / dark). Bar = content.semantic.brand.tertiary, link = content.semantic.neutral.secondary, conflict = content.semantic.error.tertiary. */
+:root{--font:"Hanken Grotesk",Inter,sans-serif;--page:#FFFFFF;--surface:#FFFFFF;--head:#F8F8F9;--border:#E2E2EA;--text:#25252F;--muted:#5D5D70;--hover:#F0F0F3;--bar:#5E5CD0;--ring:#5E5CD0;--invalid:#D7010E;--tip-bg:#25252F;--tip-fg:#FFFFFF;--link:#5D5D70;--sel:#25252F;--casing:#FFFFFF}
+.dark{--page:#2F303D;--surface:#25252F;--head:#1B1B23;--border:#3A3A4C;--text:#F0F0F3;--muted:#B7B7CB;--hover:#3A3A4C;--bar:#AFB5F1;--ring:#A0A5F6;--invalid:#EEA99D;--tip-bg:#F0F0F3;--tip-fg:#25252F;--link:#B7B7CB;--sel:#F0F0F3;--casing:#25252F}
+*{box-sizing:border-box}body{margin:0;font-family:var(--font);background:#fff;color:#25252F}
+header.top{padding:24px 32px 0}header.top h1{margin:0 0 4px;font-size:1.25rem}header.top p{margin:0;font-size:.875rem;color:#5D5D70;max-width:80ch}
+.theme{background:var(--page);color:var(--text);padding:24px 32px 32px;margin-top:24px}.theme h2{margin:0 0 12px;font-size:1rem;font-weight:600}
+.scroller{--task:9rem;overflow:auto;border:1px solid var(--border);background:var(--surface);position:relative}
+.grid{width:max-content;min-width:100%;position:relative}
+.row{display:grid;grid-template-columns:var(--task) 600px;height:41px;border-bottom:1px solid var(--border);position:relative}
+.row.hover .task,.row.hover .track{background:var(--hover)}
+.head{background:var(--head);height:auto}.head .task{background:var(--head);font-weight:600}
+.task{padding:0 .75rem;display:flex;align-items:center;font-size:.875rem;border-right:1px solid var(--border);background:var(--surface)}
+.track{position:relative;background:repeating-linear-gradient(90deg,transparent 0 83px,var(--border) 83px 84px)}
+.head .track{background:none;font-size:.75rem;color:var(--muted);padding:4px}
+.bar{position:absolute;top:10px;height:20px;border-radius:4px;background:var(--bar);border:1px solid var(--bar)}
+.conn{position:absolute;top:8px;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+.conn i{display:block;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--bar)}
+/* overlay: starts at the track column, below the header (41px high here) */
+.links{position:absolute;left:9rem;top:41px;width:600px;pointer-events:none}
+.s{position:absolute;background:var(--link);box-shadow:0 0 0 1px var(--casing)}
+.s.sel{background:var(--sel)}
+.s.cf{background:none;box-shadow:none}
+.s.cf.h{border-top:2px dashed var(--invalid)}.s.cf.v{border-left:2px dashed var(--invalid)}
+.s.h{height:2px}.s.v{width:2px}
+.arr{position:absolute;width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:8px solid var(--link)}
+.arr.cf{border-left-color:var(--invalid)}.arr.sel{border-left-color:var(--sel)}
+.flag{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--invalid);color:var(--surface);font:700 11px/16px var(--font);text-align:center}
+.tip{position:absolute;top:8px;height:24px;display:flex;align-items:center;padding:0 6px;border-radius:4px;font-size:.75rem;white-space:nowrap;background:var(--tip-bg);color:var(--tip-fg)}
+.rm{position:absolute;width:24px;height:24px;border-radius:4px;border:2px solid var(--ring);background:var(--surface);color:var(--text);font:600 14px/20px var(--font);text-align:center}
+.outline{outline:2px solid var(--invalid)}
+.cap{font-size:.75rem;color:var(--muted);margin:6px 0 14px;max-width:90ch}
+@media(forced-colors:active){.s{background:CanvasText;box-shadow:0 0 0 1px Canvas}.s.cf.h{border-top-color:CanvasText}.s.cf.v{border-left-color:CanvasText}.arr{border-left-color:CanvasText}.flag{background:Canvas;color:CanvasText;border:1px solid CanvasText}.bar{background:Highlight;border-color:CanvasText}.rm{border-color:Highlight}}
+</style></head>
+<body>
+<header class="top"><h1>Gantt dependencies — reference mockup (s24)</h1>
+<p>Week zoom (12px per day), rows 41px. Row 1 Brief to row 2 Build: U route (the gap is narrower than 56px), with the connector shown on the hovered row. Build to Test: forward route. Build to Review: a conflict (Review starts before Build ends): dashed, "!" chip, U route; Review's bar is crossed by the Build to Test link, which keeps its casing. Row 5 shows a refused drop. A selected link and its Remove button are on the Build to Test link. The static overlay is aria-hidden in the real component.</p></header>
+
+<section class="theme"><h2>Light — states</h2>
+<div class="scroller"><div class="grid slot">
+<div class="row head"><div class="task">Task</div><div class="track">March 2026 · April 2026</div></div>
+<div class="row hover"><div class="task">Brief</div><div class="track"><div class="bar" style="left:24px;width:120px"></div><div class="conn" style="left:152px"><i></i></div></div></div>
+<div class="row"><div class="task">Build</div><div class="track"><div class="bar" style="left:168px;width:168px"></div></div></div>
+<div class="row"><div class="task">Review</div><div class="track"><div class="bar" style="left:288px;width:192px"></div></div></div>
+<div class="row"><div class="task">Test</div><div class="track"><div class="bar" style="left:480px;width:84px"></div></div></div>
+<div class="row"><div class="task">Cycle target</div><div class="track"><div class="bar outline" style="left:60px;width:72px"></div><div class="tip" style="left:140px">Not linked: this would create a loop</div></div></div>
+<div class="links" aria-hidden="true">
+<!-- Brief -> Build, U route -->
+<div class="s h" style="left:144px;top:19px;width:44px"></div>
+<div class="s v" style="left:187px;top:19px;height:21px"></div>
+<div class="s h" style="left:156px;top:40px;width:32px"></div>
+<div class="s v" style="left:156px;top:40px;height:41px"></div>
+<div class="s h" style="left:156px;top:60px;width:10px"></div><div class="arr" style="left:166px;top:56px"></div>
+<!-- Build -> Test, forward route, selected -->
+<div class="s h sel" style="left:336px;top:60px;width:132px;height:3px"></div>
+<div class="s v sel" style="left:467px;top:60px;height:83px;width:3px"></div>
+<div class="s h sel" style="left:467px;top:142px;width:13px;height:3px"></div><div class="arr sel" style="left:472px;top:138px"></div>
+<div class="rm" style="left:440px;top:131px">×</div>
+<!-- Build -> Review, conflict, U route, dashed -->
+<div class="s cf h" style="left:336px;top:60px;width:44px;height:2px"></div>
+<div class="s cf v" style="left:379px;top:60px;height:21px;width:2px"></div>
+<div class="s cf h" style="left:276px;top:80px;width:104px;height:2px"></div>
+<div class="s cf v" style="left:276px;top:80px;height:41px;width:2px"></div>
+<div class="s cf h" style="left:276px;top:101px;width:10px;height:2px"></div><div class="arr cf" style="left:286px;top:97px"></div>
+<div class="flag" style="left:252px;top:93px">!</div>
+</div>
+</div></div>
+<p class="cap">Lines: neutral.secondary (6.43..11.86 on the page, 5.65..8.69 on the hovered row). Casing: 1px page colour so the line shows where it crosses a bar (no content token is visible on the bar fill). Conflict: error.tertiary (4.73..7.83) but dashed + chip + text, never colour alone. Selected: neutral.primary, 3px. Connector: brand border on the page colour (4.70..7.73). Segments end 1px short of the arrowhead tip to keep the tip crisp.</p></section>
+
+<section class="theme dark"><h2>Dark — same states</h2>
+<div class="scroller"><div class="grid" id="clone"></div></div>
+<p class="cap">Dark themes use the lighter brand, the lighter link and the inverted chip tokens; the casing flips to the dark page colour.</p></section>
+<script>document.getElementById('clone').innerHTML=document.querySelector('.slot').innerHTML;</script>
+</body></html>
