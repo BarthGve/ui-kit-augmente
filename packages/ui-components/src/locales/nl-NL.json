@@ -316,6 +316,10 @@
       "newWindow": "(opent in een nieuw venster)"
     },
     "gantt": {
+      "zoom_aria_label": "Zoomniveau",
+      "zoom_day": "Dag",
+      "zoom_week": "Week",
+      "zoom_month": "Maand",
       "task_column": "Taak",
       "schedule_column": "Planning",
       "row_dates_aria": "{name}, van {start} tot {end}",

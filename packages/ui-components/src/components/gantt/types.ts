@@ -21,8 +21,12 @@ export type GanttProps = Omit<
 > & {
   /** Rows, in display order. Never mutated. */
   tasks: GanttTask[];
-  /** Axis scale. Default: `"week"`. */
+  /** Axis scale, controlled. Leave undefined for the uncontrolled mode. */
   zoom?: GanttZoom;
+  /** Initial axis scale in the uncontrolled mode. Default: `"week"`. */
+  defaultZoom?: GanttZoom;
+  /** Called with the zoom requested from the zoom control. */
+  onZoomChange?: (zoom: GanttZoom) => void;
   /** Day of the today marker. Default: today in the local time zone. */
   today?: DateInput;
   /** Names the grid (required: the chart has no visible title). */

@@ -1,12 +1,14 @@
 import clsx from "clsx";
-import { CSSProperties, useMemo } from "react";
+import { CSSProperties, useLayoutEffect, useMemo, useRef } from "react";
 import {
   CalendarDate,
   DateFormatter,
   startOfMonth,
   startOfYear,
 } from "@internationalized/date";
+import { Button } from ":/components/button";
 import { useCunningham } from ":/components/provider";
+import { useControllableState } from ":/hooks/useControllableState";
 import { buildScale, dayIndex, formatDates, GanttScale, toDay } from "./scale";
 import { GanttProps, GanttTask, GanttZoom } from "./types";
 
@@ -70,15 +72,32 @@ const lowerTier = (
   }));
 };
 
+const ZOOMS: GanttZoom[] = ["day", "week", "month"];
+const noop = () => {};
+
 export const Gantt = ({
   tasks,
-  zoom = "week",
+  zoom: zoomProp,
+  defaultZoom = "week",
+  onZoomChange,
   today,
   "aria-label": ariaLabel,
   className,
   ...props
 }: GanttProps) => {
   const { t, currentLocale: locale } = useCunningham();
+  const controlled = zoomProp !== undefined;
+  // The hook only syncs from the prop when it gets a callback, and never
+  // updates itself when it has one: hand it one only when controlled.
+  const [zoom, setZoom] = useControllableState<GanttZoom>(
+    defaultZoom,
+    zoomProp,
+    controlled ? (onZoomChange ?? noop) : undefined,
+  );
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  // Leftmost visible day, taken before a requested zoom: once the grid has
+  // narrowed, the old offset is already clamped.
+  const anchor = useRef<{ zoom: GanttZoom; date: CalendarDate } | null>(null);
   const todayKey = today?.toString();
   const scale = useMemo(
     () =>
@@ -97,6 +116,33 @@ export const Gantt = ({
     [scale, zoom, locale],
   );
 
+  // ponytail: day widths are rem tokens, assumed at the root font size; a
+  // consumer overriding them would anchor approximately.
+  const px = (dayWidth: number) =>
+    (dayWidth *
+      parseFloat(getComputedStyle(document.documentElement).fontSize)) /
+    16;
+
+  const requestZoom = (next: GanttZoom) => {
+    const el = scrollerRef.current;
+    if (el && next !== zoom) {
+      const day = Math.floor(el.scrollLeft / px(scale.dayWidth));
+      anchor.current = { zoom: next, date: scale.origin.add({ days: day }) };
+    }
+    setZoom(next);
+    if (!controlled) onZoomChange?.(next);
+  };
+
+  // Before paint, so the new zoom is never drawn at the old offset.
+  useLayoutEffect(() => {
+    const el = scrollerRef.current;
+    if (el && anchor.current?.zoom === zoom) {
+      el.scrollLeft =
+        dayIndex(scale.origin, anchor.current.date) * px(scale.dayWidth);
+    }
+    anchor.current = null;
+  }, [zoom, scale]);
+
   const rowLabel = (task: GanttTask, dates: ReturnType<typeof formatDates>) => {
     if (!dates)
       return t("components.gantt.row_no_dates_aria", { name: task.name });
@@ -111,7 +157,25 @@ export const Gantt = ({
 
   return (
     <div {...props} className={clsx("c__gantt", className)} data-zoom={zoom}>
-      <div className="c__gantt__scroller">
+      <div
+        role="group"
+        aria-label={t("components.gantt.zoom_aria_label")}
+        className="c__gantt__zoom"
+      >
+        {ZOOMS.map((value) => (
+          <Button
+            key={value}
+            type="button"
+            size="small"
+            variant={value === zoom ? "secondary" : "tertiary"}
+            aria-pressed={value === zoom}
+            onClick={() => requestZoom(value)}
+          >
+            {t(`components.gantt.zoom_${value}`)}
+          </Button>
+        ))}
+      </div>
+      <div ref={scrollerRef} className="c__gantt__scroller">
         <div
           role="grid"
           aria-label={ariaLabel}

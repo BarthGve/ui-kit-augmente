@@ -236,6 +236,28 @@ describe("buildScale", () => {
       expect(scale.days).toBeLessThanOrEqual(LIMIT);
     });
 
+    it.each(["day", "week", "month"] as const)(
+      "%s zoom: data wholly before the floor keeps a window on its last days",
+      (zoom) => {
+        const past = task("0001-01-01", "0100-01-01");
+        const scale = buildScale({
+          tasks: [past],
+          zoom,
+          today: today_,
+          locale: "fr-FR",
+        });
+        expect(scale.days).toBeGreaterThan(0);
+        expect(scale.days).toBeLessThanOrEqual(LIMIT);
+        expect(scale.ticks.length).toBeGreaterThan(0);
+        expect(scale.todayOffset).toBeNull();
+        expect(scale.end.compare(d("0100-01-01"))).toBeGreaterThanOrEqual(0);
+        expect(scale.positionOf(past)).toEqual({
+          start: 0,
+          span: expect.any(Number),
+        });
+      },
+    );
+
     it("gives no bar to a valid task wholly outside the window", () => {
       const scale = buildScale({
         tasks: [forever, task("0001-01-01", "0001-01-10")],
