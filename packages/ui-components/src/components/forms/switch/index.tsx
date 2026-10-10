@@ -7,15 +7,19 @@ export type SwitchOnlyProps = {
   labelSide?: "left" | "right";
 };
 
-export type SwitchProps = InputHTMLAttributes<HTMLInputElement> &
+// The inherited numeric HTML `size` is replaced by the control size.
+export type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> &
   RefAttributes<HTMLInputElement> &
   FieldProps &
-  SwitchOnlyProps;
+  SwitchOnlyProps & {
+    size?: "medium" | "small";
+  };
 
 export const Switch = ({
   label,
   labelSide = "left",
   ref,
+  size = "medium",
   ...props
 }: SwitchProps) => {
   const {
@@ -42,6 +46,7 @@ export const Switch = ({
         {
           "c__checkbox--disabled": props.disabled,
           "c__switch--full-width": props.fullWidth,
+          "c__checkbox--small": size === "small",
         },
       )}
     >

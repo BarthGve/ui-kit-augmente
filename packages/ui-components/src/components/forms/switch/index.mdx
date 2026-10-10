@@ -54,6 +54,21 @@ You can use the following props to change the state of the component by using th
 <Canvas of={Stories.Success}/>
 <Canvas of={Stories.Error}/>
 
+## Size
+
+Use `size="small"` for dense layouts (`"medium"` is the default). The small size
+keeps the label, both label sides, the texts, the states and the focus ring, and
+its clickable area stays at least 24x24 px.
+
+<Canvas of={Stories.Small} />
+<Canvas of={Stories.SmallWithLabel} />
+<Canvas of={Stories.SmallLabelRight} />
+<Canvas of={Stories.SmallWithText} />
+<Canvas of={Stories.SmallDisabled} />
+<Canvas of={Stories.SmallError} />
+<Canvas of={Stories.SmallSuccess} />
+<Canvas of={Stories.SizesCompared} />
+
 ## Width
 
 By default, the Switch will automatically take the minimum needed width. But you can force it to take the full width of
@@ -97,8 +112,14 @@ Here are available custom design tokens.
 | handle-background-color     	| Background color of the switch handle	|
 | handle-background-color--disabled     	| Background color of the switch handle when disabled	|
 | handle-border-radius     	| Border radius of the switch handle when disabled	|
+| small-rail-width     	| Width of the switch rail in the small size	|
+| small-rail-height     	| Height of the switch rail in the small size	|
+| small-handle-size     	| Size of the switch handle in the small size	|
+| small-handle-offset     	| Inset of the switch handle from the rail edge in the small size	|
 
 The design tokens `font-size`, `font-weight`, `color`, `width`, `height` are shared with [Checkbox](?path=/story/components-forms-checkbox-doc--page)
+
+The small size also reads the Checkbox token `small-font-size` (label font size).
 
 See also [Field](?path=/story/components-forms-field-doc--page)
 

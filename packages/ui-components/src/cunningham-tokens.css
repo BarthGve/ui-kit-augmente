@@ -723,6 +723,10 @@
 	--c--components--forms-switch--handle-background-color: var(--c--contextuals--content--semantic--contextual--primary);
 	--c--components--forms-switch--handle-background-color--disabled: var(--c--contextuals--content--semantic--disabled--secondary);
 	--c--components--forms-switch--handle-border-radius: 50%;
+	--c--components--forms-switch--small-rail-width: 2rem;
+	--c--components--forms-switch--small-rail-height: 1rem;
+	--c--components--forms-switch--small-handle-size: 0.75rem;
+	--c--components--forms-switch--small-handle-offset: var(--c--globals--spacings--4xs);
 	--c--components--forms-textarea--font-weight: var(--c--globals--font--weights--regular);
 	--c--components--forms-textarea--font-size: var(--c--globals--font--sizes--sm);
 	--c--components--forms-textarea--border-radius: 4px;
@@ -1529,6 +1533,10 @@
 	--c--components--forms-switch--handle-background-color: var(--c--contextuals--content--semantic--contextual--primary);
 	--c--components--forms-switch--handle-background-color--disabled: var(--c--contextuals--content--semantic--disabled--secondary);
 	--c--components--forms-switch--handle-border-radius: 50%;
+	--c--components--forms-switch--small-rail-width: 2rem;
+	--c--components--forms-switch--small-rail-height: 1rem;
+	--c--components--forms-switch--small-handle-size: 0.75rem;
+	--c--components--forms-switch--small-handle-offset: var(--c--globals--spacings--4xs);
 	--c--components--forms-textarea--font-weight: var(--c--globals--font--weights--regular);
 	--c--components--forms-textarea--font-size: var(--c--globals--font--sizes--sm);
 	--c--components--forms-textarea--border-radius: 4px;
@@ -2310,6 +2318,10 @@
 	--c--components--forms-switch--handle-background-color: var(--c--contextuals--content--semantic--contextual--primary);
 	--c--components--forms-switch--handle-background-color--disabled: var(--c--contextuals--content--semantic--disabled--secondary);
 	--c--components--forms-switch--handle-border-radius: 50%;
+	--c--components--forms-switch--small-rail-width: 2rem;
+	--c--components--forms-switch--small-rail-height: 1rem;
+	--c--components--forms-switch--small-handle-size: 0.75rem;
+	--c--components--forms-switch--small-handle-offset: var(--c--globals--spacings--4xs);
 	--c--components--forms-textarea--font-weight: var(--c--globals--font--weights--regular);
 	--c--components--forms-textarea--font-size: var(--c--globals--font--sizes--sm);
 	--c--components--forms-textarea--border-radius: 4px;
@@ -3091,6 +3103,10 @@
 	--c--components--forms-switch--handle-background-color: var(--c--contextuals--content--semantic--contextual--primary);
 	--c--components--forms-switch--handle-background-color--disabled: var(--c--contextuals--content--semantic--disabled--secondary);
 	--c--components--forms-switch--handle-border-radius: 50%;
+	--c--components--forms-switch--small-rail-width: 2rem;
+	--c--components--forms-switch--small-rail-height: 1rem;
+	--c--components--forms-switch--small-handle-size: 0.75rem;
+	--c--components--forms-switch--small-handle-offset: var(--c--globals--spacings--4xs);
 	--c--components--forms-textarea--font-weight: var(--c--globals--font--weights--regular);
 	--c--components--forms-textarea--font-size: var(--c--globals--font--sizes--sm);
 	--c--components--forms-textarea--border-radius: 4px;
@@ -3875,6 +3891,10 @@
 	--c--components--forms-switch--handle-background-color: var(--c--contextuals--content--semantic--contextual--primary);
 	--c--components--forms-switch--handle-background-color--disabled: var(--c--contextuals--content--semantic--disabled--secondary);
 	--c--components--forms-switch--handle-border-radius: 50%;
+	--c--components--forms-switch--small-rail-width: 2rem;
+	--c--components--forms-switch--small-rail-height: 1rem;
+	--c--components--forms-switch--small-handle-size: 0.75rem;
+	--c--components--forms-switch--small-handle-offset: var(--c--globals--spacings--4xs);
 	--c--components--forms-textarea--font-weight: var(--c--globals--font--weights--regular);
 	--c--components--forms-textarea--font-size: var(--c--globals--font--sizes--sm);
 	--c--components--forms-textarea--border-radius: 4px;
@@ -4659,6 +4679,10 @@
 	--c--components--forms-switch--handle-background-color: var(--c--contextuals--content--semantic--contextual--primary);
 	--c--components--forms-switch--handle-background-color--disabled: var(--c--contextuals--content--semantic--disabled--secondary);
 	--c--components--forms-switch--handle-border-radius: 50%;
+	--c--components--forms-switch--small-rail-width: 2rem;
+	--c--components--forms-switch--small-rail-height: 1rem;
+	--c--components--forms-switch--small-handle-size: 0.75rem;
+	--c--components--forms-switch--small-handle-offset: var(--c--globals--spacings--4xs);
 	--c--components--forms-textarea--font-weight: var(--c--globals--font--weights--regular);
 	--c--components--forms-textarea--font-size: var(--c--globals--font--sizes--sm);
 	--c--components--forms-textarea--border-radius: 4px;
