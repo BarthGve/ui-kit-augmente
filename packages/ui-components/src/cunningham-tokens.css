@@ -779,6 +779,8 @@
 	--c--components--gantt--link-casing-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--link-flag-background-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--link-flag-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--connector-border-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--gantt--connector-background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -1643,6 +1645,8 @@
 	--c--components--gantt--link-casing-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--link-flag-background-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--link-flag-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--connector-border-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--gantt--connector-background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -2482,6 +2486,8 @@
 	--c--components--gantt--link-casing-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--link-flag-background-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--link-flag-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--connector-border-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--gantt--connector-background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -3321,6 +3327,8 @@
 	--c--components--gantt--link-casing-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--link-flag-background-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--link-flag-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--connector-border-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--gantt--connector-background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -4163,6 +4171,8 @@
 	--c--components--gantt--link-casing-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--link-flag-background-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--link-flag-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--connector-border-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--gantt--connector-background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;
@@ -5005,6 +5015,8 @@
 	--c--components--gantt--link-casing-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--link-flag-background-color: var(--c--contextuals--content--semantic--error--tertiary);
 	--c--components--gantt--link-flag-color: var(--c--contextuals--background--surface--secondary);
+	--c--components--gantt--connector-border-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--gantt--connector-background-color: var(--c--contextuals--background--surface--secondary);
 	--c--components--gantt--padding: var(--c--globals--spacings--sm);
 	--c--components--gantt--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
 	--c--components--gantt--border-width: 1px;

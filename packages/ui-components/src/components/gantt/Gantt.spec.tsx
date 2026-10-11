@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
 import { parseDate } from "@internationalized/date";
@@ -564,9 +564,10 @@ const EDIT_TASKS = deepFreeze([
   { id: "d", name: "Plan the launch" },
 ]);
 
-// Pointer events, capture and a track of `pxPerDay()` pixels per day; returns
-// the restore.
-const stubPointer = (pxPerDay: () => number) => {
+// Pointer events, capture and a track of `pxPerDay()` pixels per day; with
+// `rowTop`, task rows 40px tall on a 41px pitch from `rowTop()` and a large
+// scroll box (link targets). Returns the restore.
+const stubPointer = (pxPerDay: () => number, rowTop?: () => number) => {
   const proto = HTMLElement.prototype;
   const { getBoundingClientRect } = proto;
   const win = window as unknown as Record<string, unknown>;
@@ -583,6 +584,13 @@ const stubPointer = (pxPerDay: () => number) => {
         ),
       );
       return new DOMRect(0, 0, days * pxPerDay(), 40);
+    }
+    if (rowTop && this.matches(".c__gantt__row")) {
+      const i = Number(this.getAttribute("aria-rowindex")) - 2;
+      return new DOMRect(0, rowTop() + i * 41, 4000, 40);
+    }
+    if (rowTop && this.matches(".c__gantt__scroller")) {
+      return new DOMRect(0, 0, 4000, 2000);
     }
     return getBoundingClientRect.call(this);
   };
@@ -2020,6 +2028,579 @@ describe("Gantt dependencies (s24)", () => {
   });
 });
 
+// Link editing with the pointer (s24 t03). Rows: Brief 0, Build 1, Review 2,
+// Plan 3 (no dates), Release 4; existing links of DEPS: a>b, a>c, b>c, b>e,
+// a>d. Review to Release is a free pair.
+describe("Gantt link editing (s24)", () => {
+  let px = 40;
+  let top = 42;
+  beforeEach(() => {
+    px = 40;
+    top = 42;
+    return stubPointer(
+      () => px,
+      () => top,
+    );
+  });
+
+  const NAMES = ["Brief", "Build", "Review", "Plan", "Release"];
+  const rowY = (name: string) => top + NAMES.indexOf(name) * 41 + 20;
+  const linkGantt = (props: Partial<GanttProps> = {}) =>
+    renderGantt({
+      tasks: DEP_TASKS,
+      dependencies: DEPS,
+      zoom: "day",
+      editable: true,
+      onDependencyChange: vi.fn(),
+      ...props,
+    });
+  const connector = (name: string) =>
+    taskRow(name).querySelector<HTMLElement>(".c__gantt__connector");
+  // On the name of a row without a bar; beside a bar, in the link overlay
+  // (above the lines).
+  const tipOf = (name: string) => {
+    const id = bar(taskRow(name))?.dataset.taskId;
+    return id
+      ? document.querySelector<HTMLElement>(
+          `.c__gantt__links > .c__gantt__tip[data-task-id="${id}"]`,
+        )
+      : taskRow(name).querySelector<HTMLElement>(".c__gantt__tip");
+  };
+  const linkEl = (from: string, to: string) =>
+    document.querySelector<HTMLElement>(
+      `.c__gantt__link[data-from="${from}"][data-to="${to}"]`,
+    );
+  const creating = () =>
+    document.querySelector<HTMLElement>(
+      '.c__gantt__link[data-state="creating"]',
+    );
+  const status = () => screen.getByRole("status");
+  const root = () =>
+    screen.getByRole("grid").closest<HTMLElement>(".c__gantt")!;
+  // Press a row's connector, then move over the row `to` (a name) or a
+  // point `y`; returns the connector (it holds the pointer capture).
+  const press = (from: string, pointerId = 1) => {
+    const el = connector(from)!;
+    fireEvent.pointerDown(el, {
+      clientX: 500,
+      clientY: rowY(from),
+      button: 0,
+      pointerId,
+    });
+    return el;
+  };
+  const over = (el: HTMLElement, to: string | number) =>
+    fireEvent.pointerMove(el, {
+      clientX: 300,
+      clientY: typeof to === "number" ? to : rowY(to),
+      pointerId: 1,
+    });
+  const release = (el: HTMLElement, to: string | number) =>
+    fireEvent.pointerUp(el, {
+      clientX: 300,
+      clientY: typeof to === "number" ? to : rowY(to),
+      pointerId: 1,
+    });
+  const link = (from: string, to: string | number) => {
+    const el = press(from);
+    over(el, to);
+    release(el, to);
+  };
+  const hits = (from: string, to: string) =>
+    Array.from(
+      linkEl(from, to)!.querySelectorAll<HTMLElement>(".c__gantt__link-hit"),
+    );
+
+  it("offers a connector on dated rows only when editable with onDependencyChange, never inside a bar", () => {
+    linkGantt();
+    for (const name of ["Brief", "Build", "Review", "Release"]) {
+      const el = connector(name);
+      expect(el).not.toBeNull();
+      expect(el!.closest(".c__gantt__bar")).toBeNull();
+      expect(el!.closest('[role="gridcell"]')).not.toBeNull();
+    }
+    expect(connector("Plan")).toBeNull();
+    // The overlay stays inert for the keyboard: rows keep the focus.
+    expect(
+      document
+        .querySelector(".c__gantt__links")!
+        .querySelectorAll("[tabindex], button, a, input, [role]"),
+    ).toHaveLength(0);
+  });
+
+  it("gating: editable without the callback is t02's chart, and s23 editing is unchanged", () => {
+    const onTaskChange = vi.fn();
+    const { unmount } = linkGantt({
+      onDependencyChange: undefined,
+      onTaskChange,
+    });
+    expect(document.querySelector(".c__gantt__connector")).toBeNull();
+    expect(document.querySelector(".c__gantt__link-hit")).toBeNull();
+    fireEvent.click(
+      linkEl("a", "b")!.querySelectorAll(".c__gantt__link-segment")[1],
+    );
+    expect(linkEl("a", "b")).not.toHaveAttribute("data-selected");
+    expect(screen.queryByRole("button", { name: /Remove link/ })).toBeNull();
+    // A move from the bar, then a resize from a handle, as in s23.
+    const el = bar(taskRow("Build"))!;
+    fireEvent.pointerDown(el, { clientX: 100, button: 0, pointerId: 1 });
+    fireEvent.pointerMove(el, { clientX: 180, pointerId: 1 });
+    fireEvent.pointerUp(el, { clientX: 180, pointerId: 1 });
+    const handle = el.querySelector<HTMLElement>('[data-edge="end"]')!;
+    fireEvent.pointerDown(handle, { clientX: 100, button: 0, pointerId: 1 });
+    fireEvent.pointerMove(handle, { clientX: 140, pointerId: 1 });
+    fireEvent.pointerUp(handle, { clientX: 140, pointerId: 1 });
+    expect(onTaskChange.mock.calls).toEqual([
+      ["b", { start: "2026-03-18", end: "2026-03-29" }],
+      ["b", { start: "2026-03-16", end: "2026-03-28" }],
+    ]);
+    unmount();
+    // The callback without editable, or right to left: no connector either.
+    const { unmount: second } = linkGantt({ editable: false });
+    expect(document.querySelector(".c__gantt__connector")).toBeNull();
+    second();
+    render(
+      <CunninghamProvider>
+        <div dir="rtl">
+          <Gantt
+            aria-label="Plan"
+            tasks={DEP_TASKS}
+            dependencies={DEPS}
+            today="2026-03-23"
+            editable
+            onDependencyChange={vi.fn()}
+          />
+        </div>
+      </CunninghamProvider>,
+    );
+    expect(document.querySelector(".c__gantt__connector")).toBeNull();
+  });
+
+  it("dragging a connector onto another row reports the link once, with a prospective link and a tip (AC2)", () => {
+    const onDependencyChange = vi.fn();
+    linkGantt({ onDependencyChange });
+    const el = press("Review");
+    expect(root()).toHaveAttribute("data-editing", "link");
+    // Over nothing: the source row says where to drop.
+    over(el, 1500);
+    expect(tipOf("Review")).toHaveTextContent("Drop on a task");
+    expect(creating()).toBeNull();
+    over(el, "Release");
+    expect(tipOf("Release")).toHaveTextContent("Start Release after Review");
+    expect(tipOf("Review")).toBeNull();
+    expect(creating()).toHaveAttribute("data-from", "c");
+    expect(creating()).toHaveAttribute("data-to", "e");
+    release(el, "Release");
+    expect(onDependencyChange).toHaveBeenCalledTimes(1);
+    expect(onDependencyChange).toHaveBeenCalledWith({
+      kind: "add",
+      dependency: { from: "c", to: "e" },
+    });
+    expect(status()).toHaveTextContent("Release now starts after Review");
+    expect(creating()).toBeNull();
+    expect(tipOf("Release")).toBeNull();
+    expect(root()).not.toHaveAttribute("data-editing");
+  });
+
+  it("the task name cell is a target too, and a scroll re-targets a still pointer", () => {
+    const onDependencyChange = vi.fn();
+    linkGantt({ onDependencyChange });
+    const el = press("Review");
+    over(el, "Plan");
+    expect(tipOf("Plan")).toHaveTextContent("Not linked: Plan has no dates");
+    // The box scrolls one row under the still pointer: Release is there.
+    const y = rowY("Plan");
+    top -= 41;
+    fireEvent.scroll(
+      document.querySelector<HTMLElement>(".c__gantt__scroller")!,
+    );
+    expect(tipOf("Release")).toHaveTextContent("Start Release after Review");
+    release(el, y);
+    expect(onDependencyChange).toHaveBeenCalledWith({
+      kind: "add",
+      dependency: { from: "c", to: "e" },
+    });
+  });
+
+  it.each([
+    ["a loop", "Review", "Brief", "Not linked: this would create a loop"],
+    ["itself", "Review", "Review", "A task cannot depend on itself"],
+    ["no dates", "Review", "Plan", "Not linked: Plan has no dates"],
+    [
+      "an existing pair",
+      "Brief",
+      "Build",
+      "Not linked: Build already starts after Brief",
+    ],
+  ])(
+    "refuses %s with a sentence in the row and the live region, and reports nothing (AC3)",
+    (_, from, to, sentence) => {
+      vi.useFakeTimers();
+      try {
+        const onDependencyChange = vi.fn();
+        linkGantt({ onDependencyChange });
+        link(from, to);
+        expect(onDependencyChange).not.toHaveBeenCalled();
+        expect(tipOf(to)).toHaveTextContent(sentence);
+        expect(tipOf(to)).toHaveAttribute("data-refused");
+        const target = bar(taskRow(to));
+        if (target) expect(target).toHaveAttribute("data-refused");
+        expect(status()).toHaveTextContent(sentence);
+        expect(creating()).toBeNull();
+        expect(root()).not.toHaveAttribute("data-editing");
+        // No timer: it stays until the user does something.
+        act(() => vi.advanceTimersByTime(10_000));
+        expect(tipOf(to)).toHaveTextContent(sentence);
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+
+  it("refuses a link past MAX_LINKS", () => {
+    const tasks = Array.from({ length: 50 }, (_, i) => ({
+      id: `t${i}`,
+      name: `T${i}`,
+      start: "2026-03-02",
+      end: "2026-03-06",
+    }));
+    const dependencies: GanttDependency[] = [];
+    for (let i = 0; i < 50 && dependencies.length < MAX_LINKS; i++)
+      for (let j = i + 1; j < 50 && dependencies.length < MAX_LINKS; j++)
+        dependencies.push({ from: `t${i}`, to: `t${j}` });
+    // Full, and t38 > t39 is not among the first 1000 forward pairs.
+    expect(dependencies).toHaveLength(MAX_LINKS);
+    expect(dependencies.some((d) => d.from === "t38")).toBe(false);
+    const onDependencyChange = vi.fn();
+    linkGantt({ tasks, dependencies, onDependencyChange });
+    const el = connector("T38")!;
+    const y = (i: number) => top + i * 41 + 20;
+    fireEvent.pointerDown(el, { clientX: 500, clientY: y(38), button: 0 });
+    fireEvent.pointerMove(el, { clientX: 300, clientY: y(39) });
+    fireEvent.pointerUp(el, { clientX: 300, clientY: y(39) });
+    expect(onDependencyChange).not.toHaveBeenCalled();
+    expect(status()).toHaveTextContent(
+      `Not linked: a chart holds at most ${MAX_LINKS} links`,
+    );
+  });
+
+  it.each([
+    ["a pointer down", () => fireEvent.pointerDown(document.body)],
+    ["a key press", () => fireEvent.keyDown(document.body, { key: "Shift" })],
+    ["a focus change", () => taskRow("Build").focus()],
+  ])("the refusal sentence goes with %s", (_, action) => {
+    linkGantt();
+    link("Review", "Brief");
+    expect(tipOf("Brief")).not.toBeNull();
+    act(action);
+    expect(tipOf("Brief")).toBeNull();
+    expect(bar(taskRow("Brief"))).not.toHaveAttribute("data-refused");
+  });
+
+  it.each([
+    ["Escape", () => fireEvent.keyDown(document.body, { key: "Escape" })],
+    ["pointercancel", (el: HTMLElement) => fireEvent.pointerCancel(el)],
+    [
+      "lost capture",
+      (el: HTMLElement) => fireEvent.lostPointerCapture(el, { pointerId: 1 }),
+    ],
+    ["window blur", () => fireEvent.blur(window)],
+    ["a release over nothing", (el: HTMLElement) => release(el, 1500)],
+  ])("%s cancels: nothing reported, announced, ghost gone", (_, cancel) => {
+    const onDependencyChange = vi.fn();
+    linkGantt({ onDependencyChange });
+    const el = press("Review");
+    over(el, "Release");
+    expect(creating()).not.toBeNull();
+    cancel(el);
+    expect(creating()).toBeNull();
+    expect(tipOf("Release")).toBeNull();
+    expect(root()).not.toHaveAttribute("data-editing");
+    expect(status()).toHaveTextContent("Link cancelled");
+    release(el, "Release");
+    expect(onDependencyChange).not.toHaveBeenCalled();
+  });
+
+  it("Escape is stopped while a link session runs, and only then", () => {
+    const outer = vi.fn();
+    document.addEventListener("keydown", outer);
+    try {
+      linkGantt();
+      over(press("Review"), "Release");
+      fireEvent.keyDown(document.body, { key: "Escape" });
+      expect(outer).not.toHaveBeenCalled();
+      fireEvent.keyDown(document.body, { key: "Escape" });
+      expect(outer).toHaveBeenCalledTimes(1);
+    } finally {
+      document.removeEventListener("keydown", outer);
+    }
+  });
+
+  it("unmounted mid link-creation, it leaves Escape, blur and scroll to the page", () => {
+    const outer = vi.fn();
+    document.addEventListener("keydown", outer);
+    const blur = vi.spyOn(window, "removeEventListener");
+    const add = vi.spyOn(HTMLElement.prototype, "addEventListener");
+    const remove = vi.spyOn(HTMLElement.prototype, "removeEventListener");
+    try {
+      const { unmount } = linkGantt({ dependencies: [] });
+      const box = document.querySelector<HTMLElement>(".c__gantt__scroller")!;
+      over(press("Review"), "Release");
+      const scrolls = add.mock.calls.filter(
+        (call, i) => add.mock.contexts[i] === box && call[0] === "scroll",
+      );
+      unmount();
+      fireEvent.keyDown(document.body, { key: "Escape" });
+      expect(outer).toHaveBeenCalledTimes(1);
+      expect(blur).toHaveBeenCalledWith("blur", expect.any(Function));
+      for (const [, handler] of scrolls) {
+        expect(
+          remove.mock.calls.some(
+            (call, i) =>
+              remove.mock.contexts[i] === box &&
+              call[0] === "scroll" &&
+              call[1] === handler,
+          ),
+        ).toBe(true);
+      }
+      expect(scrolls.length).toBeGreaterThan(0);
+    } finally {
+      document.removeEventListener("keydown", outer);
+      blur.mockRestore();
+      add.mockRestore();
+      remove.mockRestore();
+    }
+  });
+
+  it.each([
+    ["a refusal sentence shown", () => link("Review", "Brief")],
+    ["a link selected", () => fireEvent.click(hits("a", "b")[0])],
+  ])("unmounted with %s, it leaves the document listeners", (_, setUp) => {
+    const add = vi.spyOn(document, "addEventListener");
+    const remove = vi.spyOn(document, "removeEventListener");
+    try {
+      const { unmount } = linkGantt();
+      setUp();
+      const types = ["pointerdown", "keydown", "focusin"];
+      const added = add.mock.calls.filter(([type]) => types.includes(type));
+      expect(added.length).toBeGreaterThan(0);
+      unmount();
+      for (const [type, handler] of added) {
+        expect(
+          remove.mock.calls.some(([t, h]) => t === type && h === handler),
+          type,
+        ).toBe(true);
+      }
+    } finally {
+      add.mockRestore();
+      remove.mockRestore();
+    }
+  });
+
+  it("one session at a time: a connector during a move, a bar during a link", () => {
+    const onTaskChange = vi.fn();
+    const onDependencyChange = vi.fn();
+    linkGantt({ onTaskChange, onDependencyChange });
+    const build = bar(taskRow("Build"))!;
+    fireEvent.pointerDown(build, { clientX: 100, button: 0, pointerId: 1 });
+    fireEvent.pointerMove(build, { clientX: 180, pointerId: 1 });
+    const el = press("Review", 2);
+    expect(root()).toHaveAttribute("data-editing", "move");
+    fireEvent.pointerMove(el, {
+      clientX: 300,
+      clientY: rowY("Release"),
+      pointerId: 2,
+    });
+    fireEvent.pointerUp(el, {
+      clientX: 300,
+      clientY: rowY("Release"),
+      pointerId: 2,
+    });
+    fireEvent.pointerUp(build, { clientX: 180, pointerId: 1 });
+    expect(onDependencyChange).not.toHaveBeenCalled();
+    expect(onTaskChange).toHaveBeenCalledTimes(1);
+
+    const linking = press("Review");
+    over(linking, "Release");
+    const brief = bar(taskRow("Brief"))!;
+    fireEvent.pointerDown(brief, { clientX: 100, button: 0, pointerId: 3 });
+    expect(root()).toHaveAttribute("data-editing", "link");
+    fireEvent.pointerUp(brief, { clientX: 140, pointerId: 3 });
+    release(linking, "Release");
+    expect(onTaskChange).toHaveBeenCalledTimes(1);
+    expect(onDependencyChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("controlled: an ignored add shows nothing; an applied one draws the first link; data never mutated", () => {
+    const before = [JSON.stringify(DEP_TASKS), JSON.stringify(DEPS)];
+    const { unmount } = linkGantt();
+    link("Review", "Release");
+    expect(linkEl("c", "e")).toBeNull();
+    expect(creating()).toBeNull();
+    unmount();
+
+    const Parent = () => {
+      const [dependencies, setDependencies] = useState<GanttDependency[]>([]);
+      return (
+        <CunninghamProvider>
+          <Gantt
+            aria-label="Plan"
+            tasks={DEP_TASKS}
+            dependencies={dependencies}
+            zoom="day"
+            today="2026-03-23"
+            editable
+            onDependencyChange={({ kind, dependency }) =>
+              setDependencies((all) =>
+                kind === "add"
+                  ? [...all, dependency]
+                  : all.filter(
+                      (d) =>
+                        d.from !== dependency.from || d.to !== dependency.to,
+                    ),
+              )
+            }
+          />
+        </CunninghamProvider>
+      );
+    };
+    render(<Parent />);
+    link("Review", "Release");
+    expect(linkEl("c", "e")).not.toBeNull();
+    expect(linkEl("c", "e")).not.toHaveAttribute("data-state");
+    expect(creating()).toBeNull();
+    expect([JSON.stringify(DEP_TASKS), JSON.stringify(DEPS)]).toEqual(before);
+  });
+
+  it("a click on a link's middle selects it and focuses Remove in the successor row; the ends are not targets", () => {
+    linkGantt();
+    // Strips on the middle vertical segments only (forward a>b, U b>e).
+    for (const [from, to] of [
+      ["a", "b"],
+      ["b", "e"],
+    ]) {
+      const segments = Array.from(
+        linkEl(from, to)!.querySelectorAll<HTMLElement>(
+          ".c__gantt__link-segment",
+        ),
+      );
+      expect(
+        hits(from, to).map((hit) => segments.indexOf(hit.parentElement!)),
+      ).toEqual(
+        segments.flatMap((segment, i) =>
+          i > 0 && i < segments.length - 1 && segment.dataset.axis === "y"
+            ? [i]
+            : [],
+        ),
+      );
+    }
+    expect(hits("a", "b")).toHaveLength(1);
+    expect(hits("b", "e")).toHaveLength(2);
+    fireEvent.click(hits("a", "b")[0]);
+    expect(linkEl("a", "b")).toHaveAttribute("data-selected");
+    const remove = screen.getByRole("button", {
+      name: "Remove link from Brief to Build",
+    });
+    expect(remove).toHaveFocus();
+    expect(remove.closest('[role="gridcell"]')).not.toBeNull();
+    expect(remove.closest('[role="row"]')).toBe(taskRow("Build"));
+  });
+
+  it.each(["{Enter}", " ", "{Delete}", "{Backspace}"])(
+    "%s on Remove reports the removal once",
+    async (key) => {
+      const onDependencyChange = vi.fn();
+      linkGantt({ onDependencyChange });
+      fireEvent.click(hits("a", "b")[0]);
+      await userEvent.keyboard(key);
+      expect(onDependencyChange).toHaveBeenCalledTimes(1);
+      expect(onDependencyChange).toHaveBeenCalledWith({
+        kind: "remove",
+        dependency: { from: "a", to: "b" },
+      });
+      expect(status()).toHaveTextContent(
+        "Link removed: Build no longer depends on Brief",
+      );
+      expect(taskRow("Brief")).toHaveFocus();
+    },
+  );
+
+  it("Escape deselects and gives the focus back to the predecessor row, kept from an enclosing handler", () => {
+    const outer = vi.fn();
+    const onDependencyChange = vi.fn();
+    render(
+      <CunninghamProvider>
+        <div onKeyDown={outer}>
+          <Gantt
+            aria-label="Plan"
+            tasks={DEP_TASKS}
+            dependencies={DEPS}
+            zoom="day"
+            today="2026-03-23"
+            editable
+            onDependencyChange={onDependencyChange}
+          />
+        </div>
+      </CunninghamProvider>,
+    );
+    fireEvent.click(hits("b", "e")[0]);
+    fireEvent.keyDown(document.activeElement!, { key: "Escape" });
+    expect(outer).not.toHaveBeenCalled();
+    expect(linkEl("b", "e")).not.toHaveAttribute("data-selected");
+    expect(screen.queryByRole("button", { name: /Remove link/ })).toBeNull();
+    expect(taskRow("Build")).toHaveFocus();
+    expect(taskRow("Build").tabIndex).toBe(0);
+    expect(onDependencyChange).not.toHaveBeenCalled();
+  });
+
+  it("a click elsewhere deselects; the selection goes with its link", () => {
+    const { rerender } = linkGantt();
+    fireEvent.click(hits("a", "b")[0]);
+    fireEvent.pointerDown(document.body);
+    expect(linkEl("a", "b")).not.toHaveAttribute("data-selected");
+    fireEvent.click(hits("a", "b")[0]);
+    const props = {
+      "aria-label": "Project schedule",
+      tasks: DEP_TASKS,
+      zoom: "day" as const,
+      today: "2026-03-23",
+      editable: true,
+      onDependencyChange: vi.fn(),
+    };
+    rerender(
+      <CunninghamProvider currentLocale="en-US">
+        <Gantt
+          {...props}
+          dependencies={DEPS.filter((d) => d.from !== "a" || d.to !== "b")}
+        />
+      </CunninghamProvider>,
+    );
+    expect(screen.queryByRole("button", { name: /Remove link/ })).toBeNull();
+    rerender(
+      <CunninghamProvider currentLocale="en-US">
+        <Gantt {...props} dependencies={DEPS} />
+      </CunninghamProvider>,
+    );
+    expect(linkEl("a", "b")).not.toHaveAttribute("data-selected");
+    expect(screen.queryByRole("button", { name: /Remove link/ })).toBeNull();
+  });
+
+  it("focusing Remove, inside a row, leaves the roving tab stop alone (s22 onFocus guard)", () => {
+    linkGantt();
+    const stops = () =>
+      screen
+        .getAllByRole("row")
+        .slice(1)
+        .filter((row) => row.tabIndex === 0);
+    expect(stops()).toEqual([taskRow("Brief")]);
+    expect(() => fireEvent.click(hits("b", "e")[0])).not.toThrow();
+    expect(
+      screen.getByRole("button", { name: "Remove link from Build to Release" }),
+    ).toHaveFocus();
+    expect(stops()).toEqual([taskRow("Brief")]);
+  });
+});
+
 describe("Gantt tokens", () => {
   it("emits every token of tokens.ts in the generated :root block", () => {
     const css = read("../../cunningham-tokens.css");
@@ -2219,6 +2800,44 @@ describe("Gantt stylesheet", () => {
       ),
     ).toMatch(/transition:\s*none;/);
   });
+
+  it("link editing: 24px connector and Remove, crosshair, touch-action on the connector, forced colors", () => {
+    const source = scss();
+    const hit = "var\\(--c--components--gantt--link-hit-size\\)";
+    const connector = blocks(source, /&__connector\b/);
+    expect(connector).toMatch(new RegExp(`inline-size:\\s*${hit};`));
+    expect(connector).toMatch(new RegExp(`block-size:\\s*${hit};`));
+    const remove = blocks(source, /&__remove\b/);
+    expect(remove).toMatch(new RegExp(`min-inline-size:\\s*${hit};`));
+    expect(remove).toMatch(new RegExp(`min-block-size:\\s*${hit};`));
+    expect(blocks(source, /&\[data-editable\] &__connector\b/)).toMatch(
+      /cursor:\s*crosshair;/,
+    );
+    // The connector joins the bar and the handles; the track keeps scrolling.
+    expect(
+      blocks(
+        source,
+        /&\[data-editable\] &__bar,\s*&\[data-editable\] &__handle,\s*&__connector/,
+      ),
+    ).toMatch(/touch-action:\s*none;/);
+    expect(blocks(source, /&__track\b/)).not.toMatch(/touch-action/);
+    // The dot shows on hover and focus of its row, like the grips.
+    expect(source).toMatch(/&__row:hover &__connector::after/);
+    expect(source).toMatch(/&__row:focus-within &__connector::after/);
+    expect(blocks(source, /&__connector::after/)).toMatch(
+      /border:[^;]*var\(--c--components--gantt--connector-border-color\);[\s\S]*background-color:\s*var\(--c--components--gantt--connector-background-color\);/,
+    );
+    expect(blocks(source, /&__link\[data-selected\]/)).toMatch(
+      /var\(--c--components--gantt--link-selected-color\)[\s\S]*var\(--c--components--gantt--link-width--selected\)/,
+    );
+    expect(blocks(source, /&__bar\[data-refused\]/)).toMatch(
+      /var\(--c--components--gantt--invalid-color\)/,
+    );
+    const forced = blocks(source, /@media \(forced-colors: active\)/);
+    expect(blocks(forced, /&__connector::after/)).toMatch(/CanvasText/);
+    expect(blocks(forced, /&__link\[data-selected\]/)).toMatch(/Highlight/);
+    expect(blocks(forced, /&__remove\b/)).toMatch(/CanvasText/);
+  });
 });
 
 // Contrast, technique of `button/focus-ring.spec.tsx` (helpers copied: known
@@ -2333,6 +2952,9 @@ describe("Gantt contrast", () => {
         ["link-color", "link-casing-color", 3],
         ["link-conflict-color", "link-casing-color", 3],
         ["link-flag-color", "link-flag-background-color", 4.5],
+        // Link editing (s24 t03): the connector ring on the row and its hover.
+        ["connector-border-color", "background-color", 3],
+        ["connector-border-color", "row-background-color--hover", 3],
       ];
       for (const [foreground, background, min] of pairs) {
         expect(

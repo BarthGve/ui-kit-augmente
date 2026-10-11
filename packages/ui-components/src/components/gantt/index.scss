@@ -72,6 +72,16 @@
     min-inline-size: 100%;
   }
 
+  // Room after the axis' last day for the connector of a task ending there
+  // (rows clip their paint): the end handle's outer third and one target.
+  &[data-linkable] &__grid {
+    inline-size: calc(
+      var(--gantt-task-width) + var(--gantt-days) * var(--gantt-day-width) +
+        var(--c--components--gantt--handle-hit-size) / 3 +
+        var(--c--components--gantt--link-hit-size)
+    );
+  }
+
   &__axis,
   &__row {
     display: grid;
@@ -278,16 +288,25 @@
     cursor: ew-resize;
   }
 
-  // Touch drags the bar at once; fingers on the track or the task column
-  // still scroll the box.
+  // Touch drags the bar (and a link from the connector) at once; fingers on
+  // the track or the task column still scroll the box.
   &[data-editable] &__bar,
-  &[data-editable] &__handle {
+  &[data-editable] &__handle,
+  &__connector {
     touch-action: none;
   }
 
-  &__bar[data-preview] {
+  // The bar being edited, or the source of a link being drawn.
+  &__bar[data-preview],
+  &__bar[data-link-source] {
     outline: var(--c--components--gantt--focus-ring-width) solid
       var(--c--components--gantt--drag-outline-color);
+  }
+
+  // A refused link target: the tooltip sentence is the first cue.
+  &__bar[data-refused] {
+    outline: var(--c--components--gantt--focus-ring-width) solid
+      var(--c--components--gantt--invalid-color);
   }
 
   // Clamped (axis or end before start): the colour is a second cue, the
@@ -344,6 +363,70 @@
     visibility: visible;
   }
 
+  // Link editing (s24): the connector, a track child after the bar (a press
+  // never starts a move), its 24px target just past the end handle (which
+  // reaches a third of its own target out of the bar).
+  &__connector {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      (var(--gantt-start) + var(--gantt-span)) * var(--gantt-day-width) +
+        var(--c--components--gantt--handle-hit-size) / 3
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--c--components--gantt--link-hit-size);
+    block-size: var(--c--components--gantt--link-hit-size);
+    margin-block: auto;
+  }
+
+  &[data-editable] &__connector {
+    cursor: crosshair;
+  }
+
+  &[data-editing="link"],
+  &[data-editing="link"] &__bar {
+    cursor: crosshair;
+  }
+
+  // The dot: shown like the grips (the target is always live).
+  &__connector::after {
+    content: "";
+    box-sizing: border-box;
+    inline-size: calc(var(--c--components--gantt--bar-height) / 2);
+    block-size: calc(var(--c--components--gantt--bar-height) / 2);
+    border: var(--c--components--gantt--link-width) solid
+      var(--c--components--gantt--connector-border-color);
+    border-radius: 50%;
+    background-color: var(--c--components--gantt--connector-background-color);
+    visibility: hidden;
+  }
+
+  &__row:hover &__connector::after,
+  &__row:focus-within &__connector::after,
+  &__bar[data-link-source] ~ &__connector::after {
+    visibility: visible;
+  }
+
+  // Remove link: in the successor row, left of the arrow and clear of the
+  // last vertical segment's hit strip.
+  & &__remove {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: max(
+      0%,
+      calc(
+        var(--gantt-start) *
+          var(--gantt-day-width) - var(--c--components--gantt--link-lead) -
+          1.5 * var(--c--components--gantt--link-hit-size)
+      )
+    );
+    min-inline-size: var(--c--components--gantt--link-hit-size);
+    min-block-size: var(--c--components--gantt--link-hit-size);
+    margin-block: auto;
+  }
+
   // The original dates: a shape (dashed), not a colour.
   &__ghost {
     position: absolute;
@@ -380,11 +463,11 @@
     white-space: nowrap;
     pointer-events: none;
 
+    // Ends one margin before the bar (not from the track's end: the track
+    // can be wider than the axis).
     &[data-side="start"] {
-      inset-inline-start: auto;
-      inset-inline-end: calc(
-        (var(--gantt-days) - var(--gantt-start)) * var(--gantt-day-width)
-      );
+      inset-inline-start: calc(var(--gantt-start) * var(--gantt-day-width));
+      translate: calc(-100% - 2 * var(--c--globals--spacings--3xs)) 0;
     }
   }
 
@@ -440,6 +523,22 @@
     pointer-events: none;
   }
 
+  // A link session's sentence (Gantt.tsx): in the overlay, after the lines,
+  // so that none paints over it; placed by row like the segments.
+  &__links > &__tip {
+    inset-block: auto;
+    inset-block-start: calc(
+      var(--gantt-y) * var(--gantt-pitch) +
+        (
+          var(--c--components--gantt--row-height) - var(
+              --c--components--gantt--bar-height
+            )
+        ) /
+        2
+    );
+    margin-block: 0;
+  }
+
   &__link {
     --gantt-link-color: var(--c--components--gantt--link-color);
     --gantt-link-style: solid;
@@ -450,6 +549,37 @@
   &__link[data-conflict] {
     --gantt-link-color: var(--c--components--gantt--link-conflict-color);
     --gantt-link-style: dashed;
+  }
+
+  // Selected or hovered (link editing on): darker and wider.
+  &__link[data-selected],
+  &__link:has(.c__gantt__link-hit:hover) {
+    --gantt-link-color: var(--c--components--gantt--link-selected-color);
+    --gantt-link-width: var(--c--components--gantt--link-width--selected);
+  }
+
+  // The prospective link of a pointer session, like the dragged bar.
+  &__link[data-state="creating"] {
+    --gantt-link-color: var(--c--components--gantt--drag-outline-color);
+  }
+
+  &[data-editable] &__link-hit {
+    cursor: pointer;
+  }
+
+  // A transparent 24px strip centred on a middle vertical segment
+  // (Gantt.tsx): the overlay ignores the pointer, the strip takes it back.
+  // Placed from the padding box, which starts after the line's border.
+  &__link-hit {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      -1 *
+        (var(--gantt-link-width) + var(--c--components--gantt--link-hit-size)) /
+        2
+    );
+    inline-size: var(--c--components--gantt--link-hit-size);
+    pointer-events: auto;
   }
 
   &__link-segment {
@@ -639,8 +769,20 @@
     }
 
     &__bar[data-preview],
-    &__bar[data-clamped] {
+    &__bar[data-clamped],
+    &__bar[data-link-source],
+    &__bar[data-refused] {
       outline-color: Highlight;
+    }
+
+    &__connector::after {
+      forced-color-adjust: none;
+      border-color: CanvasText;
+      background-color: Canvas;
+    }
+
+    & &__remove {
+      border: var(--c--components--gantt--border-width) solid CanvasText;
     }
 
     &__handle::after {
@@ -665,6 +807,11 @@
     &__link,
     &__link[data-conflict] {
       --gantt-link-color: CanvasText;
+    }
+
+    &__link[data-selected],
+    &__link[data-state="creating"] {
+      --gantt-link-color: Highlight;
     }
 
     &__link-segment::before {

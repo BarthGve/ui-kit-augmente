@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { CalendarDate } from "@internationalized/date";
 import { Gantt } from "./index";
-import type { GanttTask, GanttZoom } from "./types";
+import type { GanttDependency, GanttTask, GanttZoom } from "./types";
 
 const TASKS: GanttTask[] = [
   {
@@ -143,5 +143,51 @@ export const WithDependencies: Story = {
       { from: "review", to: "release" },
       { from: "plan", to: "release" },
     ],
+  },
+};
+
+// Link editing, controlled: the story applies every task and link change and
+// shows the last one. Drag a bar's connector onto another task to link it;
+// click a link, then Remove (or Delete) to unlink it.
+export const LinkEditable: Story = {
+  args: { editable: true },
+  render: function Render(args) {
+    const [tasks, setTasks] = useState(args.tasks);
+    const [dependencies, setDependencies] = useState<GanttDependency[]>([
+      { from: "brief", to: "build" },
+      { from: "brief", to: "review" },
+      { from: "build", to: "release" },
+    ]);
+    const [last, setLast] = useState("");
+    return (
+      <>
+        <Gantt
+          {...args}
+          tasks={tasks}
+          dependencies={dependencies}
+          onTaskChange={(id, change) => {
+            setLast(`${id}: ${change.start} to ${change.end}`);
+            setTasks((all) =>
+              all.map((task) =>
+                task.id === id ? { ...task, ...change } : task,
+              ),
+            );
+          }}
+          onDependencyChange={({ kind, dependency }) => {
+            setLast(`${kind} ${dependency.from} to ${dependency.to}`);
+            setDependencies((all) =>
+              kind === "add"
+                ? [...all, dependency]
+                : all.filter(
+                    (link) =>
+                      link.from !== dependency.from ||
+                      link.to !== dependency.to,
+                  ),
+            );
+          }}
+        />
+        <output>{last}</output>
+      </>
+    );
   },
 };
