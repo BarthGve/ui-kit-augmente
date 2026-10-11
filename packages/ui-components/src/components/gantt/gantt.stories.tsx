@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { CalendarDate } from "@internationalized/date";
+import { DEMO_DEPENDENCIES, DEMO_TASKS, DEMO_TODAY } from "./demo";
 import { Gantt } from "./index";
 import type { GanttDependency, GanttTask, GanttZoom } from "./types";
 
@@ -150,14 +151,19 @@ export const WithDependencies: Story = {
 // shows the last one. Drag a bar's connector onto another task to link it;
 // click a link, then Remove (or Delete) to unlink it.
 export const LinkEditable: Story = {
-  args: { editable: true },
-  render: function Render(args) {
-    const [tasks, setTasks] = useState(args.tasks);
-    const [dependencies, setDependencies] = useState<GanttDependency[]>([
+  args: {
+    editable: true,
+    dependencies: [
       { from: "brief", to: "build" },
       { from: "brief", to: "review" },
       { from: "build", to: "release" },
-    ]);
+    ],
+  },
+  render: function Render(args) {
+    const [tasks, setTasks] = useState(args.tasks);
+    const [dependencies, setDependencies] = useState<GanttDependency[]>(
+      args.dependencies ?? [],
+    );
     const [last, setLast] = useState("");
     return (
       <>
@@ -189,5 +195,21 @@ export const LinkEditable: Story = {
         <output>{last}</output>
       </>
     );
+  },
+};
+
+// The demonstration data set (also driven by the CT smoke): a chain, a
+// diamond, a conflict already there, a task without dates, and a one-day
+// retrospective far right that leaves three weeks of room to drag into (the
+// axis does not grow while dragging). Move, resize, link and unlink: the
+// story applies every change and shows the last one.
+export const Dependencies: Story = {
+  ...LinkEditable,
+  args: {
+    editable: true,
+    tasks: DEMO_TASKS,
+    dependencies: DEMO_DEPENDENCIES,
+    today: DEMO_TODAY,
+    defaultZoom: "week",
   },
 };

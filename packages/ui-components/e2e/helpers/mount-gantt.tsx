@@ -2,7 +2,13 @@ import { useState } from "react";
 import { Dialog, Modal } from "react-aria-components";
 import { CunninghamProvider } from "../../src/components/provider/Provider";
 import { Gantt } from "../../src/components/gantt/Gantt";
+import {
+  DEMO_DEPENDENCIES,
+  DEMO_TASKS,
+  DEMO_TODAY,
+} from "../../src/components/gantt/demo";
 import type {
+  GanttDependency,
   GanttProps,
   GanttTask,
   GanttZoom,
@@ -76,6 +82,48 @@ export const GanttInModal = () => {
           </div>
         </Dialog>
       </Modal>
+    </CunninghamProvider>
+  );
+};
+
+// The `Dependencies` story's data (s24 t05) under a parent that applies every
+// task and link change; tall enough to show every row without scrolling.
+export const DemoGantt = ({
+  onTaskChange,
+  onDependencyChange,
+}: Pick<GanttProps, "onTaskChange" | "onDependencyChange">) => {
+  const [tasks, setTasks] = useState(DEMO_TASKS);
+  const [dependencies, setDependencies] =
+    useState<GanttDependency[]>(DEMO_DEPENDENCIES);
+  return (
+    <CunninghamProvider>
+      <div style={{ height: "36rem", padding: "1rem" }}>
+        <Gantt
+          aria-label="Schedule"
+          data-testid="gantt"
+          tasks={tasks}
+          dependencies={dependencies}
+          today={DEMO_TODAY}
+          editable
+          onTaskChange={(id, change) => {
+            onTaskChange?.(id, change);
+            setTasks((all) =>
+              all.map((task) =>
+                task.id === id ? { ...task, ...change } : task,
+              ),
+            );
+          }}
+          onDependencyChange={(change) => {
+            onDependencyChange?.(change);
+            const { from, to } = change.dependency;
+            setDependencies((all) =>
+              change.kind === "add"
+                ? [...all, change.dependency]
+                : all.filter((l) => l.from !== from || l.to !== to),
+            );
+          }}
+        />
+      </div>
     </CunninghamProvider>
   );
 };

@@ -4,8 +4,10 @@ import type {
   GanttDependencyChange,
   GanttTaskChange,
 } from "../../src/components/gantt/types";
+import { DEMO_TASKS } from "../../src/components/gantt/demo";
 import {
   ControlledGantt,
+  DemoGantt,
   EditableGantt,
   GanttInModal,
   TestGantt,
@@ -1579,5 +1581,122 @@ test.describe("Gantt link editing", () => {
       ).toHaveCount(0);
       expect(calls).toHaveLength(1);
     });
+  });
+});
+
+// The demonstration data (s24 t05, AC6), the same module the `Dependencies`
+// story loads: move, resize, link, a refused loop and an unlink, end to end,
+// with a parent that applies every change.
+test.describe("Gantt dependencies demo", () => {
+  const rowOf = (page: Page, id: string) =>
+    row(page, DEMO_TASKS.findIndex((t) => t.id === id) + 2);
+  const link = (page: Page, from: string, to: string) =>
+    page.locator(`.c__gantt__link[data-from="${from}"][data-to="${to}"]`);
+  const centre = async (locator: Locator) => {
+    const b = await box(locator);
+    return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  };
+  const drag = async (
+    page: Page,
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+  ) => {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(to.x, to.y, { steps: 8 });
+  };
+
+  test("move, resize, link, a refused loop and an unlink, each reported once", async ({
+    mount,
+    page,
+  }) => {
+    const tasks: [string, GanttTaskChange][] = [];
+    const links: GanttDependencyChange[] = [];
+    await mount(
+      <DemoGantt
+        onTaskChange={(id, change) => tasks.push([id, change])}
+        onDependencyChange={(change) => links.push(change)}
+      />,
+    );
+    const design = bar(page, "design");
+    await expect.poll(() => hittable(design, "x")).toBeGreaterThan(24);
+    const span = Number(
+      await design.evaluate((el) =>
+        (el as HTMLElement).style.getPropertyValue("--gantt-span"),
+      ),
+    );
+    const px = (await box(design)).width / span;
+
+    // Move: Design one week later now ends after the API starts.
+    const conflict = () =>
+      link(page, "design", "api").getAttribute("data-conflict");
+    expect(await conflict()).toBeNull();
+    const at = await centre(design);
+    await drag(page, at, { x: at.x + 7 * px, y: at.y });
+    await expect.poll(conflict).not.toBeNull();
+    await page.mouse.up();
+    await expect.poll(() => tasks.length).toBe(1);
+    expect(tasks[0]).toEqual([
+      "design",
+      { start: "2026-03-16", end: "2026-03-27" },
+    ]);
+    await expect.poll(conflict).not.toBeNull();
+
+    // Resize: the help pages end one week later, the start stays.
+    const end = await centre(
+      bar(page, "docs").locator('.c__gantt__handle[data-edge="end"]'),
+    );
+    await drag(page, end, { x: end.x + 7 * px, y: end.y });
+    await page.mouse.up();
+    await expect.poll(() => tasks.length).toBe(2);
+    expect(tasks[1]).toEqual([
+      "docs",
+      { start: "2026-04-13", end: "2026-05-15" },
+    ]);
+
+    // Link: from the API's connector down onto the help pages.
+    const dot = await centre(
+      rowOf(page, "api").locator(".c__gantt__connector"),
+    );
+    const docs = await centre(rowOf(page, "docs"));
+    await drag(page, dot, { x: dot.x, y: docs.y });
+    await page.mouse.up();
+    await expect.poll(() => links.length).toBe(1);
+    expect(links[0]).toEqual({
+      kind: "add",
+      dependency: { from: "api", to: "docs" },
+    });
+    await expect(link(page, "api", "docs")).toHaveCount(1);
+
+    // Refused: Integrate already comes after the brief, through the chain.
+    const integrate = await centre(
+      rowOf(page, "integrate").locator(".c__gantt__connector"),
+    );
+    const brief = await centre(rowOf(page, "brief"));
+    await drag(page, integrate, { x: integrate.x, y: brief.y });
+    const tip = page.locator('.c__gantt__tip[data-task-id="brief"]');
+    await expect(tip).toHaveText("Not linked: this would create a loop");
+    await expect(page.getByRole("status")).toHaveText(
+      "Not linked: this would create a loop",
+    );
+    await page.mouse.up();
+    await page.waitForTimeout(200);
+    expect(links).toHaveLength(1);
+
+    // Unlink from the keyboard: the brief's first candidate is the design,
+    // already linked, so Enter removes that link.
+    await rowOf(page, "brief").focus();
+    await page.keyboard.press("Alt+Shift+ArrowRight");
+    await expect(page.getByRole("status")).toHaveText(
+      "Design the service already starts after Write the brief. Enter to remove the link.",
+    );
+    await page.keyboard.press("Enter");
+    await expect.poll(() => links.length).toBe(2);
+    expect(links[1]).toEqual({
+      kind: "remove",
+      dependency: { from: "brief", to: "design" },
+    });
+    await expect(link(page, "brief", "design")).toHaveCount(0);
+    expect(tasks).toHaveLength(2);
   });
 });
