@@ -354,7 +354,10 @@
       "link_refused_limit": "Not linked: a chart holds at most {count} links",
       "announce_link_added": "{to} now starts after {from}",
       "announce_link_removed": "Link removed: {to} no longer depends on {from}",
-      "announce_link_cancelled": "Link cancelled"
+      "announce_link_cancelled": "Link cancelled",
+      "link_instructions": "Alt plus Shift plus Right arrow makes another task start after this one; Alt plus Shift plus Left arrow makes this task start after another. Up and Down arrows choose the task, Enter links or unlinks, Escape cancels.",
+      "announce_link_target": "Link {from} to {to}: {to} would start after {from} ends. Enter to link.",
+      "announce_link_exists": "{to} already starts after {from}. Enter to remove the link."
     }
   }
 }

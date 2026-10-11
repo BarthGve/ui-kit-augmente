@@ -2599,6 +2599,409 @@ describe("Gantt link editing (s24)", () => {
     ).toHaveFocus();
     expect(stops()).toEqual([taskRow("Brief")]);
   });
+
+  // The keyboard path (t04): Alt+Shift+Right (this task first) or Left
+  // (this task after another) on a focused row, then the arrows pick.
+  describe("keyboard", () => {
+    beforeEach(() => {
+      Element.prototype.scrollIntoView = vi.fn();
+    });
+
+    // fireEvent returns false when the key was kept from the browser.
+    const key = (
+      row: HTMLElement,
+      name: string,
+      modifiers: Record<string, boolean> = {},
+    ) => fireEvent.keyDown(row, { key: name, ...modifiers });
+    const chord = (row: HTMLElement, name: "ArrowRight" | "ArrowLeft") =>
+      key(row, name, { altKey: true, shiftKey: true });
+    const focused = (name: string) => {
+      const row = taskRow(name);
+      row.focus();
+      return row;
+    };
+    const LINK_SHORTCUTS = "Alt+Shift+ArrowLeft Alt+Shift+ArrowRight";
+
+    it("Alt+Shift+Right: the next dated row is the successor; the arrows pick, skipping the source; Enter links once (AC2)", () => {
+      const onDependencyChange = vi.fn();
+      linkGantt({ onDependencyChange });
+      const row = focused("Review");
+      expect(chord(row, "ArrowRight")).toBe(false);
+      expect(root()).toHaveAttribute("data-editing", "link");
+      expect(bar(row)).toHaveAttribute("data-link-source");
+      // Plan has no dates: Release is the first candidate.
+      expect(creating()).toHaveAttribute("data-from", "c");
+      expect(creating()).toHaveAttribute("data-to", "e");
+      expect(tipOf("Release")).toHaveTextContent("Start Release after Review");
+      expect(status()).toHaveTextContent(
+        "Link Review to Release: Release would start after Review ends. Enter to link.",
+      );
+      const heard = () => status().textContent;
+      expect(key(row, "ArrowUp")).toBe(false);
+      expect(tipOf("Plan")).toHaveTextContent("Not linked: Plan has no dates");
+      expect(creating()).toBeNull();
+      expect(key(row, "ArrowUp")).toBe(false);
+      // The source is skipped; two loops in a row are told apart.
+      expect(tipOf("Build")).toHaveTextContent(
+        "Not linked: this would create a loop",
+      );
+      expect(bar(taskRow("Build"))).toHaveAttribute("data-refused");
+      const build = heard();
+      expect(build).toBe(
+        "Start Build after Review. Not linked: this would create a loop",
+      );
+      key(row, "ArrowUp");
+      expect(tipOf("Brief")).toHaveTextContent(
+        "Not linked: this would create a loop",
+      );
+      expect(heard()).toBe(
+        "Start Brief after Review. Not linked: this would create a loop",
+      );
+      // Clamped at the first row: kept in the row, nothing new said.
+      expect(key(row, "ArrowUp")).toBe(false);
+      expect(tipOf("Brief")).not.toBeNull();
+      expect(row).toHaveFocus();
+      expect(key(row, "End")).toBe(false);
+      expect(creating()).toHaveAttribute("data-to", "e");
+      key(row, "Home");
+      expect(tipOf("Brief")).not.toBeNull();
+      key(row, "ArrowDown");
+      key(row, "ArrowDown");
+      expect(tipOf("Plan")).not.toBeNull();
+      key(row, "ArrowDown");
+      expect(key(row, "ArrowDown")).toBe(false);
+      expect(creating()).toHaveAttribute("data-to", "e");
+      expect(row).toHaveFocus();
+      expect(onDependencyChange).not.toHaveBeenCalled();
+      expect(key(row, "Enter")).toBe(false);
+      expect(onDependencyChange).toHaveBeenCalledTimes(1);
+      expect(onDependencyChange).toHaveBeenCalledWith({
+        kind: "add",
+        dependency: { from: "c", to: "e" },
+      });
+      expect(status()).toHaveTextContent("Release now starts after Review");
+      expect(root()).not.toHaveAttribute("data-editing");
+      expect(creating()).toBeNull();
+      expect(tipOf("Release")).toBeNull();
+      expect(row).toHaveFocus();
+      // No session: Enter is the page's again.
+      expect(key(row, "Enter")).toBe(true);
+      expect(onDependencyChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("Alt+Shift+Left: the focused task starts after the previous dated row; at the first row, the nearest other", () => {
+      const onDependencyChange = vi.fn();
+      const { unmount } = linkGantt({ onDependencyChange });
+      let row = focused("Release");
+      expect(chord(row, "ArrowLeft")).toBe(false);
+      expect(creating()).toHaveAttribute("data-from", "c");
+      expect(creating()).toHaveAttribute("data-to", "e");
+      expect(tipOf("Review")).toHaveTextContent("Start Release after Review");
+      key(row, "Enter");
+      expect(onDependencyChange).toHaveBeenCalledWith({
+        kind: "add",
+        dependency: { from: "c", to: "e" },
+      });
+      unmount();
+
+      linkGantt({ onDependencyChange, dependencies: [] });
+      row = focused("Brief");
+      expect(chord(row, "ArrowLeft")).toBe(false);
+      expect(creating()).toHaveAttribute("data-from", "b");
+      expect(creating()).toHaveAttribute("data-to", "a");
+      key(row, "Enter");
+      expect(onDependencyChange).toHaveBeenLastCalledWith({
+        kind: "add",
+        dependency: { from: "b", to: "a" },
+      });
+    });
+
+    it("an existing pair is announced as such and Enter removes it (AC2)", () => {
+      const onDependencyChange = vi.fn();
+      linkGantt({ onDependencyChange });
+      const row = focused("Brief");
+      chord(row, "ArrowRight");
+      const sentence =
+        "Build already starts after Brief. Enter to remove the link.";
+      expect(status()).toHaveTextContent(sentence);
+      expect(tipOf("Build")).toHaveTextContent(sentence);
+      expect(tipOf("Build")).not.toHaveAttribute("data-refused");
+      expect(creating()).toBeNull();
+      expect(key(row, "Enter")).toBe(false);
+      expect(onDependencyChange).toHaveBeenCalledTimes(1);
+      expect(onDependencyChange).toHaveBeenCalledWith({
+        kind: "remove",
+        dependency: { from: "a", to: "b" },
+      });
+      expect(status()).toHaveTextContent(
+        "Link removed: Build no longer depends on Brief",
+      );
+      expect(root()).not.toHaveAttribute("data-editing");
+      expect(row).toHaveFocus();
+    });
+
+    it("Enter on a refused candidate reports nothing and the session stays open (AC3)", () => {
+      const onDependencyChange = vi.fn();
+      linkGantt({ onDependencyChange });
+      const row = focused("Review");
+      chord(row, "ArrowRight");
+      key(row, "Home");
+      expect(key(row, "Enter")).toBe(false);
+      expect(onDependencyChange).not.toHaveBeenCalled();
+      expect(root()).toHaveAttribute("data-editing", "link");
+      expect(tipOf("Brief")).toHaveTextContent(
+        "Not linked: this would create a loop",
+      );
+      expect(status()).toHaveTextContent(
+        "Not linked: this would create a loop",
+      );
+      key(row, "End");
+      key(row, "Enter");
+      expect(onDependencyChange).toHaveBeenCalledTimes(1);
+      expect(onDependencyChange).toHaveBeenCalledWith({
+        kind: "add",
+        dependency: { from: "c", to: "e" },
+      });
+    });
+
+    it("Escape cancels, the row keeps the focus, and only a running session stops it", () => {
+      const outer = vi.fn();
+      const onDependencyChange = vi.fn();
+      document.addEventListener("keydown", outer);
+      try {
+        linkGantt({ onDependencyChange });
+        const row = focused("Review");
+        chord(row, "ArrowRight");
+        outer.mockClear();
+        expect(key(row, "Escape")).toBe(false);
+        expect(outer).not.toHaveBeenCalled();
+        expect(status()).toHaveTextContent("Link cancelled");
+        expect(root()).not.toHaveAttribute("data-editing");
+        expect(creating()).toBeNull();
+        expect(tipOf("Release")).toBeNull();
+        expect(row).toHaveFocus();
+        key(row, "Enter");
+        expect(onDependencyChange).not.toHaveBeenCalled();
+        outer.mockClear();
+        expect(key(row, "Escape")).toBe(true);
+        expect(outer).toHaveBeenCalledTimes(1);
+      } finally {
+        document.removeEventListener("keydown", outer);
+      }
+    });
+
+    it.each([
+      ["focus leaving the row", () => taskRow("Build").focus()],
+      ["leaving the window", () => fireEvent.blur(window)],
+    ])("%s cancels with nothing reported", (_, leave) => {
+      const onDependencyChange = vi.fn();
+      linkGantt({ onDependencyChange });
+      const row = focused("Review");
+      chord(row, "ArrowRight");
+      act(leave);
+      expect(root()).not.toHaveAttribute("data-editing");
+      expect(creating()).toBeNull();
+      expect(status()).toHaveTextContent("Link cancelled");
+      key(row, "Enter");
+      expect(onDependencyChange).not.toHaveBeenCalled();
+    });
+
+    it("unmounted mid-session, it leaves Escape and blur to the page", () => {
+      const outer = vi.fn();
+      const blur = vi.spyOn(window, "removeEventListener");
+      try {
+        const { unmount } = linkGantt();
+        chord(focused("Review"), "ArrowRight");
+        expect(root()).toHaveAttribute("data-editing", "link");
+        unmount();
+        document.addEventListener("keydown", outer);
+        fireEvent.keyDown(document.body, { key: "Escape" });
+        expect(outer).toHaveBeenCalledTimes(1);
+        expect(blur).toHaveBeenCalledWith("blur", expect.any(Function));
+      } finally {
+        document.removeEventListener("keydown", outer);
+        blur.mockRestore();
+      }
+    });
+
+    it("no regression: arrows navigate without a session; other chords never mix with a link session", () => {
+      const onTaskChange = vi.fn();
+      const onDependencyChange = vi.fn();
+      linkGantt({ onTaskChange, onDependencyChange });
+      const brief = focused("Brief");
+      expect(key(brief, "ArrowDown")).toBe(false);
+      expect(taskRow("Build")).toHaveFocus();
+      const row = focused("Review");
+      chord(row, "ArrowRight");
+      // s23 chords and modified arrows during a link session: left alone.
+      for (const modifiers of [
+        { altKey: true },
+        { shiftKey: true },
+        { ctrlKey: true },
+      ] as Record<string, boolean>[]) {
+        expect(key(row, "ArrowRight", modifiers)).toBe(true);
+        expect(key(row, "ArrowDown", modifiers)).toBe(true);
+      }
+      expect(chord(row, "ArrowLeft")).toBe(true);
+      expect(root()).toHaveAttribute("data-editing", "link");
+      expect(creating()).toHaveAttribute("data-to", "e");
+      expect(row).toHaveFocus();
+      key(row, "Escape");
+
+      // Alt+Shift during an s23 edit session or a pointer drag: ignored.
+      key(row, "ArrowRight", { altKey: true });
+      expect(root()).toHaveAttribute("data-editing", "move");
+      expect(chord(row, "ArrowRight")).toBe(true);
+      expect(root()).toHaveAttribute("data-editing", "move");
+      key(row, "Escape");
+      const el = bar(taskRow("Build"))!;
+      fireEvent.pointerDown(el, { clientX: 100, button: 0, pointerId: 1 });
+      expect(chord(row, "ArrowRight")).toBe(true);
+      expect(root()).toHaveAttribute("data-editing", "move");
+      fireEvent.pointerUp(el, { clientX: 100, pointerId: 1 });
+      // Ctrl or Meta with Alt+Shift: the browser's.
+      for (const extra of [{ ctrlKey: true }, { metaKey: true }] as Record<
+        string,
+        boolean
+      >[]) {
+        expect(
+          key(row, "ArrowRight", { altKey: true, shiftKey: true, ...extra }),
+        ).toBe(true);
+      }
+      expect(root()).not.toHaveAttribute("data-editing");
+      expect(onTaskChange).not.toHaveBeenCalled();
+      expect(onDependencyChange).not.toHaveBeenCalled();
+    });
+
+    it("gating: the chord is the browser's without link editing or on a row without a bar; shortcuts and instructions follow", () => {
+      const s23 =
+        "Alt+ArrowLeft Alt+ArrowRight Shift+ArrowLeft Shift+ArrowRight Enter Escape";
+      const linkInstructions =
+        "Alt plus Shift plus Right arrow makes another task start after this one";
+      const { unmount } = linkGantt({ onDependencyChange: undefined });
+      let row = focused("Review");
+      expect(row).toHaveAttribute("aria-keyshortcuts", s23);
+      expect(row).not.toHaveAccessibleDescription(
+        expect.stringContaining(linkInstructions),
+      );
+      expect(chord(row, "ArrowRight")).toBe(true);
+      expect(root()).not.toHaveAttribute("data-editing");
+      unmount();
+
+      const { unmount: second } = linkGantt({ editable: false });
+      row = focused("Review");
+      expect(row).not.toHaveAttribute("aria-keyshortcuts");
+      expect(chord(row, "ArrowRight")).toBe(true);
+      second();
+
+      linkGantt();
+      row = focused("Review");
+      expect(row).toHaveAttribute(
+        "aria-keyshortcuts",
+        `Alt+ArrowLeft Alt+ArrowRight Shift+ArrowLeft Shift+ArrowRight ${LINK_SHORTCUTS} Enter Escape`,
+      );
+      expect(row).toHaveAccessibleDescription(
+        expect.stringContaining(linkInstructions),
+      );
+      const plan = focused("Plan");
+      expect(plan).not.toHaveAttribute("aria-keyshortcuts");
+      expect(plan).not.toHaveAccessibleDescription(
+        expect.stringContaining(linkInstructions),
+      );
+      expect(chord(plan, "ArrowRight")).toBe(true);
+      expect(root()).not.toHaveAttribute("data-editing");
+      const label = row.getAttribute("aria-label");
+      row.focus();
+      chord(row, "ArrowRight");
+      key(row, "ArrowUp");
+      expect(row).toHaveAttribute("aria-label", label!);
+    });
+
+    it("controlled: an applied add is drawn, data never mutated, the row keeps the focus", () => {
+      const before = [JSON.stringify(DEP_TASKS), JSON.stringify(DEPS)];
+      const Parent = () => {
+        const [dependencies, setDependencies] =
+          useState<GanttDependency[]>(DEPS);
+        return (
+          <CunninghamProvider>
+            <Gantt
+              aria-label="Plan"
+              tasks={DEP_TASKS}
+              dependencies={dependencies}
+              zoom="day"
+              today="2026-03-23"
+              editable
+              onDependencyChange={({ kind, dependency }) =>
+                setDependencies((all) =>
+                  kind === "add"
+                    ? [...all, dependency]
+                    : all.filter(
+                        (d) =>
+                          d.from !== dependency.from || d.to !== dependency.to,
+                      ),
+                )
+              }
+            />
+          </CunninghamProvider>
+        );
+      };
+      render(<Parent />);
+      const row = focused("Review");
+      chord(row, "ArrowRight");
+      key(row, "Enter");
+      expect(linkEl("c", "e")).not.toBeNull();
+      expect(linkEl("c", "e")).not.toHaveAttribute("data-state");
+      expect(row).toHaveFocus();
+      // The same chord on the new pair removes it.
+      chord(row, "ArrowRight");
+      key(row, "Enter");
+      expect(linkEl("c", "e")).toBeNull();
+      expect([JSON.stringify(DEP_TASKS), JSON.stringify(DEPS)]).toEqual(before);
+    });
+
+    it.each([
+      [
+        "en-US",
+        [
+          "Link Review to Release: Release would start after Review ends. Enter to link.",
+          "Start Plan after Review. Not linked: Plan has no dates",
+          "Link cancelled",
+          "Build already starts after Brief. Enter to remove the link.",
+        ],
+      ],
+      [
+        "fr-FR",
+        [
+          "Lier Review à Release : Release commencerait après la fin de Review. Entrée pour lier.",
+          "Faire commencer Plan après Review. Lien refusé : Plan n'a pas de dates",
+          "Lien annulé",
+          "Build commence déjà après Brief. Entrée pour supprimer le lien.",
+        ],
+      ],
+    ])("%s: names the pair and the action before Enter", (locale, said) => {
+      renderGantt(
+        {
+          tasks: DEP_TASKS,
+          dependencies: DEPS,
+          zoom: "day",
+          editable: true,
+          onDependencyChange: vi.fn(),
+        },
+        locale,
+      );
+      const heard: (string | null)[] = [];
+      const row = focused("Review");
+      chord(row, "ArrowRight");
+      heard.push(status().textContent);
+      key(row, "ArrowUp");
+      heard.push(status().textContent);
+      key(row, "Escape");
+      heard.push(status().textContent);
+      chord(focused("Brief"), "ArrowRight");
+      heard.push(status().textContent);
+      expect(heard).toEqual(said);
+    });
+  });
 });
 
 describe("Gantt tokens", () => {
