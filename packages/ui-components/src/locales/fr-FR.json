@@ -334,7 +334,16 @@
       "announce_cancelled": "{name} : modification annulée, dates rétablies",
       "limit_axis": "Limite du graphique atteinte",
       "limit_end_before_start": "La fin ne peut pas précéder le début",
-      "edit_instructions": "Alt avec flèche gauche ou droite déplace la tâche d'un pas du zoom. Maj avec flèche gauche ou droite modifie sa date de fin. Entrée valide, Échap annule."
+      "edit_instructions": "Alt avec flèche gauche ou droite déplace la tâche d'un pas du zoom. Maj avec flèche gauche ou droite modifie sa date de fin. Entrée valide, Échap annule.",
+      "dependencies_list_label": "Dépendances",
+      "dependency_item": "{from} doit se terminer avant le début de {to}",
+      "dependency_item_conflict": "{from} doit se terminer avant le début de {to}. Conflit : {to} commence le {start}, {from} se termine le {end}",
+      "row_starts_after": "Commence après : {names}",
+      "row_required_by": "Requise par : {names}",
+      "row_conflict": "Conflit avec : {names}",
+      "names_more": "{names}, +{count}",
+      "link_conflict_tip": "Conflit : {to} commence avant la fin de {from}",
+      "announce_conflict": "Conflit : {to} commence avant la fin de {from}"
     }
   }
 }

@@ -334,7 +334,16 @@
       "announce_cancelled": "{name}: Änderung abgebrochen, Daten wiederhergestellt",
       "limit_axis": "Grenze des Diagramms erreicht",
       "limit_end_before_start": "Das Ende kann nicht vor dem Beginn liegen",
-      "edit_instructions": "Alt mit Pfeil nach links oder rechts verschiebt die Aufgabe um einen Schritt des Zooms. Umschalt mit Pfeil nach links oder rechts ändert ihr Enddatum. Eingabe bestätigt, Escape bricht ab."
+      "edit_instructions": "Alt mit Pfeil nach links oder rechts verschiebt die Aufgabe um einen Schritt des Zooms. Umschalt mit Pfeil nach links oder rechts ändert ihr Enddatum. Eingabe bestätigt, Escape bricht ab.",
+      "dependencies_list_label": "Abhängigkeiten",
+      "dependency_item": "{from} muss enden, bevor {to} beginnt",
+      "dependency_item_conflict": "{from} muss enden, bevor {to} beginnt. Konflikt: {to} beginnt am {start}, {from} endet am {end}",
+      "row_starts_after": "Beginnt nach: {names}",
+      "row_required_by": "Erforderlich für: {names}",
+      "row_conflict": "Konflikt mit: {names}",
+      "names_more": "{names}, +{count}",
+      "link_conflict_tip": "Konflikt: {to} beginnt, bevor {from} endet",
+      "announce_conflict": "Konflikt: {to} beginnt, bevor {from} endet"
     }
   }
 }

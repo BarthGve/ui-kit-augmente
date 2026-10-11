@@ -797,3 +797,328 @@ test.describe("Gantt keyboard edit", () => {
     expect(after.x + after.width).toBeLessThanOrEqual(box_.x + box_.width);
   });
 });
+
+// Dependencies (s24): what jsdom cannot see, the overlay's paint over the
+// sticky column and the rows, and the link ends on the real bar edges.
+test.describe("Gantt dependencies", () => {
+  const link = (page: Page, from: string, to: string) =>
+    page.locator(`.c__gantt__link[data-from="${from}"][data-to="${to}"]`);
+  const segments = (page: Page, from: string, to: string) =>
+    link(page, from, to).locator(".c__gantt__link-segment");
+  // The overlay ignores the pointer (t02): hit testing shows what is painted
+  // once the segments take it back; clip-path clips hit testing too.
+  const hitTestable = (page: Page) =>
+    page.addStyleTag({
+      content: ".c__gantt__link-segment { pointer-events: auto; }",
+    });
+  const linkAt = (page: Page, x: number, y: number) =>
+    page.evaluate(
+      ([px, py]) =>
+        document.elementFromPoint(px, py)?.closest(".c__gantt__link") !== null,
+      [x, y],
+    );
+  // Rightmost point of the link on a horizontal line: the arrowhead tip.
+  const tipX = (
+    page: Page,
+    from: string,
+    to: string,
+    y: number,
+    near: number,
+  ) =>
+    page.evaluate(
+      ([selector, py, around]) => {
+        let tip = Number.NaN;
+        for (let x = around - 16; x <= around + 8; x += 0.25) {
+          if (document.elementFromPoint(x, py)?.closest(selector)) tip = x;
+        }
+        return tip;
+      },
+      [
+        `.c__gantt__link[data-from="${from}"][data-to="${to}"]`,
+        y,
+        near,
+      ] as const,
+    );
+  const settle = async (locator: Locator) => {
+    let last = "";
+    await expect
+      .poll(
+        async () => {
+          const now = JSON.stringify(await box(locator));
+          const done = now === last;
+          last = now;
+          return done;
+        },
+        { intervals: [100] },
+      )
+      .toBe(true);
+  };
+  // Both ends of a link against the real bars, within 1px.
+  const expectOnEdges = async (page: Page, from: string, to: string) => {
+    const pred = await box(bar(page, from));
+    const succ = await box(bar(page, to));
+    const first = await box(segments(page, from, to).first());
+    expect(Math.abs(first.x - (pred.x + pred.width))).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(first.y + first.height / 2 - (pred.y + pred.height / 2)),
+    ).toBeLessThanOrEqual(1);
+    const y = succ.y + succ.height / 2;
+    const last = await box(segments(page, from, to).last());
+    expect(Math.abs(last.y + last.height / 2 - y)).toBeLessThanOrEqual(1);
+    const tip = await tipX(page, from, to, y, succ.x);
+    expect(Math.abs(tip - succ.x)).toBeLessThanOrEqual(1);
+    // Wider than the 2px line just before the tip: the arrowhead.
+    expect(await linkAt(page, succ.x - 3, y - 3)).toBe(true);
+  };
+
+  test("scrolled, the links never paint over the task column, and do right of it", async ({
+    mount,
+    page,
+  }) => {
+    // t0 to t5: a long forward stub on the first row.
+    await mount(<TestGantt dependencies={[{ from: "t0", to: "t5" }]} />);
+    await hitTestable(page);
+    await scrollBy(scroller(page), 300, 0);
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => done(null))),
+    );
+    const column = await box(taskCells(page).first());
+    const stub = await box(segments(page, "t0", "t5").first());
+    const right = column.x + column.width;
+    // The stub really runs under the column and past it.
+    expect(stub.x).toBeLessThan(right - 20);
+    expect(stub.x + stub.width).toBeGreaterThan(right + 20);
+    const y = stub.y + stub.height / 2;
+    expect(await linkAt(page, right - 10, y)).toBe(false);
+    expect(
+      await page.evaluate(
+        ([x, py]) =>
+          document.elementFromPoint(x, py)?.closest('[role="rowheader"]') !==
+          null,
+        [right - 10, y],
+      ),
+    ).toBe(true);
+    expect(await linkAt(page, right + 10, y)).toBe(true);
+  });
+
+  // t0 to t3 spans three rows (off screen in day zoom).
+  for (const zoom of ["day", "week", "month"] as const) {
+    test(`${zoom} zoom: the link leaves the predecessor's end and its tip meets the successor's start`, async ({
+      mount,
+      page,
+    }) => {
+      await mount(
+        <TestGantt
+          defaultZoom={zoom}
+          dependencies={[
+            { from: "t0", to: "t1" },
+            { from: "t0", to: "t3" },
+          ]}
+        />,
+      );
+      await hitTestable(page);
+      await expectOnEdges(page, "t0", "t1");
+      if (zoom !== "day") await expectOnEdges(page, "t0", "t3");
+    });
+  }
+
+  test("at a 20px root font the ends, the row pitch and the overlay still match", async ({
+    mount,
+    page,
+  }) => {
+    await page.addStyleTag({ content: "html { font-size: 20px; }" });
+    await mount(
+      <TestGantt
+        dependencies={[
+          { from: "t0", to: "t1" },
+          { from: "t0", to: "t3" },
+        ]}
+      />,
+    );
+    await hitTestable(page);
+    await expectOnEdges(page, "t0", "t1");
+    await expectOnEdges(page, "t0", "t3");
+    const pitch = (await box(row(page, 3))).y - (await box(row(page, 2))).y;
+    expect(pitch).toBeCloseTo(20 * 2.5 + 1, 1);
+  });
+
+  test("a U route leaving the last day of the axis stays painted, at most one gutter past it", async ({
+    mount,
+    page,
+  }) => {
+    // Long ends on the axis' last day; Short starts before: a conflict.
+    await mount(
+      <TestGantt
+        tasks={[
+          { id: "a", name: "Long", start: "2026-01-05", end: "2026-12-26" },
+          { id: "b", name: "Short", start: "2026-12-14", end: "2026-12-15" },
+        ]}
+        dependencies={[{ from: "a", to: "b" }]}
+      />,
+    );
+    await hitTestable(page);
+    await scroller(page).evaluate((el) => (el.scrollLeft = el.scrollWidth));
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => done(null))),
+    );
+    const stub = await box(segments(page, "a", "b").first());
+    expect(
+      await linkAt(page, stub.x + stub.width / 2, stub.y + stub.height / 2),
+    ).toBe(true);
+    const { overflow, room } = await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>(".c__gantt__scroller")!;
+      const grid = el.querySelector<HTMLElement>(".c__gantt__grid")!;
+      const style = getComputedStyle(grid);
+      const rem = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
+      return {
+        overflow: el.scrollWidth - grid.getBoundingClientRect().width,
+        room:
+          parseFloat(
+            style.getPropertyValue("--c--components--gantt--link-gutter"),
+          ) *
+            rem +
+          parseFloat(
+            style.getPropertyValue("--c--components--gantt--link-width"),
+          ),
+      };
+    });
+    expect(overflow).toBeLessThanOrEqual(room + 1);
+  });
+
+  test("rows step by row-height plus border-width; the overlay starts under the axis and spans the rows", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<TestGantt dependencies={[{ from: "t0", to: "t1" }]} />);
+    const tokens = await page.evaluate(() => {
+      const style = getComputedStyle(document.querySelector(".c__gantt")!);
+      const rem = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
+      const length = (name: string) => {
+        const value = style.getPropertyValue(name).trim();
+        return value.endsWith("rem")
+          ? parseFloat(value) * rem
+          : parseFloat(value);
+      };
+      return {
+        row: length("--c--components--gantt--row-height"),
+        border: length("--c--components--gantt--border-width"),
+      };
+    });
+    const tops = await Promise.all(
+      [2, 3, 4, 5].map(async (i) => (await box(row(page, i))).y),
+    );
+    for (let i = 1; i < tops.length; i++) {
+      expect(tops[i] - tops[i - 1]).toBeCloseTo(tokens.row + tokens.border, 1);
+    }
+    const axis = await box(row(page, 1));
+    const layer = await box(page.locator(".c__gantt__links"));
+    expect(layer.y).toBeCloseTo(axis.y + axis.height, 1);
+    expect(layer.height).toBeCloseTo(30 * (tokens.row + tokens.border), 1);
+  });
+
+  test("a link stays painted on a hovered row and keeps its casing across a bar", async ({
+    mount,
+    page,
+  }) => {
+    // Brief to Test runs down through the long Build bar.
+    await mount(
+      <TestGantt
+        today="2026-03-01"
+        tasks={[
+          { id: "a", name: "Brief", start: "2026-03-02", end: "2026-03-04" },
+          { id: "b", name: "Build", start: "2026-03-01", end: "2026-04-30" },
+          { id: "c", name: "Test", start: "2026-03-23", end: "2026-03-27" },
+        ]}
+        dependencies={[{ from: "a", to: "c" }]}
+      />,
+    );
+    const colours = await page.evaluate(() => {
+      const probe = document.createElement("div");
+      document.body.append(probe);
+      const resolve = (name: string) => {
+        probe.style.color = `var(${name})`;
+        return getComputedStyle(probe).color;
+      };
+      const out = {
+        line: resolve("--c--components--gantt--link-color"),
+        casing: resolve("--c--components--gantt--link-casing-color"),
+        fill: resolve("--c--components--gantt--bar-background-color"),
+        hover: resolve("--c--components--gantt--row-background-color--hover"),
+      };
+      probe.remove();
+      return out;
+    });
+    const view = await box(scroller(page));
+    const vertical = await box(
+      segments(page, "a", "c").and(page.locator('[data-axis="y"]')),
+    );
+    const build = await box(bar(page, "b"));
+    const rowB = await box(row(page, 3));
+    // Hovered row: the line over the track's hover colour, above the bar.
+    await page.mouse.move(rowB.x + 20, rowB.y + 4);
+    const x = vertical.x + vertical.width / 2 - view.x;
+    const [onTrack, onBar, casing, fill] = await colorsAt(
+      page,
+      scroller(page),
+      [
+        [Math.floor(x), Math.floor(rowB.y + 3 - view.y)],
+        [Math.floor(x), Math.floor(build.y + build.height / 2 - view.y)],
+        [
+          Math.floor(vertical.x + vertical.width - view.x),
+          Math.floor(build.y + build.height / 2 - view.y),
+        ],
+        [
+          Math.floor(vertical.x + vertical.width + 4 - view.x),
+          Math.floor(build.y + build.height / 2 - view.y),
+        ],
+      ],
+    );
+    expect(onTrack).toEqual(rgb(colours.line));
+    expect(onBar).toEqual(rgb(colours.line));
+    expect(casing).toEqual(rgb(colours.casing));
+    expect(fill).toEqual(rgb(colours.fill));
+    expect(rgb(colours.hover)).not.toEqual(rgb(colours.line));
+  });
+
+  test("a real drag of a predecessor past its successor shows the conflict; Escape clears it", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<EditableGantt dependencies={[{ from: "t0", to: "t1" }]} />);
+    const conflict = () => link(page, "t0", "t1").getAttribute("data-conflict");
+    expect(await conflict()).toBeNull();
+    const t0 = await box(bar(page, "t0"));
+    const px = t0.width / 10;
+    const at = { x: t0.x + t0.width / 2, y: t0.y + t0.height / 2 };
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    // One week on: t0 ends after t1 starts.
+    await page.mouse.move(at.x + 7 * px, at.y, { steps: 6 });
+    await expect.poll(conflict).not.toBeNull();
+    await expect(
+      link(page, "t0", "t1").locator(".c__gantt__link-flag"),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect.poll(conflict).toBeNull();
+    // Motion on: the link snaps back with the bar, no tween.
+    const first = await box(segments(page, "t0", "t1").first());
+    expect(Math.abs(first.x - (t0.x + t0.width))).toBeLessThanOrEqual(1);
+    await page.mouse.up();
+  });
+
+  test("after a zoom change the link ends sit on the bar edges at rest", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<TestGantt dependencies={[{ from: "t0", to: "t1" }]} />);
+    await hitTestable(page);
+    await page.getByRole("button", { name: "Day" }).click();
+    await settle(bar(page, "t1"));
+    await settle(segments(page, "t0", "t1").last());
+    await expectOnEdges(page, "t0", "t1");
+  });
+});

@@ -334,7 +334,16 @@
       "announce_cancelled": "{name}: change cancelled, dates restored",
       "limit_axis": "Limit of the chart reached",
       "limit_end_before_start": "The end cannot be before the start",
-      "edit_instructions": "Alt plus Left or Right arrow moves the task by one step of the zoom. Shift plus Left or Right arrow changes its end date. Enter confirms, Escape cancels."
+      "edit_instructions": "Alt plus Left or Right arrow moves the task by one step of the zoom. Shift plus Left or Right arrow changes its end date. Enter confirms, Escape cancels.",
+      "dependencies_list_label": "Dependencies",
+      "dependency_item": "{from} must finish before {to} starts",
+      "dependency_item_conflict": "{from} must finish before {to} starts. Conflict: {to} starts on {start}, {from} ends on {end}",
+      "row_starts_after": "Starts after: {names}",
+      "row_required_by": "Required by: {names}",
+      "row_conflict": "Conflict with: {names}",
+      "names_more": "{names}, +{count}",
+      "link_conflict_tip": "Conflict: {to} starts before {from} ends",
+      "announce_conflict": "Conflict: {to} starts before {from} ends"
     }
   }
 }
