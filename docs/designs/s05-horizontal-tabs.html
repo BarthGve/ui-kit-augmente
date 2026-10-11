@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>s05 horizontal tabs (mockup)</title>
+<style>
+/* Reference only: values copied from the default theme. The implementation uses the kit tokens. */
+body{font:14px/18px system-ui,sans-serif;margin:24px;background:#fff;color:#2b2b35}
+h2{font-size:14px;margin:24px 0 8px}
+.list{display:flex;gap:4px;padding:2px;overflow-x:auto;max-width:100%}
+.tab{position:relative;display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:2px;color:#6b6b80;white-space:nowrap;font-weight:500}
+.d .tab.hover{background:#f3f3f4}
+.d .tab.sel{background:#f3f3f4;color:#2b2b35}
+.l .tab{padding-block:4px;border-radius:8px}
+.l .tab.hover,.l .tab.sel{color:#2b2b35}
+.l .tab.sel::after{content:"";position:absolute;left:2px;right:2px;bottom:0;height:1.5px;background:currentColor;border-radius:1px}
+.tab.dis{color:#b5b5c0}
+.tab.focus{outline:2px solid #3e3b98;outline-offset:2px}
+small{color:#6b6b80}
+</style></head><body>
+<h2>default (Classic): rest, hover, selected, focus-visible, disabled</h2>
+<div class="list d"><span class="tab">Rest</span><span class="tab hover">Hover</span><span class="tab sel">Selected</span><span class="tab focus">Focus</span><span class="tab dis">Disabled</span></div>
+<h2>line (Line)</h2>
+<div class="list l"><span class="tab">Rest</span><span class="tab hover">Hover</span><span class="tab sel">Selected</span><span class="tab focus">Focus</span><span class="tab dis">Disabled</span></div>
+<h2>narrow (240px): the list scrolls, the page does not</h2>
+<div style="width:240px"><div class="list l"><span class="tab sel">Overview</span><span class="tab">Activity</span><span class="tab">Notifications</span><span class="tab">Permissions</span></div></div>
+<p><small>Sizes: default tab 26px, line tab 30px. Open point: the image shows a darker selected than hover in default; the code uses one background for both.</small></p>
+</body></html>
