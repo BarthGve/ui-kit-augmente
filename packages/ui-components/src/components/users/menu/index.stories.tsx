@@ -1,4 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react";
+import { expect, userEvent, within } from "@storybook/test";
 import { LanguagePicker, LanguagesOption } from ":/components/language";
 import { UserMenu } from ".";
 
@@ -152,4 +153,35 @@ export const WithLotOfSettings: Story = {
     ),
     termOfServiceUrl,
   },
+};
+
+/** Closed: the trigger only (same arguments as `Default`). */
+export const Closed: Story = {
+  args: Default.args,
+};
+
+/** Open: the trigger is pressed, the menu shows its dialog. */
+export const Open: Story = {
+  args: Default.args,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: "Open user menu" }),
+    );
+    await expect(
+      await within(document.body).findByRole("dialog", { name: "User menu" }),
+    ).toBeVisible();
+  },
+};
+
+/** Without user: `UserMenu` renders nothing, not even the trigger. */
+export const WithoutUser: Story = {
+  args: { ...Default.args, user: null },
+  decorators: [
+    (Story) => (
+      <div>
+        <p>UserMenu renders nothing without a user.</p>
+        <Story />
+      </div>
+    ),
+  ],
 };
