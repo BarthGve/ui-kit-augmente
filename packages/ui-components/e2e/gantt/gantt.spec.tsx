@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/experimental-ct-react";
 import type { Locator, Page } from "@playwright/test";
-import type { GanttTaskChange } from "../../src/components/gantt/types";
+import type {
+  GanttDependencyChange,
+  GanttTaskChange,
+} from "../../src/components/gantt/types";
 import {
   ControlledGantt,
   EditableGantt,
@@ -68,6 +71,20 @@ const colorsAt = async (
 const rgb = (css: string) => css.match(/\d+/g)!.slice(0, 3).map(Number);
 const row = (page: Page, index: number) =>
   page.locator(`[role="row"][aria-rowindex="${index}"]`);
+// Pixels along a line through the box where the target is the hit target:
+// what a pointer can really reach, not the box (sticky column, clipping).
+const hittable = (target: Locator, axis: "x" | "y") =>
+  target.evaluate((el, along) => {
+    const r = el.getBoundingClientRect();
+    let hits = 0;
+    const [from, to] = along === "x" ? [r.left, r.right] : [r.top, r.bottom];
+    for (let p = Math.floor(from) - 4; p <= to + 4; p++) {
+      const x = along === "x" ? p + 0.5 : r.left + r.width / 2;
+      const y = along === "y" ? p + 0.5 : r.top + r.height / 2;
+      if (document.elementFromPoint(x, y) === el) hits++;
+    }
+    return hits;
+  }, axis);
 const ring = (locator: Locator) =>
   locator.evaluate((el) => {
     const style = getComputedStyle(el, "::after");
@@ -490,20 +507,6 @@ test.describe("Gantt pointer resize", () => {
     width: number;
     height: number;
   }) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
-  // Pixels along a line through the box where the handle is the hit target:
-  // what a pointer can really reach, not the box (sticky column, clipping).
-  const hittable = (target: Locator, axis: "x" | "y") =>
-    target.evaluate((el, along) => {
-      const r = el.getBoundingClientRect();
-      let hits = 0;
-      const [from, to] = along === "x" ? [r.left, r.right] : [r.top, r.bottom];
-      for (let p = Math.floor(from) - 4; p <= to + 4; p++) {
-        const x = along === "x" ? p + 0.5 : r.left + r.width / 2;
-        const y = along === "y" ? p + 0.5 : r.top + r.height / 2;
-        if (document.elementFromPoint(x, y) === el) hits++;
-      }
-      return hits;
-    }, axis);
   const scrollLeft = (page: Page) =>
     scroller(page).evaluate((el) => el.scrollLeft);
   const editing = (page: Page) =>
@@ -1120,5 +1123,332 @@ test.describe("Gantt dependencies", () => {
     await settle(bar(page, "t1"));
     await settle(segments(page, "t0", "t1").last());
     await expectOnEdges(page, "t0", "t1");
+  });
+});
+
+// Link editing with the pointer (s24 t03): real drags, clicks and touches on
+// the connector and the links; hit areas measured by hit testing.
+test.describe("Gantt link editing", () => {
+  const recorder = () => {
+    const calls: GanttDependencyChange[] = [];
+    return {
+      calls,
+      onDependencyChange: (change: GanttDependencyChange) => calls.push(change),
+    };
+  };
+  const connector = (page: Page, index: number) =>
+    row(page, index).locator(".c__gantt__connector");
+  const link = (page: Page, from: string, to: string) =>
+    page.locator(`.c__gantt__link[data-from="${from}"][data-to="${to}"]`);
+  const centre = async (locator: Locator) => {
+    const b = await box(locator);
+    return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  };
+  // Press a connector and move straight onto another row (a vertical drag).
+  const dragLink = async (page: Page, from: number, to: number) => {
+    const start = await centre(connector(page, from));
+    const target = await box(row(page, to));
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(start.x, target.y + target.height / 2, {
+      steps: 6,
+    });
+  };
+
+  test("a real drag from a connector to another row reports the link; it is drawn once applied", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onDependencyChange } = recorder();
+    const component = await mount(
+      <TestGantt editable onDependencyChange={onDependencyChange} />,
+    );
+    // Rows 4 and 6 hold t2 and t4.
+    await dragLink(page, 4, 6);
+    await expect(
+      page.locator('.c__gantt__link[data-state="creating"]'),
+    ).toHaveAttribute("data-to", "t4");
+    await expect(page.locator('.c__gantt__tip[data-task-id="t4"]')).toHaveText(
+      "Start Task 5 after Task 3",
+    );
+    await page.mouse.up();
+    await expect.poll(() => calls.length).toBe(1);
+    expect(calls[0]).toEqual({
+      kind: "add",
+      dependency: { from: "t2", to: "t4" },
+    });
+    await expect(page.locator('[data-state="creating"]')).toHaveCount(0);
+    await component.update(
+      <TestGantt
+        editable
+        onDependencyChange={onDependencyChange}
+        dependencies={[{ from: "t2", to: "t4" }]}
+      />,
+    );
+    await expect(link(page, "t2", "t4")).toHaveCount(1);
+    await expect(link(page, "t2", "t4")).not.toHaveAttribute("data-state");
+  });
+
+  test("over a target that would make a loop the refusal shows, and the release reports nothing", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onDependencyChange } = recorder();
+    await mount(
+      <TestGantt
+        editable
+        onDependencyChange={onDependencyChange}
+        dependencies={[
+          { from: "t0", to: "t1" },
+          { from: "t1", to: "t2" },
+        ]}
+      />,
+    );
+    await dragLink(page, 4, 2);
+    const tip = page.locator('.c__gantt__tip[data-task-id="t0"]');
+    await expect(tip).toHaveText("Not linked: this would create a loop");
+    await expect(tip).toBeVisible();
+    await expect(page.getByRole("status")).toHaveText(
+      "Not linked: this would create a loop",
+    );
+    await page.mouse.up();
+    await expect(tip).toBeVisible();
+    expect(await bar(page, "t0").getAttribute("data-refused")).not.toBeNull();
+    await page.waitForTimeout(200);
+    expect(calls).toHaveLength(0);
+  });
+
+  test("hit areas: the connector is 24px, the end handle keeps its pixels, a U route's strip stays off the connector", async ({
+    mount,
+    page,
+  }) => {
+    // t0 ends two days before t1 starts: a U route out of t0's end.
+    await mount(
+      <TestGantt
+        editable
+        onDependencyChange={() => {}}
+        dependencies={[{ from: "t0", to: "t1" }]}
+      />,
+    );
+    const dot = connector(page, 2);
+    // Polled: under load the first hit test can run before the rows
+    // (content-visibility) are laid out.
+    await expect.poll(() => hittable(dot, "x")).toBeGreaterThanOrEqual(24);
+    expect(await hittable(dot, "y")).toBeGreaterThanOrEqual(24);
+    const end = bar(page, "t0").locator('.c__gantt__handle[data-edge="end"]');
+    expect(await hittable(end, "x")).toBeGreaterThanOrEqual(24);
+    // Every pixel of the connector is the connector's, but the column it
+    // shares with the strip (the boxes touch; hit testing gives the shared
+    // edge to the overlay, painted later: the box check below is exact).
+    const stolen = await dot.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      let other = 0;
+      for (let x = Math.ceil(r.left); x < r.right - 1; x++)
+        for (let y = Math.ceil(r.top); y < r.bottom; y++)
+          if (document.elementFromPoint(x + 0.5, y + 0.5) !== el) other++;
+      return other;
+    });
+    expect(stolen).toBe(0);
+    // Just right of it, below the row centre: the route's vertical strip,
+    // which starts where the connector ends.
+    const b = await box(dot);
+    const strip = await box(
+      link(page, "t0", "t1").locator(".c__gantt__link-hit").first(),
+    );
+    expect(strip.x).toBeGreaterThanOrEqual(b.x + b.width - 0.01);
+    expect(
+      await page.evaluate(
+        ([x, y]) =>
+          document
+            .elementFromPoint(x, y)
+            ?.classList.contains("c__gantt__link-hit") ?? false,
+        [b.x + b.width + 12, b.y + b.height / 2 + 8],
+      ),
+    ).toBe(true);
+  });
+
+  test("a real click selects a link, Delete removes it, Escape deselects", async ({
+    mount,
+    page,
+  }) => {
+    const { calls, onDependencyChange } = recorder();
+    await mount(
+      <TestGantt
+        editable
+        onDependencyChange={onDependencyChange}
+        dependencies={[{ from: "t0", to: "t1" }]}
+      />,
+    );
+    // The middle of the route's first vertical strip (the strips of one
+    // link overlap at the corners: the pointer, not the locator, decides).
+    const at = await centre(
+      link(page, "t0", "t1").locator(".c__gantt__link-hit").first(),
+    );
+    const strip = { click: () => page.mouse.click(at.x, at.y) };
+    await strip.click();
+    await expect(link(page, "t0", "t1")).toHaveAttribute("data-selected");
+    const remove = page.getByRole("button", {
+      name: "Remove link from Task 1 to Task 2",
+    });
+    await expect(remove).toBeFocused();
+    await page.keyboard.press("Delete");
+    await expect.poll(() => calls.length).toBe(1);
+    expect(calls[0]).toEqual({
+      kind: "remove",
+      dependency: { from: "t0", to: "t1" },
+    });
+    await expect(row(page, 2)).toBeFocused();
+
+    await strip.click();
+    await expect(remove).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(link(page, "t0", "t1")).not.toHaveAttribute("data-selected");
+    await expect(remove).toHaveCount(0);
+    await expect(row(page, 2)).toBeFocused();
+    expect(calls).toHaveLength(1);
+  });
+
+  test("the refusal sentence paints above a link that crosses it", async ({
+    mount,
+    page,
+  }) => {
+    // A > C runs down through B's row, right where B's refusal sentence
+    // (A > B exists) stands after B's bar.
+    await mount(
+      <TestGantt
+        editable
+        onDependencyChange={() => {}}
+        tasks={[
+          { id: "a", name: "A", start: "2026-01-05", end: "2026-01-07" },
+          { id: "b", name: "B", start: "2026-01-05", end: "2026-01-09" },
+          { id: "c", name: "C", start: "2026-01-20", end: "2026-01-23" },
+        ]}
+        dependencies={[
+          { from: "a", to: "b" },
+          { from: "a", to: "c" },
+        ]}
+      />,
+    );
+    await dragLink(page, 2, 3);
+    await page.mouse.up();
+    const tip = page.locator(".c__gantt__tip[data-refused]");
+    await expect(tip).toHaveText("Not linked: B already starts after A");
+    const t = await box(tip);
+    const line = await box(link(page, "a", "c").locator('[data-axis="y"]'));
+    const x = line.x + line.width / 2;
+    // The line really crosses the sentence's box.
+    expect(x).toBeGreaterThan(t.x + 4);
+    expect(x).toBeLessThan(t.x + t.width - 4);
+    const linkColour = rgb(
+      await page.evaluate(() => {
+        const probe = document.createElement("div");
+        document.body.append(probe);
+        probe.style.color = "var(--c--components--gantt--link-color)";
+        const colour = getComputedStyle(probe).color;
+        probe.remove();
+        return colour;
+      }),
+    );
+    const view = await box(scroller(page));
+    const ys = Array.from({ length: Math.floor(t.height) - 4 }, (_, i) =>
+      Math.floor(t.y + 2 + i - view.y),
+    );
+    const colours = await colorsAt(
+      page,
+      scroller(page),
+      ys.map((y) => [Math.floor(x - view.x), y] as [number, number]),
+    );
+    expect(colours.filter((c) => c.join() === linkColour.join())).toEqual([]);
+  });
+
+  test("a task ending on the axis' last day keeps a reachable connector", async ({
+    mount,
+    page,
+  }) => {
+    await mount(
+      <TestGantt
+        editable
+        onDependencyChange={() => {}}
+        tasks={[
+          { id: "a", name: "Long", start: "2026-01-05", end: "2026-12-26" },
+          { id: "b", name: "Short", start: "2026-12-14", end: "2026-12-15" },
+        ]}
+      />,
+    );
+    await scroller(page).evaluate((el) => (el.scrollLeft = el.scrollWidth));
+    const dot = connector(page, 2);
+    await expect.poll(() => hittable(dot, "x")).toBeGreaterThanOrEqual(24);
+    expect(await hittable(dot, "y")).toBeGreaterThanOrEqual(24);
+    // The track is now wider than the axis: a tip on the start side still
+    // ends before its bar (s23 preview, Short pressed near the axis end).
+    const short = await box(bar(page, "b"));
+    await page.mouse.move(short.x + short.width / 2, short.y + 5);
+    await page.mouse.down();
+    const tip = row(page, 3).locator(".c__gantt__tip");
+    await expect(tip).toHaveAttribute("data-side", "start");
+    const t = await box(tip);
+    expect(t.x + t.width).toBeLessThanOrEqual(short.x);
+    expect(t.x + t.width).toBeGreaterThan(short.x - 12);
+    await page.keyboard.press("Escape");
+    await page.mouse.up();
+  });
+
+  test.describe("touch", () => {
+    test.use({ hasTouch: true });
+
+    test("a finger drags a connector to another row; a cancelled touch reports nothing", async ({
+      mount,
+      page,
+    }) => {
+      const { calls, onDependencyChange } = recorder();
+      await mount(
+        <TestGantt editable onDependencyChange={onDependencyChange} />,
+      );
+      const cdp = await page.context().newCDPSession(page);
+      const touch = (
+        type: "touchStart" | "touchMove" | "touchEnd" | "touchCancel",
+        x?: number,
+        y?: number,
+      ) =>
+        cdp.send("Input.dispatchTouchEvent", {
+          type,
+          touchPoints: x === undefined ? [] : [{ x, y: y! }],
+        });
+      const start = await centre(connector(page, 3));
+      const target = await box(row(page, 5));
+      const to = { x: start.x, y: target.y + target.height / 2 };
+      await touch("touchStart", start.x, start.y);
+      for (let i = 1; i <= 6; i++) {
+        await touch(
+          "touchMove",
+          start.x + ((to.x - start.x) * i) / 6,
+          start.y + ((to.y - start.y) * i) / 6,
+        );
+      }
+      await expect(page.getByTestId("gantt")).toHaveAttribute(
+        "data-editing",
+        "link",
+      );
+      await touch("touchEnd");
+      await expect.poll(() => calls.length).toBe(1);
+      expect(calls[0]).toEqual({
+        kind: "add",
+        dependency: { from: "t1", to: "t3" },
+      });
+
+      await touch("touchStart", start.x, start.y);
+      await touch("touchMove", to.x, to.y);
+      await expect(
+        page.locator('.c__gantt__link[data-state="creating"]'),
+      ).toHaveCount(1);
+      await touch("touchCancel");
+      await expect(page.getByTestId("gantt")).not.toHaveAttribute(
+        "data-editing",
+      );
+      await expect(
+        page.locator('.c__gantt__link[data-state="creating"]'),
+      ).toHaveCount(0);
+      expect(calls).toHaveLength(1);
+    });
   });
 });

@@ -347,6 +347,7 @@ export {
 
 export type {
   GanttDependency,
+  GanttDependencyChange,
   GanttProps,
   GanttTask,
   GanttTaskChange,

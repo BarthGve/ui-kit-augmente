@@ -343,7 +343,18 @@
       "row_conflict": "Conflict with: {names}",
       "names_more": "{names}, +{count}",
       "link_conflict_tip": "Conflict: {to} starts before {from} ends",
-      "announce_conflict": "Conflict: {to} starts before {from} ends"
+      "announce_conflict": "Conflict: {to} starts before {from} ends",
+      "link_remove": "Remove link from {from} to {to}",
+      "link_tip_target": "Start {to} after {from}",
+      "link_tip_drop": "Drop on a task",
+      "link_refused_cycle": "Not linked: this would create a loop",
+      "link_refused_self": "A task cannot depend on itself",
+      "link_refused_no_dates": "Not linked: {name} has no dates",
+      "link_refused_exists": "Not linked: {to} already starts after {from}",
+      "link_refused_limit": "Not linked: a chart holds at most {count} links",
+      "announce_link_added": "{to} now starts after {from}",
+      "announce_link_removed": "Link removed: {to} no longer depends on {from}",
+      "announce_link_cancelled": "Link cancelled"
     }
   }
 }

@@ -4,6 +4,7 @@ import {
   FocusEvent,
   KeyboardEvent,
   memo,
+  MouseEvent,
   PointerEvent,
   Ref,
   useEffect,
@@ -36,9 +37,12 @@ import {
   unitsFromPixels,
 } from "./edit";
 import {
+  checkLink,
   conflictsOf,
   type LinkPair,
   linkKey,
+  type LinkRefusal,
+  MAX_LINKS,
   type LinkSpan,
   neighboursOf,
   normalizeLinks,
@@ -186,6 +190,16 @@ type RowProps = {
   /** Id of the row's dependency description, when it has links. */
   description?: string;
   preview?: Preview;
+  /** Link editing on: a row with a bar offers a connector after it. */
+  linkable: boolean;
+  /** The row a link session starts from (its bar is outlined). */
+  linkSource?: boolean;
+  /** A link session's sentence for this row (drawn here when the row has no
+   * bar, in the link overlay otherwise), and whether it refuses. */
+  linkTip?: string;
+  linkRefused?: boolean;
+  /** Accessible name of the Remove button of the selected link ending here. */
+  removeLabel?: string;
 };
 
 // Memoised: a drag re-renders the dragged row only.
@@ -199,6 +213,11 @@ const GanttRow = memo(function GanttRow({
   instructions,
   description,
   preview,
+  linkable,
+  linkSource,
+  linkTip,
+  linkRefused,
+  removeLabel,
 }: RowProps) {
   const { t } = useCunningham();
   // "No dates" follows the dates; the bar can also be absent when the task
@@ -221,6 +240,11 @@ const GanttRow = memo(function GanttRow({
   // Edge handles: a bar narrower than one target has none (moving only).
   const handles =
     editableRow && position && position.span * scale.dayWidth >= HANDLE_MIN;
+  // Tips stand beside the bar, on its wider side of the track.
+  const side =
+    position && position.start > scale.days - position.start - position.span
+      ? "start"
+      : "end";
   return (
     <div
       role="row"
@@ -243,6 +267,17 @@ const GanttRow = memo(function GanttRow({
             {t("components.gantt.no_dates")}
           </span>
         )}
+        {/* No bar to stand beside: the sentence sits on the name. */}
+        {linkTip && !position && (
+          <span
+            className="c__gantt__tip"
+            aria-hidden="true"
+            data-refused={linkRefused || undefined}
+            style={place(0, 0)}
+          >
+            {linkTip}
+          </span>
+        )}
       </div>
       {/* Fixed child slots: the bar node holds the pointer capture and must
           survive every preview render. */}
@@ -260,6 +295,8 @@ const GanttRow = memo(function GanttRow({
             data-task-id={task.id}
             data-preview={preview ? true : undefined}
             data-clamped={preview?.limit ? true : undefined}
+            data-link-source={linkSource || undefined}
+            data-refused={(linkTip && linkRefused) || undefined}
             aria-hidden="true"
             style={place(position.start, position.span)}
           >
@@ -271,22 +308,44 @@ const GanttRow = memo(function GanttRow({
             )}
           </div>
         )}
+        {/* A track child, not a bar child: pressing it never starts a
+            move. A fixed slot: it holds the pointer capture of a link. */}
+        {linkable && position && (
+          <div
+            className="c__gantt__connector"
+            aria-hidden="true"
+            style={place(position.start, position.span)}
+          />
+        )}
         {position && previewDates && (
           <div
             className="c__gantt__tip"
             aria-hidden="true"
-            // Beside the bar, on its wider side of the track.
-            data-side={
-              position.start > scale.days - position.start - position.span
-                ? "start"
-                : "end"
-            }
+            data-side={side}
             style={place(position.start, position.span)}
           >
             {preview.limit
               ? t(`components.gantt.${preview.limit}`)
               : t("components.gantt.tooltip_dates", previewDates)}
           </div>
+        )}
+        {/* In the gridcell (the link overlay is aria-hidden); its clicks and
+            keys are handled by the grid. */}
+        {position && removeLabel && (
+          <Button
+            type="button"
+            className="c__gantt__remove"
+            color="neutral"
+            variant="tertiary"
+            size="nano"
+            icon={
+              <span className="material-icons" aria-hidden="true">
+                close
+              </span>
+            }
+            aria-label={removeLabel}
+            style={place(position.start)}
+          />
         )}
       </div>
     </div>
@@ -319,6 +378,11 @@ type LinkProps = {
   succSpan: number;
   conflict: boolean;
   dayWidth: number;
+  /** Link editing on: the middle segments take the pointer (selection). */
+  interactive?: boolean;
+  selected?: boolean;
+  /** The prospective link of a pointer session. */
+  creating?: boolean;
 };
 
 // Boxes placed in CSS from the route's corners (days, gutters, leads, rows),
@@ -335,6 +399,9 @@ const GanttLink = memo(function GanttLink({
   succSpan,
   conflict,
   dayWidth,
+  interactive,
+  selected,
+  creating,
 }: LinkProps) {
   const route = routeOf(
     { row: predRow, start: predStart, span: predSpan },
@@ -347,16 +414,28 @@ const GanttLink = memo(function GanttLink({
       data-from={from}
       data-to={to}
       data-conflict={conflict || undefined}
+      data-selected={selected || undefined}
+      data-state={creating ? "creating" : undefined}
     >
-      {route.map(([a, b], i) => (
-        <div
-          key={i}
-          className="c__gantt__link-segment"
-          data-axis={a.row === b.row && a.centre === b.centre ? "x" : "y"}
-          data-end={i === route.length - 1 || undefined}
-          style={{ ...corner(1, a), ...corner(2, b) } as CSSProperties}
-        />
-      ))}
+      {route.map(([a, b], i) => {
+        const axis = a.row === b.row && a.centre === b.centre ? "x" : "y";
+        return (
+          <div
+            key={i}
+            className="c__gantt__link-segment"
+            data-axis={axis}
+            data-end={i === route.length - 1 || undefined}
+            style={{ ...corner(1, a), ...corner(2, b) } as CSSProperties}
+          >
+            {/* A 24px strip on the middle vertical segments only: the end
+                stubs leave the resize handles reachable, and a U route's
+                run along a row line would cover the connector above it. */}
+            {interactive && axis === "y" && i > 0 && i < route.length - 1 && (
+              <div className="c__gantt__link-hit" />
+            )}
+          </div>
+        );
+      })}
       {conflict && (
         <span
           className="c__gantt__link-flag"
@@ -378,7 +457,25 @@ type LinksProps = {
   conflicts: ReadonlySet<string>;
   dayWidth: number;
   rows: number;
+  interactive: boolean;
+  /** Key of the selected link. */
+  selected: string | null;
+  /** Ends of the prospective link of a pointer session. */
+  creatingFrom?: string;
+  creatingTo?: string;
+  days: number;
+  /** A link session's sentence beside a bar (row, start and span in days):
+   * here, so that no link paints over it. */
+  tipId?: string;
+  tipText?: string;
+  tipRefused?: boolean;
+  tipRow?: number;
+  tipStart?: number;
+  tipSpan?: number;
 };
+
+const NO_ENDS: ReadonlyMap<string, LinkEnd | null> = new Map();
+const NO_CONFLICTS: ReadonlySet<string> = new Set();
 
 // Above the rows, inert and hidden from assistive technology (the rows
 // describe their links); clipped to the visible track by `--gantt-scroll`.
@@ -389,7 +486,20 @@ const GanttLinks = memo(function GanttLinks({
   conflicts,
   dayWidth,
   rows,
+  interactive,
+  selected,
+  creatingFrom,
+  creatingTo,
+  days,
+  tipId,
+  tipText,
+  tipRefused,
+  tipRow,
+  tipStart = 0,
+  tipSpan = 0,
 }: LinksProps) {
+  const pred = creatingFrom === undefined ? null : ends.get(creatingFrom);
+  const succ = creatingTo === undefined ? null : ends.get(creatingTo);
   return (
     <div
       ref={layerRef}
@@ -415,9 +525,45 @@ const GanttLinks = memo(function GanttLinks({
             succSpan={succ.span}
             conflict={conflicts.has(key)}
             dayWidth={dayWidth}
+            interactive={interactive}
+            selected={key === selected}
           />
         );
       })}
+      {pred && succ && (
+        <GanttLink
+          key="creating"
+          from={creatingFrom!}
+          to={creatingTo!}
+          predRow={pred.row}
+          predStart={pred.start}
+          predSpan={pred.span}
+          succRow={succ.row}
+          succStart={succ.start}
+          succSpan={succ.span}
+          conflict={false}
+          dayWidth={dayWidth}
+          creating
+        />
+      )}
+      {/* Last: above every line. Beside the bar, on its wider side. */}
+      {tipText !== undefined && (
+        <div
+          className="c__gantt__tip"
+          data-task-id={tipId}
+          data-side={tipStart > days - tipStart - tipSpan ? "start" : "end"}
+          data-refused={tipRefused || undefined}
+          style={
+            {
+              "--gantt-start": tipStart,
+              "--gantt-span": tipSpan,
+              "--gantt-y": tipRow,
+            } as CSSProperties
+          }
+        >
+          {tipText}
+        </div>
+      )}
     </div>
   );
 });
@@ -463,6 +609,20 @@ type KeyEdit = Session & {
   span: GanttUnitSpan;
 };
 
+/** A link dragged from a connector onto a target row (s24). */
+type LinkSession = {
+  from: string;
+  pointerId: number;
+  connector: HTMLElement;
+  // The pointer now: a scroll re-targets a still pointer.
+  x: number;
+  y: number;
+  // The row under the pointer (the source included) and its verdict.
+  over: string | null;
+  refusal: LinkRefusal | null;
+  unlisten: () => void;
+};
+
 /** From the pointer. */
 type Drag = Session & {
   pointerId: number;
@@ -500,6 +660,7 @@ export const Gantt = ({
   editable = false,
   onTaskChange,
   dependencies,
+  onDependencyChange,
   "aria-label": ariaLabel,
   className,
   ...props
@@ -620,6 +781,9 @@ export const Gantt = ({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest(".c__gantt__remove")) {
+      return onRemoveKey(event);
+    }
     const rows = taskRows();
     const from = rows.indexOf(event.target as HTMLElement);
     if (from >= 0 && onEditKey(event, rows[from], from)) return;
@@ -653,14 +817,19 @@ export const Gantt = ({
     setRtl(rootRef.current?.closest("[dir]")?.getAttribute("dir") === "rtl");
   }, []);
   const canEdit = editable && !rtl;
+  const canLink = canEdit && !!onDependencyChange;
   const instructions = useId();
 
   // Edit (s23), pointer or keyboard: `session` drives it, `preview` only
   // draws it. One session at a time.
-  const session = useRef<Drag | KeyEdit | null>(null);
+  const session = useRef<Drag | KeyEdit | LinkSession | null>(null);
   const dragOf = () => {
     const current = session.current;
-    return current && "pointerId" in current ? current : null;
+    return current && "edges" in current ? current : null;
+  };
+  const linkOf = () => {
+    const current = session.current;
+    return current && "connector" in current ? current : null;
   };
   const keyEditOf = () => {
     const current = session.current;
@@ -672,22 +841,34 @@ export const Gantt = ({
   const [announcement, setAnnouncement] = useState("");
   useEffect(() => () => session.current?.unlisten(), []);
 
+  // Link editing (s24): what a link session shows (its source, a valid
+  // target, a row's sentence); a refusal's sentence outlives the session.
+  const [linkView, setLinkView] = useState<{
+    from?: string;
+    to?: string;
+    tip?: { id: string; text: string; refused: boolean };
+  } | null>(null);
+  const [selected, setSelected] = useState<LinkPair | null>(null);
+  const taskOf = (id: string) => tasks.find((task) => task.id === id);
+
   // Dependencies (s24): valid links (bounded), drawn from the dates shown,
   // the dragged task's preview included, so a move shows a conflict live.
   const links = useMemo(
     () => normalizeLinks(dependencies, new Set(tasks.map((task) => task.id))),
     [dependencies, tasks],
   );
+  // A prospective link needs the ends even before the first link exists.
+  const creatingTo = linkView?.to;
   const shown = useMemo(
     () =>
-      links.length === 0
+      links.length === 0 && creatingTo === undefined
         ? null
         : tasks.map((task) =>
             preview?.id === task.id
               ? { ...task, start: preview.start, end: preview.end }
               : task,
           ),
-    [links, tasks, preview],
+    [links, tasks, preview, creatingTo],
   );
   const linkState = useMemo(() => {
     if (!shown) return null;
@@ -735,7 +916,7 @@ export const Gantt = ({
   // What a row says about its links (aria-describedby), and the list.
   const descriptionId = useId();
   const linkTexts = useMemo(() => {
-    if (!linkState) return null;
+    if (!linkState || links.length === 0) return null;
     const { byId, conflicts } = linkState;
     const name = (id: string) => byId.get(id)!.name;
     const listFormat = new ListFormat(locale, {
@@ -799,7 +980,11 @@ export const Gantt = ({
 
   // Links are not drawn right-to-left (the clip assumes ltr); still listed.
   const linksRef = useRef<HTMLDivElement>(null);
-  const drawLinks = links.length > 0 && !rtl;
+  // A link session's sentence beside a bar is drawn in the overlay.
+  const tipTask = linkView?.tip && taskOf(linkView.tip.id);
+  const tipPlace = tipTask ? scale.positionOf(tipTask) : null;
+  const drawLinks =
+    (links.length > 0 || creatingTo !== undefined || tipPlace !== null) && !rtl;
   // The clip follows the scroll offset: one passive listener, one write per
   // frame, straight on the overlay (no render).
   useEffect(() => {
@@ -834,8 +1019,8 @@ export const Gantt = ({
   // original dates in between.
   const close = (commit?: () => void) => {
     const current = session.current;
+    if (!current || "connector" in current) return null;
     session.current = null;
-    if (!current) return null;
     current.unlisten();
     // The bar jumps to its final place: the zoom tween stays off until the
     // jump is laid out. Its links jump with it.
@@ -853,6 +1038,7 @@ export const Gantt = ({
   };
 
   const cancel = () => {
+    if (linkOf()) return cancelLink();
     const current = close();
     if (!current) return;
     if (
@@ -884,7 +1070,7 @@ export const Gantt = ({
   // The one commit of a session: reported unless nothing changed. `pxPerDay`
   // keeps the leftmost visible day if the change moves the axis origin.
   const finish = (span: GanttUnitSpan, pxPerDay: number) => {
-    const current = session.current;
+    const current = dragOf() ?? keyEditOf();
     if (!current) return;
     const report = isNoop(current.original, span) ? undefined : onTaskChange;
     close(
@@ -989,6 +1175,19 @@ export const Gantt = ({
   };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    const connector = (event.target as HTMLElement).closest<HTMLElement>(
+      ".c__gantt__connector",
+    );
+    if (connector) {
+      if (
+        canLink &&
+        event.button === 0 &&
+        !session.current &&
+        connector.closest('[role="grid"]') === gridRef.current
+      )
+        startLink(event, connector);
+      return;
+    }
     const bar = (event.target as HTMLElement).closest<HTMLElement>(
       ".c__gantt__bar",
     );
@@ -1097,6 +1296,12 @@ export const Gantt = ({
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const link = linkOf();
+    if (link && event.pointerId === link.pointerId) {
+      link.x = event.clientX;
+      link.y = event.clientY;
+      return retarget(link);
+    }
     const current = dragOf();
     if (!current || event.pointerId !== current.pointerId) return;
     current.lastX = event.clientX;
@@ -1107,6 +1312,10 @@ export const Gantt = ({
   };
 
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const link = linkOf();
+    if (link && event.pointerId === link.pointerId) {
+      return endLink(link, event.clientX, event.clientY);
+    }
     const current = dragOf();
     if (event.pointerId !== current?.pointerId) return;
     const { mode, original, zoom, unitDelta, pxPerDay } = current;
@@ -1115,7 +1324,233 @@ export const Gantt = ({
 
   // Released elsewhere than by pointerup (which closes the session first).
   const onPointerLost = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerId === dragOf()?.pointerId) cancel();
+    const pointerId = (dragOf() ?? linkOf())?.pointerId;
+    if (event.pointerId === pointerId) cancel();
+  };
+
+  // Link editing (s24). Sentences fill every variable (`fill`).
+  const text = (key: string, vars: Record<string, string> = {}) =>
+    fill(t(`components.gantt.${key}`, vars), vars);
+  // A task without a bar (no dates, outside the window) cannot be linked.
+  const hasBar = (id: string) => {
+    const task = taskOf(id);
+    return !!task && scale.positionOf(task) !== null;
+  };
+  const refusalText = (refusal: LinkRefusal, from: GanttTask, to: GanttTask) =>
+    text(`link_refused_${refusal}`, {
+      from: from.name,
+      to: to.name,
+      name: (hasBar(from.id) ? to : from).name,
+      count: String(MAX_LINKS),
+    });
+
+  // The task row under a point of the visible box (not under the axis).
+  const rowAt = (x: number, y: number) => {
+    const box = scrollerRef.current?.getBoundingClientRect();
+    const axis = gridRef.current
+      ?.querySelector(":scope > .c__gantt__axis")
+      ?.getBoundingClientRect();
+    if (!box || x < box.left || x > box.right || y > box.bottom) return null;
+    if (y < Math.max(box.top, axis?.bottom ?? box.top)) return null;
+    const index = taskRows().findIndex((row) => {
+      const rect = row.getBoundingClientRect();
+      return y >= rect.top && y < rect.bottom;
+    });
+    return tasks[index] ?? null;
+  };
+
+  // The verdict on the row under the pointer, drawn and spoken only when it
+  // changes (not per pixel).
+  const retarget = (current: LinkSession) => {
+    const over = rowAt(current.x, current.y);
+    const source = taskOf(current.from);
+    const target = over && over.id !== current.from ? over : null;
+    const refusal = target && checkLink(links, current.from, target.id, hasBar);
+    if ((over?.id ?? null) === current.over && refusal === current.refusal)
+      return;
+    current.over = over?.id ?? null;
+    current.refusal = refusal;
+    if (!target || !source) {
+      setLinkView({
+        from: current.from,
+        tip: { id: current.from, text: text("link_tip_drop"), refused: false },
+      });
+    } else if (refusal) {
+      const sentence = refusalText(refusal, source, target);
+      setLinkView({
+        from: current.from,
+        tip: { id: target.id, text: sentence, refused: true },
+      });
+      setAnnouncement(sentence);
+    } else {
+      setLinkView({
+        from: current.from,
+        to: target.id,
+        tip: {
+          id: target.id,
+          text: text("link_tip_target", {
+            from: source.name,
+            to: target.name,
+          }),
+          refused: false,
+        },
+      });
+    }
+  };
+
+  const startLink = (event: PointerEvent<HTMLDivElement>, el: HTMLElement) => {
+    const task = tasks[taskRows().indexOf(el.closest(".c__gantt__row")!)];
+    const scroller = scrollerRef.current;
+    if (!task || !scroller) return;
+    el.setPointerCapture(event.pointerId);
+    const off = listen();
+    // The box may scroll (wheel) under a still pointer.
+    const onScroll = () => {
+      if (session.current === current) retarget(current);
+    };
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    const current: LinkSession = {
+      from: task.id,
+      pointerId: event.pointerId,
+      connector: el,
+      x: event.clientX,
+      y: event.clientY,
+      over: task.id,
+      refusal: null,
+      unlisten: () => {
+        off();
+        scroller.removeEventListener("scroll", onScroll);
+      },
+    };
+    session.current = current;
+    setLinkView({
+      from: task.id,
+      tip: { id: task.id, text: text("link_tip_drop"), refused: false },
+    });
+  };
+
+  const closeLink = () => {
+    const current = linkOf();
+    if (!current) return null;
+    session.current = null;
+    current.unlisten();
+    return current;
+  };
+
+  const cancelLink = () => {
+    const current = closeLink();
+    if (!current) return;
+    if (current.connector.hasPointerCapture(current.pointerId)) {
+      current.connector.releasePointerCapture(current.pointerId);
+    }
+    setLinkView(null);
+    setAnnouncement(text("announce_link_cancelled"));
+  };
+
+  // Released on a row: the one report of a session, or its refusal, which
+  // stays until the next pointer down, key press or focus change.
+  const endLink = (current: LinkSession, x: number, y: number) => {
+    const over = rowAt(x, y);
+    const source = taskOf(current.from);
+    if (!over || !source) return cancelLink();
+    closeLink();
+    const refusal = checkLink(links, source.id, over.id, hasBar);
+    if (refusal) {
+      const sentence = refusalText(refusal, source, over);
+      setLinkView({ tip: { id: over.id, text: sentence, refused: true } });
+      setAnnouncement(sentence);
+      return;
+    }
+    setLinkView(null);
+    onDependencyChange?.({
+      kind: "add",
+      dependency: { from: source.id, to: over.id },
+    });
+    setAnnouncement(
+      text("announce_link_added", { from: source.name, to: over.name }),
+    );
+  };
+
+  const lingering = !!linkView?.tip && !linkView.from;
+  useEffect(() => {
+    if (!lingering) return;
+    const clear = () => setLinkView(null);
+    const events = ["pointerdown", "keydown", "focusin"];
+    for (const type of events) document.addEventListener(type, clear, true);
+    return () => {
+      for (const type of events)
+        document.removeEventListener(type, clear, true);
+    };
+  }, [lingering]);
+
+  // The selected link, while it is still in the data.
+  const selectedLink =
+    canLink &&
+    selected &&
+    links.some((l) => l.from === selected.from && l.to === selected.to)
+      ? selected
+      : null;
+  if (selected && !selectedLink) setSelected(null);
+  const selectedKey = selectedLink && linkKey(selectedLink);
+
+  // Remove takes the focus; a press anywhere else deselects.
+  useLayoutEffect(() => {
+    if (!selectedKey) return;
+    gridRef.current?.querySelector<HTMLElement>(".c__gantt__remove")?.focus();
+    const onDown = (event: Event) => {
+      if (
+        !(event.target instanceof Element) ||
+        !event.target.closest(".c__gantt__remove")
+      )
+        setSelected(null);
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    return () => document.removeEventListener("pointerdown", onDown, true);
+  }, [selectedKey]);
+
+  // Back to the predecessor row (Remove leaves with the selection).
+  const deselect = (link: LinkPair) => {
+    taskRows()[tasks.findIndex((task) => task.id === link.from)]?.focus();
+    setSelected(null);
+  };
+
+  const removeSelected = () => {
+    if (!selectedLink) return;
+    const from = taskOf(selectedLink.from)!;
+    const to = taskOf(selectedLink.to)!;
+    deselect(selectedLink);
+    onDependencyChange?.({
+      kind: "remove",
+      dependency: { from: from.id, to: to.id },
+    });
+    setAnnouncement(
+      text("announce_link_removed", { from: from.name, to: to.name }),
+    );
+  };
+
+  const onClick = (event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (target.closest(".c__gantt__remove")) return removeSelected();
+    const link = target
+      .closest(".c__gantt__link-hit")
+      ?.closest<HTMLElement>(".c__gantt__link");
+    if (!canLink || !link || link.closest('[role="grid"]') !== gridRef.current)
+      return;
+    setSelected({ from: link.dataset.from!, to: link.dataset.to! });
+  };
+
+  // Remove's keys (Enter and Space click it).
+  const onRemoveKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!selectedLink) return;
+    if (event.key === "Escape") {
+      // Ours: an enclosing dialog stays open.
+      event.preventDefault();
+      event.stopPropagation();
+      deselect(selectedLink);
+    } else if (event.key === "Delete" || event.key === "Backspace") {
+      event.preventDefault();
+      removeSelected();
+    }
   };
 
   return (
@@ -1125,7 +1560,8 @@ export const Gantt = ({
       className={clsx("c__gantt", className)}
       data-zoom={zoom}
       data-editable={canEdit || undefined}
-      data-editing={preview?.mode}
+      data-linkable={canLink || undefined}
+      data-editing={preview?.mode ?? (linkView?.from ? "link" : undefined)}
     >
       <div
         role="group"
@@ -1161,6 +1597,7 @@ export const Gantt = ({
             if (event.target === keyEditOf()?.row) cancel();
           }}
           onKeyDown={onKeyDown}
+          onClick={onClick}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -1230,16 +1667,47 @@ export const Gantt = ({
                   : undefined
               }
               preview={preview?.id === task.id ? preview : undefined}
+              linkable={canLink}
+              linkSource={linkView?.from === task.id || undefined}
+              linkTip={
+                linkView?.tip?.id === task.id ? linkView.tip.text : undefined
+              }
+              linkRefused={
+                linkView?.tip?.id === task.id ? linkView.tip.refused : undefined
+              }
+              removeLabel={
+                selectedLink?.to === task.id
+                  ? text("link_remove", {
+                      from: taskOf(selectedLink.from)!.name,
+                      to: task.name,
+                    })
+                  : undefined
+              }
             />
           ))}
-          {drawLinks && linkState && (
+          {drawLinks && (
             <GanttLinks
               layerRef={linksRef}
               links={links}
-              ends={linkState.ends}
-              conflicts={linkState.conflicts}
+              ends={linkState?.ends ?? NO_ENDS}
+              conflicts={linkState?.conflicts ?? NO_CONFLICTS}
               dayWidth={scale.dayWidth}
               rows={tasks.length}
+              interactive={canLink}
+              selected={selectedKey}
+              creatingFrom={
+                creatingTo === undefined ? undefined : linkView?.from
+              }
+              creatingTo={creatingTo}
+              days={scale.days}
+              {...(tipPlace && {
+                tipId: tipTask!.id,
+                tipText: linkView!.tip!.text,
+                tipRefused: linkView!.tip!.refused,
+                tipRow: tasks.indexOf(tipTask!),
+                tipStart: tipPlace.start,
+                tipSpan: tipPlace.span,
+              })}
             />
           )}
         </div>

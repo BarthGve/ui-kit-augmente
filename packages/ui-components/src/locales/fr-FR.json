@@ -343,7 +343,18 @@
       "row_conflict": "Conflit avec : {names}",
       "names_more": "{names}, +{count}",
       "link_conflict_tip": "Conflit : {to} commence avant la fin de {from}",
-      "announce_conflict": "Conflit : {to} commence avant la fin de {from}"
+      "announce_conflict": "Conflit : {to} commence avant la fin de {from}",
+      "link_remove": "Supprimer le lien de {from} vers {to}",
+      "link_tip_target": "Faire commencer {to} après {from}",
+      "link_tip_drop": "Déposer sur une tâche",
+      "link_refused_cycle": "Lien refusé : il créerait une boucle",
+      "link_refused_self": "Une tâche ne peut pas dépendre d'elle-même",
+      "link_refused_no_dates": "Lien refusé : {name} n'a pas de dates",
+      "link_refused_exists": "Lien refusé : {to} commence déjà après {from}",
+      "link_refused_limit": "Lien refusé : un graphique contient au plus {count} liens",
+      "announce_link_added": "{to} commence désormais après {from}",
+      "announce_link_removed": "Lien supprimé : {to} ne dépend plus de {from}",
+      "announce_link_cancelled": "Lien annulé"
     }
   }
 }

@@ -343,7 +343,18 @@
       "row_conflict": "Conflict met: {names}",
       "names_more": "{names}, +{count}",
       "link_conflict_tip": "Conflict: {to} begint voordat {from} eindigt",
-      "announce_conflict": "Conflict: {to} begint voordat {from} eindigt"
+      "announce_conflict": "Conflict: {to} begint voordat {from} eindigt",
+      "link_remove": "Koppeling van {from} naar {to} verwijderen",
+      "link_tip_target": "{to} na {from} laten beginnen",
+      "link_tip_drop": "Neerzetten op een taak",
+      "link_refused_cycle": "Niet gekoppeld: dit zou een lus maken",
+      "link_refused_self": "Een taak kan niet van zichzelf afhangen",
+      "link_refused_no_dates": "Niet gekoppeld: {name} heeft geen datums",
+      "link_refused_exists": "Niet gekoppeld: {to} begint al na {from}",
+      "link_refused_limit": "Niet gekoppeld: een grafiek bevat hoogstens {count} koppelingen",
+      "announce_link_added": "{to} begint nu na {from}",
+      "announce_link_removed": "Koppeling verwijderd: {to} hangt niet meer af van {from}",
+      "announce_link_cancelled": "Koppeling geannuleerd"
     }
   }
 }

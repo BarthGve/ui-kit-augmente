@@ -32,6 +32,11 @@ export const tokens = (defaults: DefaultTokens) => ({
   "link-flag-background-color":
     defaults.contextuals.content.semantic.error.tertiary,
   "link-flag-color": defaults.contextuals.background.surface.secondary,
+  // Link editing: the connector dot, a page-colour fill in a brand ring.
+  "connector-border-color":
+    defaults.contextuals.content.semantic.brand.tertiary,
+  "connector-background-color":
+    defaults.contextuals.background.surface.secondary,
   padding: defaults.globals.spacings.sm,
   "focus-ring-color": defaults.contextuals.content.semantic.brand.tertiary,
   // Literals below: no global token exists (design-system gaps 2 to 4).

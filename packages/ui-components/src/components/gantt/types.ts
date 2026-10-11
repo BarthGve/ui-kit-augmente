@@ -27,6 +27,12 @@ export interface GanttDependency {
   to: string;
 }
 
+/** A link the user added or removed, reported by `onDependencyChange`. */
+export type GanttDependencyChange = {
+  kind: "add" | "remove";
+  dependency: GanttDependency;
+};
+
 export type GanttProps = Omit<
   HTMLAttributes<HTMLDivElement>,
   "children" | "className" | "aria-label"
@@ -61,6 +67,14 @@ export type GanttProps = Omit<
    * is shown in conflict (nothing moves). Not drawn right-to-left.
    */
   dependencies?: GanttDependency[];
+  /**
+   * With `editable`, lets the user link tasks (drag a bar's connector onto
+   * another task) and remove a link (select it, then Remove). Called once per
+   * user action; a refused link (loop, task without dates, existing pair,
+   * `MAX_LINKS` reached) is never reported. `dependencies` is never mutated:
+   * apply the change to your data, or nothing appears or disappears.
+   */
+  onDependencyChange?: (change: GanttDependencyChange) => void;
   /** Names the grid (required: the chart has no visible title). */
   "aria-label": string;
   className?: string;

@@ -343,7 +343,18 @@
       "row_conflict": "Konflikt mit: {names}",
       "names_more": "{names}, +{count}",
       "link_conflict_tip": "Konflikt: {to} beginnt, bevor {from} endet",
-      "announce_conflict": "Konflikt: {to} beginnt, bevor {from} endet"
+      "announce_conflict": "Konflikt: {to} beginnt, bevor {from} endet",
+      "link_remove": "Verknüpfung von {from} zu {to} entfernen",
+      "link_tip_target": "{to} nach {from} beginnen",
+      "link_tip_drop": "Auf einer Aufgabe ablegen",
+      "link_refused_cycle": "Nicht verknüpft: Das würde eine Schleife erzeugen",
+      "link_refused_self": "Eine Aufgabe kann nicht von sich selbst abhängen",
+      "link_refused_no_dates": "Nicht verknüpft: {name} hat keine Daten",
+      "link_refused_exists": "Nicht verknüpft: {to} beginnt bereits nach {from}",
+      "link_refused_limit": "Nicht verknüpft: Ein Diagramm enthält höchstens {count} Verknüpfungen",
+      "announce_link_added": "{to} beginnt jetzt nach {from}",
+      "announce_link_removed": "Verknüpfung entfernt: {to} hängt nicht mehr von {from} ab",
+      "announce_link_cancelled": "Verknüpfung abgebrochen"
     }
   }
 }
