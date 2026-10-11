@@ -20,6 +20,7 @@ import { tokens as ganttTokens } from "./src/components/gantt/tokens";
 import { tokens as modalTokens } from "./src/components/modal/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
 import { tokens as tooltipTokens } from "./src/components/tooltip/tokens";
+import { tokens as userMenuTokens } from "./src/components/users/menu/tokens";
 import { deepMerge } from "./src/utils/objects";
 
 const componentTokenDefaults = {
@@ -41,6 +42,7 @@ const componentTokenDefaults = {
   modal: modalTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
   tooltip: tooltipTokens(defaultTokenRefs),
+  "user-menu": userMenuTokens(defaultTokenRefs),
 };
 
 const suiteComponentTokenOverrides = {
