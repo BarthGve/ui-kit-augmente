@@ -18,6 +18,15 @@ export interface GanttTask {
 /** Dates of a task after an edit, as ISO calendar days (`"YYYY-MM-DD"`). */
 export type GanttTaskChange = { start: string; end: string };
 
+/**
+ * Finish-to-start: task `to` starts after task `from` ends. A link is
+ * identified by its ordered pair of task ids.
+ */
+export interface GanttDependency {
+  from: string;
+  to: string;
+}
+
 export type GanttProps = Omit<
   HTMLAttributes<HTMLDivElement>,
   "children" | "className" | "aria-label"
@@ -43,6 +52,15 @@ export type GanttProps = Omit<
    * apply the change to your data, or the bar goes back to its dates.
    */
   onTaskChange?: (id: string, change: GanttTaskChange) => void;
+  /**
+   * Links drawn between tasks, read-only, and listed for assistive
+   * technology. Never mutated. Unknown ids, self-links, duplicates and the
+   * entries past the first 1000 valid ones (`MAX_LINKS`) are ignored; a link
+   * to a task without dates or outside the drawn window is listed, not
+   * drawn. A successor that starts on or before its predecessor's last day
+   * is shown in conflict (nothing moves). Not drawn right-to-left.
+   */
+  dependencies?: GanttDependency[];
   /** Names the grid (required: the chart has no visible title). */
   "aria-label": string;
   className?: string;

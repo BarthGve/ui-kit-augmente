@@ -109,7 +109,7 @@ No plural keys (no counts spoken except `+N`). `link_conflict_tip` and `announce
 
 ## Design system gaps
 Reported, not filled; resolved by existing values, owner confirms at the plan checkpoint.
-1. **No connector/link/edge pattern, no "!" status chip** in the system: a plain dot and a plain chip drawn with existing colours.
+1. **No connector/link/edge pattern, no "!" status chip** in the system: a plain dot and a plain chip drawn with existing colours. Implemented (t02) at `bar-height` (20px, not 16px): no flag-size token exists.
 2. **No global token for a 2px/3px line, the 44px/12px route gutters or the arrow size**: literals in `tokens.ts` (as `focus-ring-width`).
 3. **No global size token for the 24px minimum target** (as in s23 gap 4).
 4. **No delete/x icon decided for a small button inside a chart**: the existing icon set is used if one fits at 24px, else a text glyph; to confirm.

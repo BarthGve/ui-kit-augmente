@@ -135,6 +135,7 @@ export type RouteSegment = [RoutePoint, RoutePoint];
 // ponytail: px mirrors of the `link-gutter` (2.75rem) and `link-lead`
 // (0.75rem) tokens at a 16px root, used only to choose a route; at another
 // root the choice may differ, the line still lands on the bars (CSS calc).
+// Checked against the tokens by links.spec.ts.
 const LINK_GUTTER = 44;
 const LINK_LEAD = 12;
 

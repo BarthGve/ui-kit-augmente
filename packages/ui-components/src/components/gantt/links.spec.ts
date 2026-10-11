@@ -2,8 +2,10 @@ import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
 import { CalendarDate } from "@internationalized/date";
 import { describe, expect, it } from "vitest";
+import { tokens } from "./tokens";
 import {
   checkLink,
   conflictOf,
@@ -263,6 +265,22 @@ describe("routeOf", () => {
     ).toHaveLength(3);
     expect(
       check({ row: 1, start: 3, span: 2 }, { row: 3, start: 9, span: 1 }, 12),
+    ).toHaveLength(5);
+  });
+
+  it("chooses the route at the link-gutter + link-lead tokens (16px a rem), so the mirrors cannot drift", () => {
+    const t = tokens(defaultTokenRefs);
+    const threshold =
+      (parseFloat(t["link-gutter"]) + parseFloat(t["link-lead"])) * 16;
+    expect(t["link-gutter"]).toMatch(/rem$/);
+    expect(t["link-lead"]).toMatch(/rem$/);
+    // 1px a day: the gap in days is the gap in px.
+    const pred = { row: 0, start: 0, span: 1 };
+    expect(
+      routeOf(pred, { row: 1, start: 1 + threshold, span: 1 }, { dayWidth: 1 }),
+    ).toHaveLength(3);
+    expect(
+      routeOf(pred, { row: 1, start: threshold, span: 1 }, { dayWidth: 1 }),
     ).toHaveLength(5);
   });
 

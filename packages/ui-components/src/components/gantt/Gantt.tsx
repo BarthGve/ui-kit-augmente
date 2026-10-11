@@ -5,6 +5,7 @@ import {
   KeyboardEvent,
   memo,
   PointerEvent,
+  Ref,
   useEffect,
   useId,
   useLayoutEffect,
@@ -34,7 +35,24 @@ import {
   toChange,
   unitsFromPixels,
 } from "./edit";
-import { buildScale, dayIndex, formatDates, GanttScale, toDay } from "./scale";
+import {
+  conflictsOf,
+  type LinkPair,
+  linkKey,
+  type LinkSpan,
+  neighboursOf,
+  normalizeLinks,
+  type RoutePoint,
+  routeOf,
+} from "./links";
+import {
+  buildScale,
+  dayIndex,
+  formatDates,
+  GanttScale,
+  Position,
+  toDay,
+} from "./scale";
 import { GanttProps, GanttTask, GanttZoom } from "./types";
 
 type Segment = { key: string; label: string; start: number; span: number };
@@ -165,6 +183,8 @@ type RowProps = {
   editable: boolean;
   /** Id of the editing instructions, described by every editable row. */
   instructions: string;
+  /** Id of the row's dependency description, when it has links. */
+  description?: string;
   preview?: Preview;
 };
 
@@ -177,6 +197,7 @@ const GanttRow = memo(function GanttRow({
   locale,
   editable,
   instructions,
+  description,
   preview,
 }: RowProps) {
   const { t } = useCunningham();
@@ -206,7 +227,10 @@ const GanttRow = memo(function GanttRow({
       aria-rowindex={index + 2}
       aria-label={label}
       aria-keyshortcuts={editableRow ? SHORTCUTS : undefined}
-      aria-describedby={editableRow ? instructions : undefined}
+      aria-describedby={
+        [editableRow && instructions, description].filter(Boolean).join(" ") ||
+        undefined
+      }
       // A single tab stop, so Tab leaves the chart (roving).
       tabIndex={tabIndex}
       className="c__gantt__row"
@@ -269,6 +293,154 @@ const GanttRow = memo(function GanttRow({
   );
 });
 
+/** Where a link end is drawn: its row and its (clipped) bar. */
+type LinkEnd = Position & { row: number };
+
+const corner = (
+  n: 1 | 2,
+  { day, gutters, leads, row, centre }: RoutePoint,
+) => ({
+  [`--gantt-x${n}`]: day,
+  [`--gantt-g${n}`]: gutters,
+  [`--gantt-l${n}`]: leads,
+  [`--gantt-y${n}`]: row,
+  [`--gantt-c${n}`]: centre ? 1 : 0,
+});
+
+type LinkProps = {
+  from: string;
+  to: string;
+  // Primitives, so a drag re-renders only the links of the dragged task.
+  predRow: number;
+  predStart: number;
+  predSpan: number;
+  succRow: number;
+  succStart: number;
+  succSpan: number;
+  conflict: boolean;
+  dayWidth: number;
+};
+
+// Boxes placed in CSS from the route's corners (days, gutters, leads, rows),
+// like the bars: no px mirror for alignment. The arrowhead is the last
+// segment's `::after`.
+const GanttLink = memo(function GanttLink({
+  from,
+  to,
+  predRow,
+  predStart,
+  predSpan,
+  succRow,
+  succStart,
+  succSpan,
+  conflict,
+  dayWidth,
+}: LinkProps) {
+  const route = routeOf(
+    { row: predRow, start: predStart, span: predSpan },
+    { row: succRow, start: succStart, span: succSpan },
+    { dayWidth },
+  );
+  return (
+    <div
+      className="c__gantt__link"
+      data-from={from}
+      data-to={to}
+      data-conflict={conflict || undefined}
+    >
+      {route.map(([a, b], i) => (
+        <div
+          key={i}
+          className="c__gantt__link-segment"
+          data-axis={a.row === b.row && a.centre === b.centre ? "x" : "y"}
+          data-end={i === route.length - 1 || undefined}
+          style={{ ...corner(1, a), ...corner(2, b) } as CSSProperties}
+        />
+      ))}
+      {conflict && (
+        <span
+          className="c__gantt__link-flag"
+          style={
+            { "--gantt-x": succStart, "--gantt-y": succRow } as CSSProperties
+          }
+        >
+          !
+        </span>
+      )}
+    </div>
+  );
+});
+
+type LinksProps = {
+  layerRef: Ref<HTMLDivElement>;
+  links: LinkPair[];
+  ends: ReadonlyMap<string, LinkEnd | null>;
+  conflicts: ReadonlySet<string>;
+  dayWidth: number;
+  rows: number;
+};
+
+// Above the rows, inert and hidden from assistive technology (the rows
+// describe their links); clipped to the visible track by `--gantt-scroll`.
+const GanttLinks = memo(function GanttLinks({
+  layerRef,
+  links,
+  ends,
+  conflicts,
+  dayWidth,
+  rows,
+}: LinksProps) {
+  return (
+    <div
+      ref={layerRef}
+      className="c__gantt__links"
+      aria-hidden="true"
+      style={{ "--gantt-rows": rows } as CSSProperties}
+    >
+      {links.map((link) => {
+        const pred = ends.get(link.from);
+        const succ = ends.get(link.to);
+        if (!pred || !succ) return null;
+        const key = linkKey(link);
+        return (
+          <GanttLink
+            key={key}
+            from={link.from}
+            to={link.to}
+            predRow={pred.row}
+            predStart={pred.start}
+            predSpan={pred.span}
+            succRow={succ.row}
+            succStart={succ.start}
+            succSpan={succ.span}
+            conflict={conflicts.has(key)}
+            dayWidth={dayWidth}
+          />
+        );
+      })}
+    </div>
+  );
+});
+
+// `Intl.ListFormat` (every supported browser) is outside the package's
+// TypeScript lib (no es2021.intl).
+const ListFormat = (
+  Intl as unknown as {
+    ListFormat: new (
+      locale: string,
+      options: { type: "unit"; style: "short" },
+    ) => { format: (items: string[]) => string };
+  }
+).ListFormat;
+
+// The provider's `t` fills each variable once; a sentence naming a task
+// twice needs the rest filled too.
+const fill = (message: string, vars: Record<string, string>) =>
+  Object.entries(vars).reduce(
+    (text, [name, value]) => text.replaceAll(`{${name}}`, value),
+    message,
+  );
+
 /** An edit in progress (refs: read synchronously by every exit). */
 type Session = {
   id: string;
@@ -327,6 +499,7 @@ export const Gantt = ({
   today,
   editable = false,
   onTaskChange,
+  dependencies,
   "aria-label": ariaLabel,
   className,
   ...props
@@ -499,6 +672,158 @@ export const Gantt = ({
   const [announcement, setAnnouncement] = useState("");
   useEffect(() => () => session.current?.unlisten(), []);
 
+  // Dependencies (s24): valid links (bounded), drawn from the dates shown,
+  // the dragged task's preview included, so a move shows a conflict live.
+  const links = useMemo(
+    () => normalizeLinks(dependencies, new Set(tasks.map((task) => task.id))),
+    [dependencies, tasks],
+  );
+  const shown = useMemo(
+    () =>
+      links.length === 0
+        ? null
+        : tasks.map((task) =>
+            preview?.id === task.id
+              ? { ...task, start: preview.start, end: preview.end }
+              : task,
+          ),
+    [links, tasks, preview],
+  );
+  const linkState = useMemo(() => {
+    if (!shown) return null;
+    const ends = new Map<string, LinkEnd | null>();
+    const spans = new Map<string, LinkSpan | null>();
+    const byId = new Map<string, GanttTask>();
+    shown.forEach((task, row) => {
+      const position = scale.positionOf(task);
+      ends.set(task.id, position && { row, ...position });
+      const start = toDay(task.start);
+      const end = toDay(task.end);
+      spans.set(task.id, start && end ? { start, end } : null);
+      byId.set(task.id, task);
+    });
+    return { ends, byId, conflicts: conflictsOf(links, spans) };
+  }, [shown, scale, links]);
+
+  // The live region names a conflict once, when a session creates it.
+  const heardConflicts = useRef<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    const conflicts = linkState?.conflicts ?? new Set<string>();
+    const fresh = preview
+      ? links.filter(
+          (link) =>
+            conflicts.has(linkKey(link)) &&
+            !heardConflicts.current.has(linkKey(link)),
+        )
+      : [];
+    heardConflicts.current = conflicts;
+    if (!fresh.length || !linkState) return;
+    const name = (id: string) => linkState.byId.get(id)!.name;
+    setAnnouncement((said) =>
+      [
+        said,
+        ...fresh.map((link) =>
+          t("components.gantt.announce_conflict", {
+            from: name(link.from),
+            to: name(link.to),
+          }),
+        ),
+      ].join(" "),
+    );
+  }, [linkState, links, preview, t]);
+
+  // What a row says about its links (aria-describedby), and the list.
+  const descriptionId = useId();
+  const linkTexts = useMemo(() => {
+    if (!linkState) return null;
+    const { byId, conflicts } = linkState;
+    const name = (id: string) => byId.get(id)!.name;
+    const listFormat = new ListFormat(locale, {
+      type: "unit",
+      style: "short",
+    });
+    const names = (ids: string[]) => {
+      const list = listFormat.format(ids.slice(0, 5).map(name));
+      return ids.length > 5
+        ? t("components.gantt.names_more", {
+            names: list,
+            count: ids.length - 5,
+          })
+        : list;
+    };
+    const clashes = new Map<string, string[]>();
+    const items = links.map((link) => {
+      const key = linkKey(link);
+      const vars = { from: name(link.from), to: name(link.to) };
+      if (!conflicts.has(key)) {
+        return { key, text: t("components.gantt.dependency_item", vars) };
+      }
+      for (const [id, other] of [
+        [link.from, link.to],
+        [link.to, link.from],
+      ]) {
+        clashes.set(id, [...(clashes.get(id) ?? []), other]);
+      }
+      const succ = formatDates(byId.get(link.to)!, locale)!;
+      const pred = formatDates(byId.get(link.from)!, locale)!;
+      const conflictVars = { ...vars, start: succ.start, end: pred.end };
+      return {
+        key,
+        text: fill(
+          t("components.gantt.dependency_item_conflict", conflictVars),
+          conflictVars,
+        ),
+      };
+    });
+    const rows = new Map<string, string>();
+    for (const [id, { after, before }] of neighboursOf(links)) {
+      rows.set(
+        id,
+        [
+          after.length > 0 &&
+            t("components.gantt.row_starts_after", { names: names(after) }),
+          before.length > 0 &&
+            t("components.gantt.row_required_by", { names: names(before) }),
+          clashes.has(id) &&
+            t("components.gantt.row_conflict", {
+              names: names(clashes.get(id)!),
+            }),
+        ]
+          .filter(Boolean)
+          .map((sentence) => `${sentence}.`)
+          .join(" "),
+      );
+    }
+    return { items, rows };
+  }, [linkState, links, locale, t]);
+
+  // Links are not drawn right-to-left (the clip assumes ltr); still listed.
+  const linksRef = useRef<HTMLDivElement>(null);
+  const drawLinks = links.length > 0 && !rtl;
+  // The clip follows the scroll offset: one passive listener, one write per
+  // frame, straight on the overlay (no render).
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!drawLinks || !el) return;
+    let frame = 0;
+    const write = () => {
+      frame = 0;
+      linksRef.current?.style.setProperty(
+        "--gantt-scroll",
+        `${el.scrollLeft}px`,
+      );
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(write);
+    };
+    write();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, [drawLinks]);
+
   const say = (key: string, name: string, span: GanttUnitSpan) => {
     const dates = formatDates({ id: "", name, ...span }, locale);
     setAnnouncement(t(`components.gantt.${key}`, { name, ...dates }));
@@ -513,14 +838,17 @@ export const Gantt = ({
     if (!current) return null;
     current.unlisten();
     // The bar jumps to its final place: the zoom tween stays off until the
-    // jump is laid out.
+    // jump is laid out. Its links jump with it.
+    const layer = linksRef.current;
     current.bar.style.setProperty("transition", "none");
+    layer?.setAttribute("data-settling", "");
     flushSync(() => {
       setPreview(null);
       commit?.();
     });
     void current.bar.offsetWidth;
     current.bar.style.removeProperty("transition");
+    layer?.removeAttribute("data-settling");
     return current;
   };
 
@@ -896,14 +1224,51 @@ export const Gantt = ({
               locale={locale}
               editable={canEdit}
               instructions={instructions}
+              description={
+                linkTexts?.rows.has(task.id)
+                  ? `${descriptionId}-${i}`
+                  : undefined
+              }
               preview={preview?.id === task.id ? preview : undefined}
             />
           ))}
+          {drawLinks && linkState && (
+            <GanttLinks
+              layerRef={linksRef}
+              links={links}
+              ends={linkState.ends}
+              conflicts={linkState.conflicts}
+              dayWidth={scale.dayWidth}
+              rows={tasks.length}
+            />
+          )}
         </div>
         {tasks.length === 0 && (
           <p className="c__gantt__empty">{t("components.gantt.empty")}</p>
         )}
       </div>
+      {linkTexts && (
+        <>
+          <VisuallyHidden
+            elementType="ul"
+            aria-label={t("components.gantt.dependencies_list_label")}
+          >
+            {linkTexts.items.map(({ key, text }) => (
+              <li key={key}>{text}</li>
+            ))}
+          </VisuallyHidden>
+          <VisuallyHidden>
+            {tasks.map(
+              (task, i) =>
+                linkTexts.rows.has(task.id) && (
+                  <div key={task.id} id={`${descriptionId}-${i}`}>
+                    {linkTexts.rows.get(task.id)}
+                  </div>
+                ),
+            )}
+          </VisuallyHidden>
+        </>
+      )}
       {canEdit && (
         <>
           <VisuallyHidden role="status" className="c__gantt__live">

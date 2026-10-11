@@ -22,6 +22,16 @@ export const tokens = (defaults: DefaultTokens) => ({
   // a text colour: it fails on the tooltip chip).
   "handle-grip-color": defaults.contextuals.background.surface.secondary,
   "invalid-color": defaults.contextuals.content.semantic.error.tertiary,
+  // Dependencies (s24): no content token shows on the bar fill, so a line
+  // crossing a bar has a casing in the page colour; a conflict is also
+  // dashed and flagged, never colour alone.
+  "link-color": defaults.contextuals.content.semantic.neutral.secondary,
+  "link-selected-color": defaults.contextuals.content.semantic.neutral.primary,
+  "link-conflict-color": defaults.contextuals.content.semantic.error.tertiary,
+  "link-casing-color": defaults.contextuals.background.surface.secondary,
+  "link-flag-background-color":
+    defaults.contextuals.content.semantic.error.tertiary,
+  "link-flag-color": defaults.contextuals.background.surface.secondary,
   padding: defaults.globals.spacings.sm,
   "focus-ring-color": defaults.contextuals.content.semantic.brand.tertiary,
   // Literals below: no global token exists (design-system gaps 2 to 4).
@@ -41,4 +51,12 @@ export const tokens = (defaults: DefaultTokens) => ({
   // Gantt.tsx (HANDLE_MIN), and the grip line.
   "handle-hit-size": "1.5rem",
   "handle-grip-width": "2px",
+  // Links: line widths, route offsets (mirrored in px by `links.ts` to choose
+  // a route only, checked by links.spec.ts), arrowhead and hit strip.
+  "link-width": "2px",
+  "link-width--selected": "3px",
+  "link-gutter": "2.75rem",
+  "link-lead": "0.75rem",
+  "link-arrow-size": "0.5rem",
+  "link-hit-size": "1.5rem",
 });

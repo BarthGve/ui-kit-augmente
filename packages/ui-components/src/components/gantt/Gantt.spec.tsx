@@ -3,11 +3,13 @@ import { resolve } from "path";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
+import { parseDate } from "@internationalized/date";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CunninghamProvider } from ":/components/provider";
-import { Gantt, GanttProps, GanttTask } from "./index";
-import { MAX_DAYS } from "./scale";
+import { Gantt, GanttDependency, GanttProps, GanttTask } from "./index";
+import { MAX_LINKS, routeOf } from "./links";
+import { buildScale, MAX_DAYS } from "./scale";
 import { tokens } from "./tokens";
 
 // Vitest stubs stylesheets, so the sources are read from disk.
@@ -562,33 +564,39 @@ const EDIT_TASKS = deepFreeze([
   { id: "d", name: "Plan the launch" },
 ]);
 
+// Pointer events, capture and a track of `pxPerDay()` pixels per day; returns
+// the restore.
+const stubPointer = (pxPerDay: () => number) => {
+  const proto = HTMLElement.prototype;
+  const { getBoundingClientRect } = proto;
+  const win = window as unknown as Record<string, unknown>;
+  const pointer = win.PointerEvent;
+  win.PointerEvent = TestPointerEvent;
+  proto.setPointerCapture = vi.fn();
+  proto.releasePointerCapture = vi.fn();
+  proto.hasPointerCapture = vi.fn(() => true);
+  proto.getBoundingClientRect = function (this: HTMLElement) {
+    if (this.matches('[role="gridcell"].c__gantt__track')) {
+      const days = Number(
+        this.closest<HTMLElement>('[role="grid"]')!.style.getPropertyValue(
+          "--gantt-days",
+        ),
+      );
+      return new DOMRect(0, 0, days * pxPerDay(), 40);
+    }
+    return getBoundingClientRect.call(this);
+  };
+  return () => {
+    proto.getBoundingClientRect = getBoundingClientRect;
+    win.PointerEvent = pointer;
+  };
+};
+
 describe("Gantt pointer move (s23)", () => {
   let px = 40;
   beforeEach(() => {
     px = 40;
-    const proto = HTMLElement.prototype;
-    const { getBoundingClientRect } = proto;
-    const win = window as unknown as Record<string, unknown>;
-    const pointer = win.PointerEvent;
-    win.PointerEvent = TestPointerEvent;
-    proto.setPointerCapture = vi.fn();
-    proto.releasePointerCapture = vi.fn();
-    proto.hasPointerCapture = vi.fn(() => true);
-    proto.getBoundingClientRect = function (this: HTMLElement) {
-      if (this.matches('[role="gridcell"].c__gantt__track')) {
-        const days = Number(
-          this.closest<HTMLElement>('[role="grid"]')!.style.getPropertyValue(
-            "--gantt-days",
-          ),
-        );
-        return new DOMRect(0, 0, days * px, 40);
-      }
-      return getBoundingClientRect.call(this);
-    };
-    return () => {
-      proto.getBoundingClientRect = getBoundingClientRect;
-      win.PointerEvent = pointer;
-    };
+    return stubPointer(() => px);
   });
 
   const editGantt = (props: Partial<GanttProps> = {}) =>
@@ -1541,6 +1549,477 @@ describe("Gantt pointer move (s23)", () => {
   });
 });
 
+// Dependencies (s24). en-US weeks start on Sunday: the axis starts on
+// 2026-03-01; Release starts the day after Build ends (no conflict).
+const DEP_TASKS = deepFreeze([
+  { id: "a", name: "Brief", start: "2026-03-02", end: "2026-03-06" },
+  { id: "b", name: "Build", start: "2026-03-16", end: "2026-03-27" },
+  { id: "c", name: "Review", start: "2026-03-09", end: "2026-03-10" },
+  { id: "d", name: "Plan" },
+  { id: "e", name: "Release", start: "2026-03-28", end: "2026-04-03" },
+]);
+const freezeLinks = (links: GanttDependency[]) =>
+  Object.freeze(links.map((link) => Object.freeze({ ...link })));
+// Valid: a>b, a>c, b>c (conflict: Review starts before Build ends), b>e,
+// a>d (Plan has no dates: listed, not drawn). The rest is ignored.
+const DEPS = freezeLinks([
+  { from: "a", to: "b" },
+  { from: "a", to: "zz" },
+  { from: "a", to: "c" },
+  { from: "a", to: "a" },
+  { from: "b", to: "c" },
+  { from: "a", to: "b" },
+  { from: "b", to: "e" },
+  { from: "a", to: "d" },
+]) as GanttDependency[];
+
+describe("Gantt dependencies (s24)", () => {
+  let px = 40;
+  beforeEach(() => {
+    px = 40;
+    return stubPointer(() => px);
+  });
+
+  const depGantt = (props: Partial<GanttProps> = {}, locale = "en-US") =>
+    renderGantt(
+      { tasks: DEP_TASKS, dependencies: DEPS, zoom: "day", ...props },
+      locale,
+    );
+  const overlay = () => document.querySelector<HTMLElement>(".c__gantt__links");
+  const linkEl = (from: string, to: string) =>
+    document.querySelector<HTMLElement>(
+      `.c__gantt__link[data-from="${from}"][data-to="${to}"]`,
+    );
+  const segmentsOf = (from: string, to: string) =>
+    Array.from(
+      linkEl(from, to)?.querySelectorAll<HTMLElement>(
+        ".c__gantt__link-segment",
+      ) ?? [],
+    );
+  // A segment's two corners as written in its custom properties.
+  const corners = (segment: HTMLElement) =>
+    [1, 2].map((n) => ({
+      day: Number(cssVar(segment, `--gantt-x${n}`)),
+      gutters: Number(cssVar(segment, `--gantt-g${n}`)),
+      leads: Number(cssVar(segment, `--gantt-l${n}`)),
+      row: Number(cssVar(segment, `--gantt-y${n}`)),
+      centre: cssVar(segment, `--gantt-c${n}`) === "1",
+    }));
+  const scroller = () =>
+    document.querySelector<HTMLElement>(".c__gantt__scroller")!;
+  const list = () => screen.queryByRole("list", { name: "Dependencies" });
+  const description = (name: string) =>
+    taskRow(name)
+      .getAttribute("aria-describedby")
+      ?.split(" ")
+      .map((id) => document.getElementById(id)?.textContent)
+      .join(" ");
+  const barOf = (name: string) => bar(taskRow(name))!;
+  const drag = (name: string, dx: number) => {
+    const el = barOf(name);
+    fireEvent.pointerDown(el, { clientX: 100, button: 0, pointerId: 1 });
+    fireEvent.pointerMove(el, { clientX: 100 + dx, pointerId: 1 });
+    return el;
+  };
+  const drop = (el: HTMLElement, dx: number) =>
+    fireEvent.pointerUp(el, { clientX: 100 + dx, pointerId: 1 });
+
+  it("without dependencies the DOM is s23's: no overlay, no list, no description, no scroll listener", () => {
+    const add = vi.spyOn(HTMLElement.prototype, "addEventListener");
+    try {
+      for (const dependencies of [undefined, []]) {
+        const { unmount } = renderGantt({
+          tasks: DEP_TASKS,
+          zoom: "day",
+          dependencies,
+        });
+        expect(overlay()).toBeNull();
+        expect(screen.queryByRole("list")).toBeNull();
+        for (const row of screen.getAllByRole("row").slice(1)) {
+          expect(row).not.toHaveAttribute("aria-describedby");
+        }
+        const grid = screen.getByRole("grid");
+        expect(grid.querySelectorAll(":scope > .c__gantt__row")).toHaveLength(
+          5,
+        );
+        expect(
+          add.mock.contexts.some(
+            (el, i) => el === scroller() && add.mock.calls[i][0] === "scroll",
+          ),
+        ).toBe(false);
+        unmount();
+      }
+    } finally {
+      add.mockRestore();
+    }
+  });
+
+  it("draws valid links from the end of one bar to the start of the other, in an inert overlay (AC1)", () => {
+    depGantt();
+    const layer = overlay()!;
+    expect(layer).toHaveAttribute("aria-hidden", "true");
+    expect(layer).not.toHaveAttribute("role");
+    expect(layer).not.toHaveClass("c__gantt__row");
+    expect(
+      layer.querySelectorAll("[tabindex], button, a, input, [role]"),
+    ).toHaveLength(0);
+    // The roving tab stop still sees the task rows only.
+    const grid = screen.getByRole("grid");
+    expect(grid.querySelectorAll(":scope > .c__gantt__row")).toHaveLength(5);
+    expect(screen.getAllByRole("row")).toHaveLength(6);
+
+    const scale = buildScale({
+      tasks: DEP_TASKS,
+      zoom: "day",
+      locale: "en-US",
+      today: parseDate("2026-03-23"),
+    });
+    const place = (id: string) => ({
+      row: DEP_TASKS.findIndex((task) => task.id === id),
+      ...scale.positionOf(DEP_TASKS.find((task) => task.id === id)!)!,
+    });
+    const drawn = [
+      ["a", "b"],
+      ["a", "c"],
+      ["b", "c"],
+      ["b", "e"],
+    ];
+    expect(layer.querySelectorAll(".c__gantt__link")).toHaveLength(
+      drawn.length,
+    );
+    for (const [from, to] of drawn) {
+      const route = routeOf(place(from), place(to), scale);
+      expect(segmentsOf(from, to).map(corners)).toEqual(route);
+      // From the predecessor's end to the successor's start.
+      const first = route[0][0];
+      const last = route[route.length - 1][1];
+      expect(first.day).toBe(place(from).start + place(from).span);
+      expect([last.day, last.leads, last.gutters]).toEqual([
+        place(to).start,
+        0,
+        0,
+      ]);
+    }
+    // Unknown, self, duplicate and dateless links draw nothing.
+    expect(linkEl("a", "zz")).toBeNull();
+    expect(linkEl("a", "a")).toBeNull();
+    expect(linkEl("a", "d")).toBeNull();
+  });
+
+  it("keeps each link's DOM across re-renders with equal data", () => {
+    const { rerender } = depGantt();
+    const before = segmentsOf("b", "e");
+    expect(before.length).toBeGreaterThan(0);
+    rerender(
+      <CunninghamProvider currentLocale="en-US">
+        <Gantt
+          aria-label="Project schedule"
+          tasks={[...DEP_TASKS]}
+          dependencies={DEPS.map((link) => ({ ...link }))}
+          zoom="day"
+          today="2026-03-23"
+        />
+      </CunninghamProvider>,
+    );
+    const after = segmentsOf("b", "e");
+    expect(after).toHaveLength(before.length);
+    after.forEach((segment, i) => expect(segment).toBe(before[i]));
+  });
+
+  it("a link to a task outside the window is listed, not drawn", () => {
+    renderGantt({
+      zoom: "month",
+      tasks: [
+        { id: "x", name: "Archive", start: "2000-01-03", end: "2000-01-07" },
+        { id: "y", name: "Brief", start: "2026-03-02", end: "2026-03-06" },
+        { id: "z", name: "Build", start: "2026-03-16", end: "2026-03-27" },
+      ],
+      dependencies: [
+        { from: "x", to: "y" },
+        { from: "y", to: "z" },
+      ],
+    });
+    expect(bar(taskRow("Archive"))).toBeNull();
+    expect(document.querySelectorAll(".c__gantt__link")).toHaveLength(1);
+    expect(linkEl("y", "z")).not.toBeNull();
+    expect(within(list()!).getAllByRole("listitem")).toHaveLength(2);
+  });
+
+  it("flags a conflict from the data with a shape and a marker, none the day after (AC4)", () => {
+    depGantt();
+    expect(linkEl("b", "c")).toHaveAttribute("data-conflict");
+    expect(
+      linkEl("b", "c")!.querySelector(".c__gantt__link-flag"),
+    ).toHaveTextContent("!");
+    for (const [from, to] of [
+      ["a", "b"],
+      ["a", "c"],
+      ["b", "e"],
+    ]) {
+      expect(linkEl(from, to)).not.toHaveAttribute("data-conflict");
+      expect(
+        linkEl(from, to)!.querySelector(".c__gantt__link-flag"),
+      ).toBeNull();
+    }
+  });
+
+  it("shows a conflict live while a predecessor moves, follows the preview, and Escape clears it (AC4)", () => {
+    const onTaskChange = vi.fn();
+    depGantt({ editable: true, onTaskChange });
+    const status = () => screen.getByRole("status");
+    const firstX = () => cssVar(segmentsOf("a", "b")[0], "--gantt-x1");
+    const unrelated = segmentsOf("b", "e");
+    expect(firstX()).toBe("6");
+    // Brief moved 3 days: it ends on Review's first day.
+    drag("Brief", 3 * 40);
+    expect(linkEl("a", "c")).toHaveAttribute("data-conflict");
+    expect(firstX()).toBe("9");
+    expect(status()).toHaveTextContent(
+      "Conflict: Review starts before Brief ends",
+    );
+    // Same conflicts one more day on: not announced again.
+    fireEvent.pointerMove(barOf("Brief"), { clientX: 100 + 4 * 40 });
+    expect(firstX()).toBe("10");
+    expect(status()).toHaveTextContent("Brief:");
+    expect(status()).not.toHaveTextContent("Conflict");
+    // The row keeps its name.
+    expect(taskRow("Review")).toHaveAttribute(
+      "aria-label",
+      "Review, from March 9, 2026 to March 10, 2026",
+    );
+    segmentsOf("b", "e").forEach((segment, i) =>
+      expect(segment).toBe(unrelated[i]),
+    );
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(linkEl("a", "c")).not.toHaveAttribute("data-conflict");
+    expect(firstX()).toBe("6");
+    expect(onTaskChange).not.toHaveBeenCalled();
+  });
+
+  it("never announces a conflict already in the data, only one a session creates, once", () => {
+    const { rerender } = depGantt({ editable: true, onTaskChange: vi.fn() });
+    const status = () => screen.getByRole("status");
+    // Build > Review is in conflict from the start: shown, not spoken.
+    expect(linkEl("b", "c")).toHaveAttribute("data-conflict");
+    expect(status()).toHaveTextContent("");
+    rerender(
+      <CunninghamProvider currentLocale="en-US">
+        <Gantt
+          aria-label="Project schedule"
+          tasks={[...DEP_TASKS]}
+          dependencies={[...DEPS]}
+          zoom="day"
+          today="2026-03-23"
+          editable
+          onTaskChange={vi.fn()}
+        />
+      </CunninghamProvider>,
+    );
+    expect(status()).not.toHaveTextContent("Conflict");
+    drag("Brief", 3 * 40);
+    expect(status().textContent).toBe(
+      "Brief: March 5, 2026 to March 9, 2026 Conflict: Review starts before Brief ends",
+    );
+  });
+
+  it("moving a successor earlier shows the conflict too", () => {
+    depGantt({ editable: true, onTaskChange: vi.fn() });
+    expect(linkEl("a", "c")).not.toHaveAttribute("data-conflict");
+    drag("Review", -3 * 40);
+    expect(linkEl("a", "c")).toHaveAttribute("data-conflict");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Conflict: Review starts before Brief ends",
+    );
+  });
+
+  it("a committed move keeps the conflict once the parent applies it; onTaskChange is s23's", () => {
+    const onTaskChange = vi.fn();
+    const Parent = () => {
+      const [tasks, setTasks] = useState(DEP_TASKS);
+      return (
+        <CunninghamProvider>
+          <Gantt
+            aria-label="Plan"
+            tasks={tasks}
+            dependencies={DEPS}
+            zoom="day"
+            today="2026-03-23"
+            editable
+            onTaskChange={(id, change) => {
+              onTaskChange(id, change);
+              setTasks((all) =>
+                all.map((task) =>
+                  task.id === id ? { ...task, ...change } : task,
+                ),
+              );
+            }}
+          />
+        </CunninghamProvider>
+      );
+    };
+    render(<Parent />);
+    drop(drag("Brief", 3 * 40), 3 * 40);
+    expect(onTaskChange).toHaveBeenCalledTimes(1);
+    expect(onTaskChange).toHaveBeenCalledWith("a", {
+      start: "2026-03-05",
+      end: "2026-03-09",
+    });
+    expect(linkEl("a", "c")).toHaveAttribute("data-conflict");
+    expect(cssVar(segmentsOf("a", "b")[0], "--gantt-x1")).toBe("9");
+  });
+
+  it("describes each row's dependencies, read-only too, and lists every valid link outside the grid (AC5)", () => {
+    depGantt();
+    expect(description("Brief")).toBe("Required by: Build, Review, Plan.");
+    expect(description("Build")).toBe(
+      "Starts after: Brief. Required by: Review, Release. Conflict with: Review.",
+    );
+    expect(description("Review")).toBe(
+      "Starts after: Brief, Build. Conflict with: Build.",
+    );
+    expect(description("Plan")).toBe("Starts after: Brief.");
+    expect(taskRow("Build")).toHaveAttribute(
+      "aria-label",
+      "Build, from March 16, 2026 to March 27, 2026",
+    );
+    const dependencies = list()!;
+    expect(dependencies.closest('[role="grid"]')).toBeNull();
+    expect(
+      within(dependencies)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual([
+      "Brief must finish before Build starts",
+      "Brief must finish before Review starts",
+      "Build must finish before Review starts. Conflict: Review starts on March 9, 2026, Build ends on March 27, 2026",
+      "Build must finish before Release starts",
+      "Brief must finish before Plan starts",
+    ]);
+  });
+
+  it("speaks French with the provider locale", () => {
+    depGantt({}, "fr-FR");
+    expect(description("Review")).toBe(
+      "Commence après : Brief et Build. Conflit avec : Build.",
+    );
+    expect(
+      screen.getByRole("list", { name: "Dépendances" }).firstElementChild,
+    ).toHaveTextContent("Brief doit se terminer avant le début de Build");
+  });
+
+  it("appends the description to the editing instructions; more than five names end with +N", () => {
+    const hub = {
+      id: "h",
+      name: "Hub",
+      start: "2026-04-20",
+      end: "2026-04-24",
+    };
+    const preds = Array.from({ length: 7 }, (_, i) => ({
+      id: `p${i}`,
+      name: `P${i + 1}`,
+      start: "2026-03-02",
+      end: "2026-03-06",
+    }));
+    renderGantt({
+      tasks: [...preds, hub],
+      zoom: "day",
+      editable: true,
+      dependencies: preds.map((p) => ({ from: p.id, to: "h" })),
+    });
+    const ids = taskRow("Hub").getAttribute("aria-describedby")!.split(" ");
+    expect(ids).toHaveLength(2);
+    expect(document.getElementById(ids[0])).toHaveTextContent(
+      "Alt plus Left or Right arrow",
+    );
+    expect(document.getElementById(ids[1])).toHaveTextContent(
+      "Starts after: P1, P2, P3, P4, P5, +2.",
+    );
+  });
+
+  it("draws and lists at most MAX_LINKS links", () => {
+    const tasks = Array.from({ length: 40 }, (_, i) => ({
+      id: `t${i}`,
+      name: `T${i}`,
+      start: "2026-03-02",
+      end: "2026-03-06",
+    }));
+    const dependencies: GanttDependency[] = [];
+    for (const from of tasks)
+      for (const to of tasks)
+        if (from !== to && dependencies.length < 1500)
+          dependencies.push({ from: from.id, to: to.id });
+    renderGantt({ tasks, dependencies, zoom: "week" });
+    expect(document.querySelectorAll(".c__gantt__link")).toHaveLength(
+      MAX_LINKS,
+    );
+    expect(within(list()!).getAllByRole("listitem")).toHaveLength(MAX_LINKS);
+  });
+
+  it("right to left: no overlay, the list stays", () => {
+    render(
+      <CunninghamProvider>
+        <div dir="rtl">
+          <Gantt
+            aria-label="Plan"
+            tasks={DEP_TASKS}
+            dependencies={DEPS}
+            today="2026-03-23"
+          />
+        </div>
+      </CunninghamProvider>,
+    );
+    expect(overlay()).toBeNull();
+    expect(within(list()!).getAllByRole("listitem")).toHaveLength(5);
+  });
+
+  it("clips the overlay to the scroll offset on the next frame, one listener removed on unmount", () => {
+    const frames = new Map<number, FrameRequestCallback>();
+    let next = 0;
+    const raf = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((cb) => (frames.set(++next, cb), next));
+    const caf = vi
+      .spyOn(window, "cancelAnimationFrame")
+      .mockImplementation((id) => void frames.delete(id));
+    const add = vi.spyOn(HTMLElement.prototype, "addEventListener");
+    const remove = vi.spyOn(HTMLElement.prototype, "removeEventListener");
+    try {
+      const { unmount } = depGantt();
+      const box = scroller();
+      const added = add.mock.calls.filter(
+        (call, i) => add.mock.contexts[i] === box && call[0] === "scroll",
+      );
+      expect(added).toHaveLength(1);
+      box.scrollLeft = 300;
+      fireEvent.scroll(box);
+      fireEvent.scroll(box);
+      expect(frames.size).toBe(1);
+      const [frame] = frames.values();
+      frames.clear();
+      frame(0);
+      expect(cssVar(overlay(), "--gantt-scroll")).toBe("300px");
+      // A pending frame is cancelled with the listener.
+      fireEvent.scroll(box);
+      expect(frames.size).toBe(1);
+      unmount();
+      expect(frames.size).toBe(0);
+      expect(
+        remove.mock.calls.some(
+          (call, i) =>
+            remove.mock.contexts[i] === box &&
+            call[0] === "scroll" &&
+            call[1] === added[0][1],
+        ),
+      ).toBe(true);
+    } finally {
+      raf.mockRestore();
+      caf.mockRestore();
+      add.mockRestore();
+      remove.mockRestore();
+    }
+  });
+});
+
 describe("Gantt tokens", () => {
   it("emits every token of tokens.ts in the generated :root block", () => {
     const css = read("../../cunningham-tokens.css");
@@ -1693,6 +2172,53 @@ describe("Gantt stylesheet", () => {
       /outline-color:\s*Highlight;/,
     );
   });
+
+  it("links: inert overlay above the rows, under the axis, clipped by the scroll offset", () => {
+    const source = scss();
+    const layer = blocks(source, /&__links\b/);
+    expect(layer).toMatch(/z-index:\s*1;/);
+    // Clipped on the left by the scroll offset, open on the right by one
+    // gutter and a line (a U route out of the axis' last day).
+    expect(layer).toMatch(
+      /clip-path:\s*inset\(\s*0\s+calc\(\s*-1 \*\s*\(\s*var\(--c--components--gantt--link-gutter\)\s*\+\s*var\(--c--components--gantt--link-width\)\s*\)\s*\)\s+0\s+var\(--gantt-scroll\)\s*\);/,
+    );
+    expect(layer).toMatch(/pointer-events:\s*none;/);
+    expect(blocks(source, /&__axis\b/)).toMatch(/z-index:\s*2;/);
+    // Row pitch from the tokens (border-width is px, row-height rem).
+    expect(layer).toMatch(
+      /var\(--c--components--gantt--row-height\)\s*\+\s*var\(--c--components--gantt--border-width\)/,
+    );
+    const link = blocks(source, /&__link\b/);
+    expect(link).toMatch(/var\(--c--components--gantt--link-color\)/);
+    expect(blocks(source, /&__link\[data-conflict\]/)).toMatch(
+      /var\(--c--components--gantt--link-conflict-color\)[\s\S]*dashed|dashed[\s\S]*var\(--c--components--gantt--link-conflict-color\)/,
+    );
+    expect(blocks(source, /&__link-segment::before/)).toMatch(
+      /background-color:\s*var\(--c--components--gantt--link-casing-color\);/,
+    );
+    const flag = blocks(source, /&__link-flag\b/);
+    expect(flag).toMatch(
+      /background-color:\s*var\(--c--components--gantt--link-flag-background-color\);/,
+    );
+    expect(flag).toMatch(
+      /color:\s*var\(--c--components--gantt--link-flag-color\);/,
+    );
+    const forced = blocks(source, /@media \(forced-colors: active\)/);
+    expect(forced).toMatch(/&__links[^{]*\{\s*forced-color-adjust:\s*none;/);
+    expect(blocks(forced, /&__link\b/)).toMatch(/CanvasText/);
+    expect(blocks(forced, /&__link-segment::before/)).toMatch(
+      /background-color:\s*Canvas;/,
+    );
+    expect(blocks(forced, /&__link-flag\b/)).toMatch(
+      /background-color:\s*Canvas;/,
+    );
+    expect(
+      blocks(
+        blocks(source, /@media \(prefers-reduced-motion: reduce\)/),
+        /&__link-segment\b/,
+      ),
+    ).toMatch(/transition:\s*none;/);
+  });
 });
 
 // Contrast, technique of `button/focus-ring.spec.tsx` (helpers copied: known
@@ -1795,6 +2321,18 @@ describe("Gantt contrast", () => {
         ["handle-grip-color", "bar-background-color", 3],
         ["invalid-color", "background-color", 3],
         ["invalid-color", "row-background-color--hover", 3],
+        // Links (s24): lines on the row and its hover, the casing against
+        // the bar fill, the line on its casing, the "!" on its chip.
+        ["link-color", "background-color", 3],
+        ["link-color", "row-background-color--hover", 3],
+        ["link-selected-color", "background-color", 3],
+        ["link-selected-color", "row-background-color--hover", 3],
+        ["link-conflict-color", "background-color", 3],
+        ["link-conflict-color", "row-background-color--hover", 3],
+        ["link-casing-color", "bar-background-color", 3],
+        ["link-color", "link-casing-color", 3],
+        ["link-conflict-color", "link-casing-color", 3],
+        ["link-flag-color", "link-flag-background-color", 4.5],
       ];
       for (const [foreground, background, min] of pairs) {
         expect(

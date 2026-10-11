@@ -334,7 +334,16 @@
       "announce_cancelled": "{name}: cambio cancelado, fechas restablecidas",
       "limit_axis": "Límite del gráfico alcanzado",
       "limit_end_before_start": "El final no puede ser anterior al inicio",
-      "edit_instructions": "Alt con flecha izquierda o derecha mueve la tarea un paso del zoom. Mayús con flecha izquierda o derecha cambia su fecha de fin. Intro confirma, Escape cancela."
+      "edit_instructions": "Alt con flecha izquierda o derecha mueve la tarea un paso del zoom. Mayús con flecha izquierda o derecha cambia su fecha de fin. Intro confirma, Escape cancela.",
+      "dependencies_list_label": "Dependencias",
+      "dependency_item": "{from} debe terminar antes de que empiece {to}",
+      "dependency_item_conflict": "{from} debe terminar antes de que empiece {to}. Conflicto: {to} empieza el {start}, {from} termina el {end}",
+      "row_starts_after": "Empieza después de: {names}",
+      "row_required_by": "Requerida por: {names}",
+      "row_conflict": "Conflicto con: {names}",
+      "names_more": "{names}, +{count}",
+      "link_conflict_tip": "Conflicto: {to} empieza antes de que termine {from}",
+      "announce_conflict": "Conflicto: {to} empieza antes de que termine {from}"
     }
   }
 }

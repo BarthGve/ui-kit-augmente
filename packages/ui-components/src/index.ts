@@ -346,6 +346,7 @@ export {
 } from "./components/gantt";
 
 export type {
+  GanttDependency,
   GanttProps,
   GanttTask,
   GanttTaskChange,

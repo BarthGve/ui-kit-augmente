@@ -401,6 +401,211 @@
     pointer-events: none;
   }
 
+  // Dependencies (s24). Above the rows (each row is its own stacking context,
+  // and its opaque hover would hide a layer below) and under the sticky
+  // axis; clipped by the scroll offset (Gantt.tsx) so that it never paints
+  // over the sticky task column. Geometry in days and rows like the bars:
+  // --gantt-x/g/l (days, gutters, leads) and --gantt-y/c (rows, centre) for
+  // the two corners of each segment.
+  &__links {
+    --gantt-pitch: calc(
+      var(--c--components--gantt--row-height) +
+        var(--c--components--gantt--border-width)
+    );
+    --gantt-scroll: 0;
+
+    position: absolute;
+    // Under the axis: two half-height tiers and two borders.
+    inset-block-start: calc(
+      var(--c--components--gantt--row-height) + 2 *
+        var(--c--components--gantt--border-width)
+    );
+    inset-inline-start: var(--gantt-task-width);
+    z-index: 1;
+    inline-size: calc(var(--gantt-days) * var(--gantt-day-width));
+    block-size: calc(var(--gantt-rows) * var(--gantt-pitch));
+    // Open on the right by one gutter and a line: a U route leaving the
+    // axis' last day goes out that far (the scroll box grows to show it).
+    clip-path: inset(
+      0
+        calc(
+          -1 *
+            (
+              var(--c--components--gantt--link-gutter) +
+                var(--c--components--gantt--link-width)
+            )
+        )
+        0 var(--gantt-scroll)
+    );
+    pointer-events: none;
+  }
+
+  &__link {
+    --gantt-link-color: var(--c--components--gantt--link-color);
+    --gantt-link-style: solid;
+    --gantt-link-width: var(--c--components--gantt--link-width);
+  }
+
+  // A shape and a marker, not only a colour.
+  &__link[data-conflict] {
+    --gantt-link-color: var(--c--components--gantt--link-conflict-color);
+    --gantt-link-style: dashed;
+  }
+
+  &__link-segment {
+    --gantt-ax: calc(
+      var(--gantt-x1) * var(--gantt-day-width) + var(--gantt-g1) *
+        var(--c--components--gantt--link-gutter) + var(--gantt-l1) *
+        var(--c--components--gantt--link-lead)
+    );
+    --gantt-bx: calc(
+      var(--gantt-x2) * var(--gantt-day-width) + var(--gantt-g2) *
+        var(--c--components--gantt--link-gutter) + var(--gantt-l2) *
+        var(--c--components--gantt--link-lead)
+    );
+    --gantt-ay: calc(
+      var(--gantt-y1) * var(--gantt-pitch) + var(--gantt-c1) *
+        var(--c--components--gantt--row-height) / 2
+    );
+    --gantt-by: calc(
+      var(--gantt-y2) * var(--gantt-pitch) + var(--gantt-c2) *
+        var(--c--components--gantt--row-height) / 2
+    );
+
+    // The line's width centred on the corners, overlapping at the joints.
+    position: absolute;
+    inset-inline-start: calc(
+      min(var(--gantt-ax), var(--gantt-bx)) - var(--gantt-link-width) / 2
+    );
+    inset-block-start: calc(
+      min(var(--gantt-ay), var(--gantt-by)) - var(--gantt-link-width) / 2
+    );
+    box-sizing: border-box;
+    inline-size: calc(
+      max(var(--gantt-ax), var(--gantt-bx)) - min(
+          var(--gantt-ax),
+          var(--gantt-bx)
+        ) +
+        var(--gantt-link-width)
+    );
+    block-size: calc(
+      max(var(--gantt-ay), var(--gantt-by)) - min(
+          var(--gantt-ay),
+          var(--gantt-by)
+        ) +
+        var(--gantt-link-width)
+    );
+    // Tweens with the bars on a zoom change.
+    transition:
+      inset-inline-start var(--c--globals--transitions--duration)
+        var(--c--globals--transitions--ease-out),
+      inline-size var(--c--globals--transitions--duration)
+        var(--c--globals--transitions--ease-out);
+
+    &[data-axis="x"] {
+      border-block-start: var(--gantt-link-width) var(--gantt-link-style)
+        var(--gantt-link-color);
+    }
+
+    &[data-axis="y"] {
+      border-inline-start: var(--gantt-link-width) var(--gantt-link-style)
+        var(--gantt-link-color);
+    }
+
+    // The last one stops at the successor's start, under the arrowhead.
+    &[data-end] {
+      inline-size: calc(
+        max(var(--gantt-ax), var(--gantt-bx)) - min(
+            var(--gantt-ax),
+            var(--gantt-bx)
+          ) +
+          var(--gantt-link-width) / 2
+      );
+    }
+  }
+
+  // Casing: a halo in the page colour, so the line shows across a bar (no
+  // content colour does). Behind every line of the overlay (z-index -1 in
+  // its stacking context), so it never cuts a joint.
+  &__link-segment::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: calc(-1 * var(--c--components--gantt--border-width));
+    background-color: var(--c--components--gantt--link-casing-color);
+  }
+
+  // The border is outside the padding box the casing is placed in.
+  &__link-segment[data-axis="x"]::before {
+    inset-block-start: calc(
+      -1 * (var(--gantt-link-width) + var(--c--components--gantt--border-width))
+    );
+  }
+
+  &__link-segment[data-axis="y"]::before {
+    inset-inline-start: calc(
+      -1 * (var(--gantt-link-width) + var(--c--components--gantt--border-width))
+    );
+  }
+
+  // Arrowhead: a border triangle (kept in forced colors), its tip on the
+  // successor's start.
+  &__link-segment[data-end]::after {
+    content: "";
+    position: absolute;
+    inset-block-start: calc(
+      (var(--gantt-link-width) + var(--c--components--gantt--link-arrow-size)) /
+        -2
+    );
+    inset-inline-end: 0;
+    border-block: calc(var(--c--components--gantt--link-arrow-size) / 2) solid
+      transparent;
+    border-inline-start: var(--c--components--gantt--link-arrow-size) solid
+      var(--gantt-link-color);
+  }
+
+  // "!" chip before the arrow, on the successor's row (no flag-size token:
+  // the bar height).
+  &__link-flag {
+    position: absolute;
+    inset-inline-start: calc(
+      var(--gantt-x) *
+        var(--gantt-day-width) - var(--c--components--gantt--link-lead) - var(
+          --c--components--gantt--bar-height
+        ) - var(--gantt-link-width)
+    );
+    inset-block-start: calc(
+      var(--gantt-y) * var(--gantt-pitch) +
+        (
+          var(--c--components--gantt--row-height) - var(
+              --c--components--gantt--bar-height
+            )
+        ) /
+        2
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--c--components--gantt--bar-height);
+    block-size: var(--c--components--gantt--bar-height);
+    border-radius: 50%;
+    background-color: var(--c--components--gantt--link-flag-background-color);
+    color: var(--c--components--gantt--link-flag-color);
+    font-size: var(--c--globals--font--sizes--xs);
+    font-weight: var(--c--globals--font--weights--bold);
+    line-height: 1;
+    transition: inset-inline-start var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+  }
+
+  // Links follow a dragged bar unit by unit, and jump back with it.
+  &[data-editing] &__link-segment,
+  &[data-editing] &__link-flag,
+  &__links[data-settling] &__link-segment,
+  &__links[data-settling] &__link-flag {
+    transition: none;
+  }
+
   &__empty {
     margin: 0;
     padding: var(--c--components--gantt--padding);
@@ -452,12 +657,33 @@
       background-color: Canvas;
       color: CanvasText;
     }
+
+    &__links {
+      forced-color-adjust: none;
+    }
+
+    &__link,
+    &__link[data-conflict] {
+      --gantt-link-color: CanvasText;
+    }
+
+    &__link-segment::before {
+      background-color: Canvas;
+    }
+
+    &__link-flag {
+      border: var(--c--components--gantt--border-width) solid CanvasText;
+      background-color: Canvas;
+      color: CanvasText;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     &__task,
     &__track,
-    &__bar {
+    &__bar,
+    &__link-segment,
+    &__link-flag {
       transition: none;
     }
   }

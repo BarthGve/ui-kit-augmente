@@ -130,3 +130,18 @@ export const EditableByMonth: Story = {
   ...Editable,
   args: { editable: true, defaultZoom: "month" },
 };
+
+// Read-only links: Build starts before the brief ends (a conflict), Plan
+// has no dates (listed for assistive technology, not drawn).
+export const WithDependencies: Story = {
+  args: {
+    defaultZoom: "day",
+    dependencies: [
+      { from: "brief", to: "build" },
+      { from: "brief", to: "review" },
+      { from: "build", to: "release" },
+      { from: "review", to: "release" },
+      { from: "plan", to: "release" },
+    ],
+  },
+};
