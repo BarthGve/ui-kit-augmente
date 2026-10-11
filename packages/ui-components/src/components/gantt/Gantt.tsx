@@ -129,8 +129,14 @@ const KEYS: Record<string, (from: number, last: number) => number> = {
 const noop = () => {};
 // Keyboard editing (s23): Alt moves, Shift changes the end, one zoom unit.
 const CHORDS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
-const SHORTCUTS =
-  "Alt+ArrowLeft Alt+ArrowRight Shift+ArrowLeft Shift+ArrowRight Enter Escape";
+const EDIT_SHORTCUTS =
+  "Alt+ArrowLeft Alt+ArrowRight Shift+ArrowLeft Shift+ArrowRight";
+// Linking (s24): Alt+Shift+Right, this task first; Left, this task after.
+const LINK_CHORDS: Record<string, boolean> = {
+  ArrowRight: true,
+  ArrowLeft: false,
+};
+const LINK_SHORTCUTS = "Alt+Shift+ArrowLeft Alt+Shift+ArrowRight";
 
 /** The limit an edit ran into: its key under `components.gantt`. */
 type Limit = "limit_axis" | "limit_end_before_start";
@@ -187,6 +193,8 @@ type RowProps = {
   editable: boolean;
   /** Id of the editing instructions, described by every editable row. */
   instructions: string;
+  /** Id of the linking instructions, described by every linkable row. */
+  linkInstructions: string;
   /** Id of the row's dependency description, when it has links. */
   description?: string;
   preview?: Preview;
@@ -211,6 +219,7 @@ const GanttRow = memo(function GanttRow({
   locale,
   editable,
   instructions,
+  linkInstructions,
   description,
   preview,
   linkable,
@@ -237,6 +246,12 @@ const GanttRow = memo(function GanttRow({
       : t("components.gantt.row_dates_aria", { name: task.name, ...dates });
   const previewDates = preview && formatDates({ ...task, ...preview }, locale);
   const editableRow = editable && editableSpan(task, scale) !== null;
+  // Linking needs a bar, clipped or not (as `hasBar`).
+  const linkRow = linkable && original !== null;
+  const shortcuts = [
+    editableRow && EDIT_SHORTCUTS,
+    linkRow && LINK_SHORTCUTS,
+  ].filter(Boolean);
   // Edge handles: a bar narrower than one target has none (moving only).
   const handles =
     editableRow && position && position.span * scale.dayWidth >= HANDLE_MIN;
@@ -250,10 +265,13 @@ const GanttRow = memo(function GanttRow({
       role="row"
       aria-rowindex={index + 2}
       aria-label={label}
-      aria-keyshortcuts={editableRow ? SHORTCUTS : undefined}
+      aria-keyshortcuts={
+        shortcuts.length ? [...shortcuts, "Enter Escape"].join(" ") : undefined
+      }
       aria-describedby={
-        [editableRow && instructions, description].filter(Boolean).join(" ") ||
-        undefined
+        [editableRow && instructions, linkRow && linkInstructions, description]
+          .filter(Boolean)
+          .join(" ") || undefined
       }
       // A single tab stop, so Tab leaves the chart (roving).
       tabIndex={tabIndex}
@@ -623,6 +641,16 @@ type LinkSession = {
   unlisten: () => void;
 };
 
+/** From the keyboard (s24): the focused row and a candidate row. */
+type KeyLink = {
+  source: string;
+  sourceRow: HTMLElement;
+  // Alt+Shift+Right: the source is the predecessor.
+  predecessor: boolean;
+  candidate: string;
+  unlisten: () => void;
+};
+
 /** From the pointer. */
 type Drag = Session & {
   pointerId: number;
@@ -786,7 +814,11 @@ export const Gantt = ({
     }
     const rows = taskRows();
     const from = rows.indexOf(event.target as HTMLElement);
-    if (from >= 0 && onEditKey(event, rows[from], from)) return;
+    if (
+      from >= 0 &&
+      (onLinkKey(event, rows[from], from) || onEditKey(event, rows[from], from))
+    )
+      return;
     const move = KEYS[event.key];
     // Modified keys are left to the browser and to s23 (move/resize).
     if (
@@ -819,10 +851,11 @@ export const Gantt = ({
   const canEdit = editable && !rtl;
   const canLink = canEdit && !!onDependencyChange;
   const instructions = useId();
+  const linkInstructions = useId();
 
   // Edit (s23), pointer or keyboard: `session` drives it, `preview` only
   // draws it. One session at a time.
-  const session = useRef<Drag | KeyEdit | LinkSession | null>(null);
+  const session = useRef<Drag | KeyEdit | LinkSession | KeyLink | null>(null);
   const dragOf = () => {
     const current = session.current;
     return current && "edges" in current ? current : null;
@@ -835,15 +868,21 @@ export const Gantt = ({
     const current = session.current;
     return current && "row" in current ? current : null;
   };
+  const keyLinkOf = () => {
+    const current = session.current;
+    return current && "candidate" in current ? current : null;
+  };
   const [preview, setPreview] = useState<
     (Preview & { id: string; mode: GanttEditMode }) | null
   >(null);
   const [announcement, setAnnouncement] = useState("");
   useEffect(() => () => session.current?.unlisten(), []);
 
-  // Link editing (s24): what a link session shows (its source, a valid
-  // target, a row's sentence); a refusal's sentence outlives the session.
+  // Link editing (s24): what a link session shows (its source, the
+  // prospective link, a row's sentence); a refusal's sentence outlives the
+  // pointer session.
   const [linkView, setLinkView] = useState<{
+    source?: string;
     from?: string;
     to?: string;
     tip?: { id: string; text: string; refused: boolean };
@@ -1019,7 +1058,7 @@ export const Gantt = ({
   // original dates in between.
   const close = (commit?: () => void) => {
     const current = session.current;
-    if (!current || "connector" in current) return null;
+    if (!current || !("bar" in current)) return null;
     session.current = null;
     current.unlisten();
     // The bar jumps to its final place: the zoom tween stays off until the
@@ -1038,7 +1077,7 @@ export const Gantt = ({
   };
 
   const cancel = () => {
-    if (linkOf()) return cancelLink();
+    if (linkOf() || keyLinkOf()) return cancelLink();
     const current = close();
     if (!current) return;
     if (
@@ -1372,18 +1411,19 @@ export const Gantt = ({
     current.refusal = refusal;
     if (!target || !source) {
       setLinkView({
-        from: current.from,
+        source: current.from,
         tip: { id: current.from, text: text("link_tip_drop"), refused: false },
       });
     } else if (refusal) {
       const sentence = refusalText(refusal, source, target);
       setLinkView({
-        from: current.from,
+        source: current.from,
         tip: { id: target.id, text: sentence, refused: true },
       });
       setAnnouncement(sentence);
     } else {
       setLinkView({
+        source: current.from,
         from: current.from,
         to: target.id,
         tip: {
@@ -1424,13 +1464,13 @@ export const Gantt = ({
     };
     session.current = current;
     setLinkView({
-      from: task.id,
+      source: task.id,
       tip: { id: task.id, text: text("link_tip_drop"), refused: false },
     });
   };
 
   const closeLink = () => {
-    const current = linkOf();
+    const current = linkOf() ?? keyLinkOf();
     if (!current) return null;
     session.current = null;
     current.unlisten();
@@ -1440,7 +1480,10 @@ export const Gantt = ({
   const cancelLink = () => {
     const current = closeLink();
     if (!current) return;
-    if (current.connector.hasPointerCapture(current.pointerId)) {
+    if (
+      "connector" in current &&
+      current.connector.hasPointerCapture(current.pointerId)
+    ) {
       current.connector.releasePointerCapture(current.pointerId);
     }
     setLinkView(null);
@@ -1471,7 +1514,7 @@ export const Gantt = ({
     );
   };
 
-  const lingering = !!linkView?.tip && !linkView.from;
+  const lingering = !!linkView?.tip && !linkView.source;
   useEffect(() => {
     if (!lingering) return;
     const clear = () => setLinkView(null);
@@ -1528,6 +1571,159 @@ export const Gantt = ({
     );
   };
 
+  // The keyboard link session (s24): the pair it would add or remove.
+  const pairOf = ({ source, predecessor, candidate }: KeyLink): LinkPair =>
+    predecessor
+      ? { from: source, to: candidate }
+      : { from: candidate, to: source };
+
+  // Draws, says and shows the candidate, on every key of the session: an
+  // unchanged sentence leaves the live region silent.
+  const showCandidate = (current: KeyLink) => {
+    // Into view as the row navigation does (the scroll padding keeps it
+    // clear of the sticky column and axis); a row without a bar by its name.
+    const row = taskRows()[tasks.findIndex((t) => t.id === current.candidate)];
+    (
+      row?.querySelector(".c__gantt__bar") ??
+      row?.querySelector(".c__gantt__task")
+    )?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const pair = pairOf(current);
+    const from = taskOf(pair.from)!;
+    const to = taskOf(pair.to)!;
+    const vars = { from: from.name, to: to.name };
+    const refusal = checkLink(links, pair.from, pair.to, hasBar);
+    const tip = (sentence: string, refused = false) => ({
+      id: current.candidate,
+      text: sentence,
+      refused,
+    });
+    if (refusal === "exists") {
+      const sentence = text("announce_link_exists", vars);
+      setLinkView({ source: current.source, tip: tip(sentence) });
+      setAnnouncement(sentence);
+    } else if (refusal) {
+      const sentence = refusalText(refusal, from, to);
+      setLinkView({ source: current.source, tip: tip(sentence, true) });
+      // Two refused candidates in a row must not sound the same.
+      setAnnouncement(`${text("link_tip_target", vars)}. ${sentence}`);
+    } else {
+      setLinkView({
+        source: current.source,
+        ...pair,
+        tip: tip(text("link_tip_target", vars)),
+      });
+      setAnnouncement(text("announce_link_target", vars));
+    }
+  };
+
+  // The first candidate: the nearest dated row on the chord's side (below
+  // for Right, above for Left), then on the other side, else the nearest
+  // other row (refused: no dates). Bounded by the task count.
+  const firstCandidate = (source: number, down: boolean) => {
+    const side = (step: number) =>
+      tasks.flatMap((_, i) => {
+        const at = source + step * (i + 1);
+        return at >= 0 && at < tasks.length ? [at] : [];
+      });
+    const order = [...side(down ? 1 : -1), ...side(down ? -1 : 1)];
+    return order.find((i) => scale.positionOf(tasks[i]) !== null) ?? order[0];
+  };
+
+  // `next` (a navigation key's row), past the source and within the rows.
+  const pickCandidate = (at: number, source: number, next: number) => {
+    if (next === source) {
+      const dir = Math.sign(next - at);
+      next =
+        next + dir >= 0 && next + dir < tasks.length
+          ? next + dir
+          : source - dir;
+    }
+    return next >= 0 && next < tasks.length ? next : at;
+  };
+
+  // Enter: the one report of the session; a refused candidate keeps it open.
+  const applyKeyLink = (current: KeyLink) => {
+    const pair = pairOf(current);
+    const from = taskOf(pair.from);
+    const to = taskOf(pair.to);
+    if (!from || !to) return cancelLink();
+    const refusal = checkLink(links, pair.from, pair.to, hasBar);
+    if (refusal && refusal !== "exists") return showCandidate(current);
+    closeLink();
+    setLinkView(null);
+    onDependencyChange?.({
+      kind: refusal ? "remove" : "add",
+      dependency: { from: from.id, to: to.id },
+    });
+    setAnnouncement(
+      text(refusal ? "announce_link_removed" : "announce_link_added", {
+        from: from.name,
+        to: to.name,
+      }),
+    );
+  };
+
+  // In front of the s23 keys: Alt+Shift+Left/Right start a session on a
+  // row with a bar; during it, the navigation keys move the candidate and
+  // never leave the row, Enter applies. True when consumed (only then is
+  // the key kept from the browser).
+  const onLinkKey = (
+    event: KeyboardEvent<HTMLDivElement>,
+    row: HTMLElement,
+    index: number,
+  ) => {
+    const modified =
+      event.altKey || event.shiftKey || event.ctrlKey || event.metaKey;
+    const current = keyLinkOf();
+    if (current) {
+      if (modified) return false;
+      if (event.key === "Enter") {
+        event.preventDefault();
+        applyKeyLink(current);
+        return true;
+      }
+      const move = KEYS[event.key];
+      if (!move) return false;
+      event.preventDefault();
+      const at = tasks.findIndex((task) => task.id === current.candidate);
+      const source = tasks.findIndex((task) => task.id === current.source);
+      if (at < 0 || source < 0) {
+        cancelLink();
+        return true;
+      }
+      const next = pickCandidate(at, source, move(at, tasks.length - 1));
+      // A clamped key says the same sentence: the live region stays silent.
+      current.candidate = tasks[next].id;
+      showCandidate(current);
+      return true;
+    }
+    const predecessor = LINK_CHORDS[event.key];
+    if (
+      !canLink ||
+      predecessor === undefined ||
+      !event.altKey ||
+      !event.shiftKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      session.current ||
+      scale.positionOf(tasks[index]) === null
+    )
+      return false;
+    const at = firstCandidate(index, predecessor);
+    if (at === undefined) return false;
+    event.preventDefault();
+    const started: KeyLink = {
+      source: tasks[index].id,
+      sourceRow: row,
+      predecessor,
+      candidate: tasks[at].id,
+      unlisten: listen(),
+    };
+    session.current = started;
+    showCandidate(started);
+    return true;
+  };
+
   const onClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
     if (target.closest(".c__gantt__remove")) return removeSelected();
@@ -1561,7 +1757,7 @@ export const Gantt = ({
       data-zoom={zoom}
       data-editable={canEdit || undefined}
       data-linkable={canLink || undefined}
-      data-editing={preview?.mode ?? (linkView?.from ? "link" : undefined)}
+      data-editing={preview?.mode ?? (linkView?.source ? "link" : undefined)}
     >
       <div
         role="group"
@@ -1594,7 +1790,8 @@ export const Gantt = ({
           onBlur={(event) => {
             if (event.relatedTarget) focusedId.current = undefined;
             // Focus leaving the edited row cancels its keyboard session.
-            if (event.target === keyEditOf()?.row) cancel();
+            const row = keyEditOf()?.row ?? keyLinkOf()?.sourceRow;
+            if (event.target === row) cancel();
           }}
           onKeyDown={onKeyDown}
           onClick={onClick}
@@ -1661,6 +1858,7 @@ export const Gantt = ({
               locale={locale}
               editable={canEdit}
               instructions={instructions}
+              linkInstructions={linkInstructions}
               description={
                 linkTexts?.rows.has(task.id)
                   ? `${descriptionId}-${i}`
@@ -1668,7 +1866,7 @@ export const Gantt = ({
               }
               preview={preview?.id === task.id ? preview : undefined}
               linkable={canLink}
-              linkSource={linkView?.from === task.id || undefined}
+              linkSource={linkView?.source === task.id || undefined}
               linkTip={
                 linkView?.tip?.id === task.id ? linkView.tip.text : undefined
               }
@@ -1745,6 +1943,11 @@ export const Gantt = ({
           <VisuallyHidden id={instructions}>
             {t("components.gantt.edit_instructions")}
           </VisuallyHidden>
+          {canLink && (
+            <VisuallyHidden id={linkInstructions}>
+              {t("components.gantt.link_instructions")}
+            </VisuallyHidden>
+          )}
         </>
       )}
     </div>

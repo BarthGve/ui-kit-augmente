@@ -1393,6 +1393,135 @@ test.describe("Gantt link editing", () => {
     await page.mouse.up();
   });
 
+  // The keyboard path (t04): Alt+Shift+Right on a focused row, the arrows
+  // pick the other task, Enter links or unlinks, Escape cancels.
+  test.describe("keyboard", () => {
+    test("Alt+Shift+Right, ArrowDown, Enter links; the row keeps the focus, no history move", async ({
+      mount,
+      page,
+    }) => {
+      const { calls, onDependencyChange } = recorder();
+      const component = await mount(
+        <TestGantt editable onDependencyChange={onDependencyChange} />,
+      );
+      const url = page.url();
+      // Row 4 holds t2; t3 is the first candidate, ArrowDown picks t4.
+      await row(page, 4).focus();
+      await page.keyboard.press("Alt+Shift+ArrowRight");
+      await expect(
+        page.locator('.c__gantt__link[data-state="creating"]'),
+      ).toHaveAttribute("data-to", "t3");
+      await page.keyboard.press("ArrowDown");
+      await expect(page.getByRole("status")).toHaveText(
+        "Link Task 3 to Task 5: Task 5 would start after Task 3 ends. Enter to link.",
+      );
+      expect(calls).toEqual([]);
+      await page.keyboard.press("Enter");
+      await expect.poll(() => calls.length).toBe(1);
+      expect(calls[0]).toEqual({
+        kind: "add",
+        dependency: { from: "t2", to: "t4" },
+      });
+      await expect(row(page, 4)).toBeFocused();
+      expect(page.url()).toBe(url);
+      await component.update(
+        <TestGantt
+          editable
+          onDependencyChange={onDependencyChange}
+          dependencies={[{ from: "t2", to: "t4" }]}
+        />,
+      );
+      await expect(link(page, "t2", "t4")).toHaveCount(1);
+      await expect(link(page, "t2", "t4")).not.toHaveAttribute("data-state");
+      await expect(row(page, 4)).toBeFocused();
+    });
+
+    test("the candidate is brought into view, clear of the sticky column and the axis", async ({
+      mount,
+      page,
+    }) => {
+      await mount(<TestGantt editable onDependencyChange={() => {}} />);
+      await row(page, 2).focus();
+      await page.keyboard.press("Alt+Shift+ArrowRight");
+      // t29, the last task: far right and below the 300px box.
+      await page.keyboard.press("End");
+      await expect(
+        page.locator('.c__gantt__link[data-state="creating"]'),
+      ).toHaveAttribute("data-to", "t29");
+      const column = await box(taskCells(page).first());
+      const axis = await box(page.locator(".c__gantt__axis"));
+      const view = await box(scroller(page));
+      await expect
+        .poll(async () => {
+          const b = await box(bar(page, "t29"));
+          return (
+            b.x >= column.x + column.width - 1 &&
+            b.x + b.width <= view.x + view.width + 1 &&
+            b.y >= axis.y + axis.height - 1 &&
+            b.y + b.height <= view.y + view.height + 1
+          );
+        })
+        .toBe(true);
+      await expect(row(page, 2)).toBeFocused();
+    });
+
+    test("the same chord on an existing pair removes it", async ({
+      mount,
+      page,
+    }) => {
+      const { calls, onDependencyChange } = recorder();
+      await mount(
+        <TestGantt
+          editable
+          onDependencyChange={onDependencyChange}
+          dependencies={[{ from: "t2", to: "t3" }]}
+        />,
+      );
+      await row(page, 4).focus();
+      await page.keyboard.press("Alt+Shift+ArrowRight");
+      await expect(page.getByRole("status")).toHaveText(
+        "Task 4 already starts after Task 3. Enter to remove the link.",
+      );
+      await page.keyboard.press("Enter");
+      await expect.poll(() => calls.length).toBe(1);
+      expect(calls[0]).toEqual({
+        kind: "remove",
+        dependency: { from: "t2", to: "t3" },
+      });
+      await expect(row(page, 4)).toBeFocused();
+    });
+
+    test("Escape returns to the row without a call", async ({
+      mount,
+      page,
+    }) => {
+      const { calls, onDependencyChange } = recorder();
+      await mount(
+        <TestGantt editable onDependencyChange={onDependencyChange} />,
+      );
+      const url = page.url();
+      await row(page, 4).focus();
+      await page.keyboard.press("Alt+Shift+ArrowLeft");
+      await expect(page.getByTestId("gantt")).toHaveAttribute(
+        "data-editing",
+        "link",
+      );
+      await page.keyboard.press("Escape");
+      await expect(page.getByTestId("gantt")).not.toHaveAttribute(
+        "data-editing",
+      );
+      await expect(
+        page.locator('.c__gantt__link[data-state="creating"]'),
+      ).toHaveCount(0);
+      await expect(page.getByRole("status")).toHaveText("Link cancelled");
+      await expect(row(page, 4)).toBeFocused();
+      await page.keyboard.press("Enter");
+      await page.waitForTimeout(100);
+      expect(calls).toEqual([]);
+      expect(page.url()).toBe(url);
+    });
+  });
+
   test.describe("touch", () => {
     test.use({ hasTouch: true });
 

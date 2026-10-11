@@ -354,7 +354,10 @@
       "link_refused_limit": "Niet gekoppeld: een grafiek bevat hoogstens {count} koppelingen",
       "announce_link_added": "{to} begint nu na {from}",
       "announce_link_removed": "Koppeling verwijderd: {to} hangt niet meer af van {from}",
-      "announce_link_cancelled": "Koppeling geannuleerd"
+      "announce_link_cancelled": "Koppeling geannuleerd",
+      "link_instructions": "Alt plus Shift plus pijl rechts laat een andere taak na deze beginnen; Alt plus Shift plus pijl links laat deze taak na een andere beginnen. Pijl omhoog en omlaag kiezen de taak, Enter koppelt of ontkoppelt, Escape annuleert.",
+      "announce_link_target": "{from} aan {to} koppelen: {to} zou beginnen nadat {from} eindigt. Enter om te koppelen.",
+      "announce_link_exists": "{to} begint al na {from}. Enter om de koppeling te verwijderen."
     }
   }
 }
