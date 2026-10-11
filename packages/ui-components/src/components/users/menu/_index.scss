@@ -1,5 +1,5 @@
 .user-menu__trigger {
-  padding-inline: 4px;
+  padding-inline: var(--c--globals--spacings--3xs);
 }
 
 .user-menu__button {
@@ -12,28 +12,41 @@
 }
 
 .user-menu__popover {
-  width: 272px;
-  min-width: min(272px, calc(100vw - 32px));
+  width: var(--c--components--user-menu--width);
+  min-width: min(var(--c--components--user-menu--width), calc(100vw - 32px));
   max-width: calc(100vw - 32px);
   box-sizing: border-box;
-  // The 1px border is included in the 8px inset from the outer edge.
-  padding-block: 7px;
-  border: 1px solid var(--c--contextuals--border--surface--primary);
-  border-radius: 8px;
+  // The border is included in the 8px inset from the outer edge.
+  padding-block: calc(
+    var(--c--globals--spacings--xs) - var(
+        --c--components--user-menu--border-width
+      )
+  );
+  border: var(--c--components--user-menu--border-width) solid
+    var(--c--contextuals--border--surface--primary);
+  border-radius: var(--c--components--user-menu--border-radius);
   overflow: hidden;
   background: var(--c--contextuals--background--surface--primary);
-  box-shadow: 0 6px 20px 0 rgba(0, 0, 18, 0.1);
+  box-shadow: var(--c--components--user-menu--box-shadow);
 
   .react-aria-Dialog {
     width: 100%;
     outline: none;
   }
 
+  // Drawn inside the control: the popover clips with `overflow: hidden`.
   & button:focus-visible,
   a:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 1px
-      var(--c--contextuals--border--semantic--neutral--primary);
+    outline: var(--c--components--user-menu--focus-ring-width) solid
+      var(--c--components--user-menu--focus-ring-color);
+    outline-offset: calc(
+      -1 * var(--c--components--user-menu--focus-ring-width)
+    );
+    box-shadow: none;
+
+    @media (forced-colors: active) {
+      outline-color: Highlight;
+    }
   }
 
   &--mobile {
@@ -68,8 +81,8 @@
 
 .user-menu__close-button {
   position: absolute !important;
-  top: 8px;
-  right: 8px;
+  top: var(--c--globals--spacings--xs);
+  right: var(--c--globals--spacings--xs);
 }
 
 .user-menu__content__body {
@@ -84,7 +97,7 @@
   &__user-info {
     display: flex;
     align-items: center;
-    padding: 12px var(--c--globals--spacings--base);
+    padding: var(--c--globals--spacings--sm) var(--c--globals--spacings--base);
     gap: var(--c--globals--spacings--xs);
 
     & > .c__avatar {
@@ -97,7 +110,7 @@
     display: flex;
     flex-direction: column;
     padding: 0 var(--c--globals--spacings--xs);
-    gap: 1px;
+    gap: var(--c--components--user-menu--item-gap);
   }
 }
 
@@ -174,20 +187,21 @@
   align-items: center;
   justify-content: flex-end;
   padding: var(--c--globals--spacings--base);
-  border-top: 1px solid var(--c--contextuals--border--surface--primary);
+  border-top: var(--c--components--user-menu--border-width) solid
+    var(--c--contextuals--border--surface--primary);
   margin-top: auto;
 }
 
 .user-menu__item {
   display: flex;
   align-items: center;
-  gap: var(--c--globals--spacings--xxs, 6px);
+  gap: var(--c--globals--spacings--xxs);
   width: 100%;
   height: 32px;
   box-sizing: border-box;
   padding: var(--c--globals--spacings--xs);
   border: 0;
-  border-radius: var(--c--globals--spacings--3xs, 4px);
+  border-radius: var(--c--components--user-menu--item-border-radius);
   background: transparent;
   font-family: inherit;
   text-align: left;
@@ -231,7 +245,7 @@
   }
 
   .user-menu__content__body__user-info {
-    padding: 12px var(--c--globals--spacings--base);
+    padding: var(--c--globals--spacings--sm) var(--c--globals--spacings--base);
   }
 
   .user-menu__content__body__settings {

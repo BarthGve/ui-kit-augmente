@@ -1,9 +1,13 @@
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LanguagePicker } from ":/components/language";
 import { CunninghamProvider } from ":/components/provider/Provider";
 import { UserMenu, UserMenuProps } from ".";
+import { tokens } from "./tokens";
 
 const USER = { full_name: "John Doe", email: "john.doe@example.com" };
 const TERMS = "https://example.com/terms";
@@ -328,6 +332,229 @@ describe("UserMenu keyboard (AC3)", () => {
       expect(screen.queryByRole("dialog")).toBeNull();
       expect(focused()).toBe(trigger());
       expect(trigger()).toHaveAttribute("aria-expanded", "false");
+    });
+  });
+});
+
+// Vitest stubs stylesheets, so the sources are read from disk. The shipped
+// `cunningham-tokens.css` resolves each theme against its own globals (the
+// generated TS does not), as in `button/focus-ring.spec.tsx`.
+const read = (path: string) => readFileSync(resolve(__dirname, path), "utf8");
+const tokensCss = read("../../../cunningham-tokens.css");
+
+const THEMES = [
+  "default",
+  "dark",
+  "dsfr-light",
+  "dsfr-dark",
+  "anct-light",
+  "anct-dark",
+] as const;
+
+const declarations = (theme: (typeof THEMES)[number]) => {
+  const selector =
+    theme === "default" ? ":root " : `.cunningham-theme--${theme}`;
+  // Theme blocks hold flat declarations only: the first `}` closes the block.
+  const body = tokensCss.split(`${selector}{`)[1]?.split("}")[0];
+  if (!body) throw new Error(`No ${selector} block in cunningham-tokens.css`);
+  return Object.fromEntries(
+    [...body.matchAll(/(--c--[\w-]+):\s*([^;]+);/g)].map(([, k, v]) => [
+      k,
+      v.trim(),
+    ]),
+  );
+};
+const rootVars = declarations("default");
+
+// The theme's own value first, `:root` otherwise, following `var()` chains.
+const resolveVar = (theme: Record<string, string>, name: string): string => {
+  const value = theme[name] ?? rootVars[name];
+  if (value === undefined) throw new Error(`Undefined ${name}`);
+  const ref = value.match(/^var\((--[\w-]+)\)$/);
+  return ref ? resolveVar(theme, ref[1]) : value;
+};
+
+describe("UserMenu tokens (AC1)", () => {
+  it.each(THEMES)(
+    "emits every key of tokens.ts in the %s theme block",
+    (theme) => {
+      const vars = declarations(theme);
+      const missing = Object.keys(tokens(defaultTokenRefs)).filter(
+        (key) => !(`--c--components--user-menu--${key}` in vars),
+      );
+      expect(missing).toEqual([]);
+    },
+  );
+});
+
+// Comments stripped (they may quote a literal), whitespace collapsed so that a
+// value wrapped by the formatter reads as one line.
+const stylesheet = () =>
+  read("_index.scss")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "")
+    .replace(/\s+/g, " ")
+    .replace(/\( /g, "(")
+    .replace(/ \)/g, ")");
+
+// Body (nested blocks included) of the first block whose header matches.
+const block = (scss: string, header: RegExp) => {
+  const match = new RegExp(`${header.source}\\s*\\{`).exec(scss);
+  if (!match) throw new Error(`No block ${header}`);
+  const start = match.index + match[0].length;
+  let depth = 1;
+  let end = start;
+  while (depth > 0 && end < scss.length) {
+    if (scss[end] === "{") depth++;
+    if (scss[end] === "}") depth--;
+    end++;
+  }
+  return scss.slice(start, end - 1);
+};
+
+const token = (name: string) => `var\\(--c--components--user-menu--${name}\\)`;
+
+// Spacing, borders, shadows and rings come from tokens; only these sizes keep
+// a literal (box sizes, line heights, svg sizes, the avatar's flex-basis).
+const SIZE_PROPERTIES = [
+  "width",
+  "height",
+  "min-width",
+  "max-width",
+  "min-height",
+  "max-height",
+  "line-height",
+  "flex",
+];
+const TOKENISED = /^(padding|margin|gap|border|box-shadow|outline)/;
+
+describe("UserMenu stylesheet (AC1)", () => {
+  it("holds no literal colour and no var() fallback", () => {
+    const scss = stylesheet();
+    expect(scss).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+    expect(scss).not.toMatch(/\b(rgba?|hsla?)\(/);
+    expect(scss).not.toMatch(/var\(\s*--[\w-]+\s*,/);
+  });
+
+  it("keeps px and rem literals to the listed size properties", () => {
+    const offenders = [...stylesheet().matchAll(/([a-z-]+)\s*:\s*([^;{}]+);/g)]
+      .filter(
+        ([, property, value]) =>
+          /\d(px|rem)\b/.test(value) &&
+          (TOKENISED.test(property) || !SIZE_PROPERTIES.includes(property)),
+      )
+      .map(([, property, value]) => `${property}: ${value}`);
+    expect(offenders).toEqual([]);
+  });
+
+  it("draws the popover frame from the user-menu tokens", () => {
+    const popover = block(stylesheet(), /\.user-menu__popover/);
+    expect(popover).toMatch(new RegExp(`\\bwidth:\\s*${token("width")};`));
+    expect(popover).toMatch(
+      new RegExp(
+        `padding-block:\\s*calc\\(var\\(--c--globals--spacings--xs\\) - ${token("border-width")}\\);`,
+      ),
+    );
+    expect(popover).toMatch(
+      new RegExp(
+        `border:\\s*${token("border-width")} solid var\\(--c--contextuals--border--surface--primary\\);`,
+      ),
+    );
+    expect(popover).toMatch(
+      new RegExp(`border-radius:\\s*${token("border-radius")};`),
+    );
+    expect(popover).toMatch(
+      new RegExp(`box-shadow:\\s*${token("box-shadow")};`),
+    );
+  });
+
+  it("spaces and rounds the items from the user-menu tokens", () => {
+    const scss = stylesheet();
+    expect(block(scss, /&__settings/)).toMatch(
+      new RegExp(`gap:\\s*${token("item-gap")};`),
+    );
+    expect(block(scss, /\.user-menu__item/)).toMatch(
+      new RegExp(`border-radius:\\s*${token("item-border-radius")};`),
+    );
+  });
+
+  it("draws the focus ring inside the item from tokens, Highlight in forced colours", () => {
+    const ring = block(stylesheet(), /button:focus-visible,\s*a:focus-visible/);
+    expect(ring).toMatch(
+      new RegExp(
+        `outline:\\s*${token("focus-ring-width")} solid ${token("focus-ring-color")};`,
+      ),
+    );
+    expect(ring).toMatch(
+      new RegExp(
+        `outline-offset:\\s*calc\\(-1 \\* ${token("focus-ring-width")}\\);`,
+      ),
+    );
+    // The kit Button's own ring (Terms link, language picker) is replaced.
+    expect(ring).toMatch(/box-shadow:\s*none;/);
+    expect(block(ring, /@media \(forced-colors: active\)/)).toMatch(
+      /outline-color:\s*Highlight;/,
+    );
+  });
+});
+
+// sRGB channels in [0, 1] plus alpha, from "#RRGGBB" or "#RRGGBBAA".
+const channels = (hex: string) => {
+  expect(hex).toMatch(/^#([0-9a-f]{6}|[0-9a-f]{8})$/i);
+  return [1, 3, 5, 7].map(
+    (i) => parseInt(hex.slice(i, i + 2) || "ff", 16) / 255,
+  );
+};
+const opaque = (hex: string) => {
+  const rgba = channels(hex);
+  expect(rgba[3]).toBe(1);
+  return rgba.slice(0, 3);
+};
+// The hover overlay is translucent: composited on the surface beneath it.
+const over = (top: string, bottom: number[]) => {
+  const [r, g, b, a] = channels(top);
+  return [r, g, b].map((c, i) => c * a + bottom[i] * (1 - a));
+};
+const luminance = (rgb: number[]) => {
+  const [r, g, b] = rgb.map((c) =>
+    c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4,
+  );
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contrast = (a: number[], b: number[]) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+describe("UserMenu contrast, on the surface and on a hovered item", () => {
+  const PAIRS = [
+    [
+      "name and labels",
+      "--c--contextuals--content--semantic--neutral--primary",
+      4.5,
+    ],
+    ["e-mail", "--c--contextuals--content--semantic--neutral--secondary", 4.5],
+    ["icons", "--c--contextuals--content--semantic--neutral--tertiary", 3],
+    ["focus ring", "--c--components--user-menu--focus-ring-color", 3],
+  ] as const;
+
+  describe.each(THEMES)("theme %s", (theme) => {
+    const vars = declarations(theme);
+    const surface = opaque(
+      resolveVar(vars, "--c--contextuals--background--surface--primary"),
+    );
+    const hovered = over(
+      resolveVar(
+        vars,
+        "--c--contextuals--background--semantic--overlay--primary",
+      ),
+      surface,
+    );
+
+    it.each(PAIRS)("%s reach the minimum ratio", (_, name, minimum) => {
+      const colour = opaque(resolveVar(vars, name));
+      expect(contrast(colour, surface)).toBeGreaterThanOrEqual(minimum);
+      expect(contrast(colour, hovered)).toBeGreaterThanOrEqual(minimum);
     });
   });
 });
