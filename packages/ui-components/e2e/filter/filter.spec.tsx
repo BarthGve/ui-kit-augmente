@@ -1,5 +1,28 @@
 import { test, expect } from "@playwright/experimental-ct-react";
-import { TestFilter } from "../helpers/mount-filter";
+import { TestFilter, TestResetFilter } from "../helpers/mount-filter";
+
+test.describe("Filter — keyboard only (plain options)", () => {
+  test("opens, moves, selects and returns focus without a pointer", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<TestResetFilter />);
+    const trigger = page.getByRole("button", { name: /Type/ });
+    await trigger.focus();
+
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("listbox")).toBeVisible();
+    await expect(page.getByRole("option", { name: "All" })).toBeFocused();
+
+    await page.keyboard.press("ArrowDown");
+    await expect(page.getByRole("option", { name: "File" })).toBeFocused();
+
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("listbox")).not.toBeVisible();
+    await expect(trigger).toHaveAccessibleName("Type : File");
+    await expect(trigger).toBeFocused();
+  });
+});
 
 test.describe("Filter", () => {
   test.beforeEach(async ({ mount, page }) => {

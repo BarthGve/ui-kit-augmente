@@ -193,6 +193,28 @@ export const UncontrolledWithDefault: Story = {
 };
 
 /**
+ * The open state: `defaultOpen` renders the popover on mount. Nothing is
+ * selected, so there is no reset row and no checkmark yet.
+ */
+export const Open: Story = {
+  args: {
+    label: "Type",
+    defaultOpen: true,
+    options: OPTIONS,
+  },
+  // The open popover is modal (scroll lock, focus, aria-hidden siblings):
+  // isolated in its own iframe so it does not take over the docs page.
+  parameters: { docs: { story: { inline: false, height: "16rem" } } },
+  decorators: [
+    (Story) => (
+      <div style={{ minHeight: "14rem" }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
  * A value is pre-selected, so opening the dropdown reveals the built-in **Reset**
  * row above the options. Clicking it clears the selection (the trigger falls back
  * to just the `label`) without leaving the menu. The row is shown by default and
