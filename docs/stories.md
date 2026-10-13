@@ -1009,13 +1009,13 @@ ADR 005 owns the decisions. Do not rename in the source; do not publish `ui-toke
 2
 
 ### Acceptance criteria
-- [ ] The Storybook installation page shows the alias install command for Yarn and npm instead of the upstream one, with the version scheme `x.y.z-fork.N`.
+- [ ] The root `README.md`, `packages/ui-components/README.md` and the Storybook installation page no longer show the upstream install command as the way to get the fork: they explain, in this order, (1) what the fork package is (`@barthgve/ui-components`, versions `x.y.z-fork.N`, only `ui-components` is published, `ui-tokens` and `ui-codemod` stay upstream), (2) the install through the alias for Yarn and npm (`@gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version>`), flagged as available after the first publish, (3) until then the install from the archive (`yarn build`, `yarn fork:stage <version>`, then `file:` install), (4) the peer dependencies and the style/fonts imports already documented.
 - [ ] The page states that `ui-tokens` and `ui-codemod` remain the upstream packages and that the built code is public on npm.
 - [ ] The README package table points to the fork package and gains an install line with the alias command.
 - [ ] A throwaway app (outside the repository, not committed) installs the archive produced by the s56 dry-run with the alias and renders a component with its stylesheet; the result is written in the PR. The check validates the archive, not the registry; if the workflow artifact has expired (90 days), rerun the s56 script to regenerate it. After the first real publish and before merging, the command printed on the page is run as written in a throwaway app and the result is written in the PR.
 
 ### Dependencies
-s56-publish-fork. **Merge order:** the page must not go live before the first real publish (owner action after s56): until then the alias command returns a 404. The ticket is built and reviewed behind s56 and merged into `next` only once the package exists on npm; if the owner has not published, the agent stops and reports instead of merging.
+s56-publish-fork. **Merge order, changed by the owner on 2026-10-13:** the owner asked for the README to explain the installation now. Until the first real npm publish the docs describe the true state (package not yet on npm; install from the archive built by `yarn fork:stage`) and give the alias command as the target form once published; they never present a command that returns a 404 as working. A follow-up one-line edit removes the "not yet published" notice after the first publish.
 
 ### Agentic notes
 Docs only (`installation.mdx`, `README.md`); no code change, exempt from the shared component rules (no changeset, artifact page, locale). The other mdx pages (`customization.mdx`, `0_migrating_to_lasuite_ui.mdx`, `docs/MIGRATION.md`) print upstream import names or `npx @gouvfr-lasuite/ui-codemod` commands: they stay valid thanks to the alias and the unchanged codemod, so they are checked, not edited.
