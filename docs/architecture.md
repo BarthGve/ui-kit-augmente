@@ -42,7 +42,7 @@ Traps found while reading:
 - Legacy Cunningham components are exported through `src/cunningham.ts`; recent components are exported straight from `src/index.ts`.
 - `components/forms/radio/tokens.ts` returns an empty object (radio reuses checkbox tokens).
 - Two `FileUploader` locations exist (`components/form/file-uploader`, and the legacy one under `forms/`): check which is current before reusing.
-- `.changeset/config.json` has `baseBranch: "main"`, while this fork integrates on `next`: changeset status checks must be run against `next` explicitly.
+- `.changeset/config.json` has `baseBranch: "next"` (the fork's integration branch, corrected in s56); upstream's documentation assumes `main`.
 
 ## Data model
 None. The library holds no persistent data; components are controlled by props and callbacks. Components that fetch (waffle widget, file preview PDF worker) receive their URLs through props.

@@ -1,5 +1,11 @@
 # Manual package releases
 
+> This file describes the release of the **upstream** packages
+> (`@gouvfr-lasuite/*`). The fork publishes only `ui-components`, as
+> `@barthgve/ui-components`, from a `fork@<version>` tag on `main` through
+> `.github/workflows/publish-fork.yml`: see
+> [ADR 005](decisions/005-publish-the-fork-on-npm.md).
+
 The packages in this repository have independent versions and are published
 manually. There is no publication workflow in GitHub Actions. Changesets is
 used locally to calculate versions and update changelogs; npm is invoked for
