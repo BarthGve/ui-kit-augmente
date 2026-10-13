@@ -358,6 +358,13 @@
       "link_instructions": "Alt plus Maj plus flèche droite fait commencer une autre tâche après celle-ci ; Alt plus Maj plus flèche gauche fait commencer cette tâche après une autre. Les flèches haut et bas choisissent la tâche, Entrée lie ou délie, Échap annule.",
       "announce_link_target": "Lier {from} à {to} : {to} commencerait après la fin de {from}. Entrée pour lier.",
       "announce_link_exists": "{to} commence déjà après {from}. Entrée pour supprimer le lien."
+    },
+    "timeline": {
+      "state": {
+        "done": "Terminé",
+        "current": "En cours",
+        "upcoming": "À venir"
+      }
     }
   }
 }

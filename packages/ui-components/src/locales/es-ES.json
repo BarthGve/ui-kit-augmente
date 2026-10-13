@@ -358,6 +358,13 @@
       "link_instructions": "Alt más Mayús más flecha derecha hace que otra tarea empiece después de esta; Alt más Mayús más flecha izquierda hace que esta tarea empiece después de otra. Las flechas arriba y abajo eligen la tarea, Intro vincula o desvincula, Escape cancela.",
       "announce_link_target": "Vincular {from} con {to}: {to} empezaría después de que termine {from}. Intro para vincular.",
       "announce_link_exists": "{to} ya empieza después de {from}. Intro para quitar el vínculo."
+    },
+    "timeline": {
+      "state": {
+        "done": "Completado",
+        "current": "Actual",
+        "upcoming": "Próximo"
+      }
     }
   }
 }

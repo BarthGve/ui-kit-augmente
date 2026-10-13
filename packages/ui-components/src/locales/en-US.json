@@ -358,6 +358,13 @@
       "link_instructions": "Alt plus Shift plus Right arrow makes another task start after this one; Alt plus Shift plus Left arrow makes this task start after another. Up and Down arrows choose the task, Enter links or unlinks, Escape cancels.",
       "announce_link_target": "Link {from} to {to}: {to} would start after {from} ends. Enter to link.",
       "announce_link_exists": "{to} already starts after {from}. Enter to remove the link."
+    },
+    "timeline": {
+      "state": {
+        "done": "Done",
+        "current": "Current",
+        "upcoming": "Upcoming"
+      }
     }
   }
 }

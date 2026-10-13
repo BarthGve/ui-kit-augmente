@@ -358,6 +358,13 @@
       "link_instructions": "Alt plus Umschalt plus Pfeil nach rechts lässt eine andere Aufgabe nach dieser beginnen; Alt plus Umschalt plus Pfeil nach links lässt diese Aufgabe nach einer anderen beginnen. Pfeil nach oben und unten wählen die Aufgabe, Eingabe verknüpft oder löst, Escape bricht ab.",
       "announce_link_target": "{from} mit {to} verknüpfen: {to} würde nach dem Ende von {from} beginnen. Eingabe zum Verknüpfen.",
       "announce_link_exists": "{to} beginnt bereits nach {from}. Eingabe zum Entfernen der Verknüpfung."
+    },
+    "timeline": {
+      "state": {
+        "done": "Erledigt",
+        "current": "Aktuell",
+        "upcoming": "Bevorstehend"
+      }
     }
   }
 }
