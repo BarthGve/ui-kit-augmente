@@ -62,15 +62,21 @@ Tasks:
 5. [x] _(done: sass file restored from HEAD, the 12 blocks hand-added, its added lines equal the generated scss ones, 0 deletions)_  `yarn build-theme` rewrites generated files: `src/cunningham-tokens.*` are never hand-edited. If `cunningham-tokens-sass.scss` is rewritten, restore the tracked version and **hand-add only the new token blocks**, diff-verified (flag it in the PR).
 6. [x] _(done: lint 0 errors, check-locales, 1064 tests, build, CT chromium 34; PR artifact line left to the main agent)_  Changeset `patch` (internal tokens added, no behaviour change). PR line `Artifact: updated (version <id>)` (tokens listed on the two component pages, by the main agent). Lint, check-locales, `TZ=UTC yarn test --concurrency=1`, build, CT chromium.
 
-### t04-filters-contrast-and-a11y-polish — DEFERRED (owner decision)
+### t04-filters-contrast-and-a11y-polish
 - **size:** S
-- **estimate:** 1d (not counted in the US total)
+- **estimate:** 1d 
 - **depends on:** t03-filters-component-tokens
-- **scope:** changes visible or announced behaviour beyond the ACs: (a) trigger hover/focus label colour `neutral.tertiary` to `neutral.secondary` (4.16 to at least 4.99:1); (b) an explicit trigger focus ring (`content.brand.tertiary`, at least 3.62:1 on every trigger background, tested in six themes); (c) accessible name for the loading and empty rows (one locale key in five locales, `role=status`/`aria-busy`). **Not executed unless the owner approves** (research open question 4); the autonomous run skips it and reports it.
+- **scope:** changes visible or announced behaviour beyond the ACs: (a) trigger hover/focus label colour `neutral.tertiary` to `neutral.secondary` (4.16 to at least 4.99:1); (b) an explicit trigger focus ring (`content.brand.tertiary`, at least 3.62:1 on every trigger background, tested in six themes); (c) accessible name for the loading and empty rows (one locale key in five locales, `role=status`/`aria-busy`). **Approved by the owner on 2026-10-13** (delivery preparation), so it is executed, test-first, as the last ticket of the story.
+
+Tasks (test first; unlike t01 to t03 this ticket changes rendered colour, focus and announced text):
+1. [ ] Update the guards first and see them red: in `contrast.spec.tsx` assert the hover/focus pair (trigger label on `neutral.tertiary-hover`) at >= 4.5:1 in the six themes (red today in the three light themes); assert the trigger focus ring colour against each trigger background (rest, hover, active) at >= 3:1 in the six themes; in `Filter.spec.tsx` / `SearchFilter.spec.tsx` assert the loading and empty rows are `role="status"` with an accessible name from a locale key, `aria-busy` while loading, and that the DOM literals of t01 change only by these attributes and the focus-ring class. In `e2e` (chromium): the focused trigger has a visible `outline` of the ring width, the pointer-focused trigger has none.
+2. [ ] Implement in `tokens.ts` / `index.scss` of `filter` and `search-filter`: hover/focus label colour `contextuals.content.semantic.neutral.secondary` (new token `button-color--hover`), focus ring tokens (`focus-ring-color` `contextuals.content.semantic.brand.tertiary`, `focus-ring-width` `2px`, `focus-ring-offset` `2px`, literals as in Card) on `:focus-visible` only; `role="status"` and `aria-busy` on the loading/empty rows with a locale key `components.search-filter.status` style name in the five locales (`yarn check-locales`). `yarn build-theme`; restore `cunningham-tokens-sass.scss` and hand-add only the filter and search-filter hunks, diff-verified (flag in the PR). A pair that still fails in a theme is a STOP: report, do not change an existing token.
+3. [ ] Update the t01 exact-DOM literals and the t03 stylesheet guards for the intended differences only; Storybook check (port from `bash .dm/lib/dm-port.sh` run from `packages/ui-components`) of `Open`, `Active`, loading and empty in `default`, `dark`, `dsfr-light` with axe (the pre-existing `aria-dialog-name` of the SearchFilter popover is part of (c) if it can be fixed by naming the dialog with the locale key; otherwise report).
+4. [ ] Mutations (reverted, recorded): hover colour back to `neutral.tertiary`, drop the focus ring, drop `role="status"`, drop the locale key from one locale: each red. Changeset `patch` ("♿️(Filter) raise the hover contrast, add a focus ring and name the loading and empty rows"). `yarn lint`, `yarn check-locales`, `TZ=UTC yarn test --concurrency=1`, `yarn build`, CT chromium `e2e/filter` and `e2e/search-filter`. PR line `Artifact: updated (version <id>)`: tokens and states on the Filter and SearchFilter pages, by the main agent.
 
 ## US totals
-- **Person-days:** 4.0 (t04 DEFERRED, 1.0 excluded)
-- **Size mix:** 1×M, 1×S, 1×XS (+ 1×S deferred)
+- **Person-days:** 5.0 (t04 approved, 1.0 included)
+- **Size mix:** 1×M, 2×S, 1×XS
 - Split needed: no.
 - ADR needed: **no** for this plan. Deprecating `Filter` for Button-based filters (#259 point b) would need an ADR (ADR 005 stays free), in a separate story.
 
