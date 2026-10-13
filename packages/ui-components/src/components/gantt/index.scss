@@ -267,6 +267,8 @@
   // During a session the bar jumps unit by unit (no tween, or it would lag
   // behind the pointer) and dragging across names selects nothing.
   &[data-editing] {
+    // WebKit still needs the prefix; the build adds none.
+    -webkit-user-select: none;
     user-select: none;
   }
 

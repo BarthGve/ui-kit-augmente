@@ -296,6 +296,11 @@ describe("Gantt tab stop", () => {
     rows
       .slice(1)
       .forEach((row) => expect(row).toHaveAttribute("tabindex", "-1"));
+    // Firefox makes a scroll box a Tab stop of its own unless told not to.
+    expect(document.querySelector(".c__gantt__scroller")).toHaveAttribute(
+      "tabindex",
+      "-1",
+    );
     screen.getByRole("button", { name: "Before" }).focus();
     // Day, Week, Month, then the first row (DOM order = visual order).
     await user.tab();
