@@ -1,0 +1,46 @@
+.c__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--c--components--empty--gap);
+  padding: var(--c--components--empty--padding);
+  text-align: center;
+  overflow-wrap: anywhere;
+
+  &__media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--c--components--empty--media-size);
+    color: var(--c--components--empty--media-color);
+
+    // An `Icon` sets its own font size; the slot's size wins.
+    .material-icons {
+      font-size: inherit;
+    }
+
+    img,
+    svg {
+      block-size: var(--c--components--empty--media-size);
+      inline-size: auto;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-weight: var(--c--components--empty--title-font-weight);
+    color: var(--c--components--empty--title-color);
+  }
+
+  &__description {
+    max-inline-size: var(--c--components--empty--description-max-width);
+    color: var(--c--components--empty--description-color);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--c--components--empty--actions-gap);
+  }
+}

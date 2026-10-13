@@ -332,6 +332,14 @@ export type {
 } from "./components/card";
 
 export {
+  Empty,
+} from "./components/empty";
+
+export type {
+  EmptyProps,
+} from "./components/empty";
+
+export {
   Accordion,
   AccordionItem,
 } from "./components/accordion";

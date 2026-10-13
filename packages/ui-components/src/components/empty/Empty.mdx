@@ -1,0 +1,81 @@
+import { Meta, Canvas, ArgTypes } from "@storybook/blocks";
+import * as EmptyStories from "./empty.stories";
+
+<Meta of={EmptyStories} name="Docs" />
+
+# Empty
+
+`Empty` is an empty state: it tells the user why nothing is shown and what to
+do next. It is presentational: no state, no data logic.
+
+```tsx
+import { Button, Empty, Icon } from "@gouvfr-lasuite/ui-components";
+
+<Empty
+  media={<Icon name="folder_open" aria-hidden="true" />}
+  title="No projects yet"
+  description="Projects you create or are invited to will appear here."
+  actions={<Button>New project</Button>}
+/>;
+```
+
+<Canvas of={EmptyStories.Default} />
+
+## API
+
+| Prop               | Type                         | Default | Notes                                                    |
+| ------------------ | ---------------------------- | ------- | -------------------------------------------------------- |
+| `title`            | `ReactNode`                  | —       | Required, rendered as a heading.                         |
+| `headingLevel`     | `1 \| 2 \| 3 \| 4 \| 5 \| 6` | `3`     | Level of the title heading.                              |
+| `description`      | `ReactNode`                  | —       | One or two sentences.                                    |
+| `media`            | `ReactNode`                  | —       | Icon or image above the title.                           |
+| `actions`          | `ReactNode`                  | —       | Typically one or two `Button`s; they wrap when narrow.   |
+| `className`        | `string`                     | —       | Added to the root `div`, with every other div attribute. |
+
+An absent `media`, `description` or `actions` renders no element at all.
+
+<ArgTypes of={EmptyStories} />
+
+<Canvas of={EmptyStories.TitleOnly} />
+
+<Canvas of={EmptyStories.WithActions} />
+
+## Heading level
+
+The title is a real heading (`h1`–`h6`) so screen reader users find the empty
+state in the page outline. Pick the level that fits where it sits: under a
+page `h1` and a section `h2`, an empty list uses `3` (the default). Choose
+the level for the outline, never for its visual size.
+
+<Canvas of={EmptyStories.HeadingLevels} />
+
+## Accessibility
+
+- The root is a plain `div`, no landmark. Pass `aria-label` or
+  `aria-labelledby` to make it a named `role="group"`; without a name it has
+  no role.
+- **Media is yours.** The slot adds no `aria-hidden` and no `alt`: give a
+  decorative icon or illustration `aria-hidden="true"` (or `alt=""`), and an
+  informative image a real `alt`.
+- Title and description reach 4.5:1 against `surface.primary` in all six
+  themes, the media colour 3:1.
+
+## Not a DataGrid replacement
+
+`DataGrid` keeps its own empty placeholder (`emptyPlaceholderLabel`,
+`emptyCta`). Use `Empty` for lists, panels and pages you render yourself; it
+does not fetch, filter or know about rows.
+
+## Tokens
+
+| Token (`--c--components--empty--…`) | Default                                          |
+| ----------------------------------- | ------------------------------------------------ |
+| `title-color`                       | `contextuals.content.semantic.neutral.primary`   |
+| `title-font-weight`                 | `globals.font.weights.bold`                      |
+| `description-color`                 | `contextuals.content.semantic.neutral.secondary` |
+| `media-color`                       | `contextuals.content.semantic.neutral.tertiary`  |
+| `media-size`                        | `3rem`                                           |
+| `padding`                           | `globals.spacings.xl`                            |
+| `gap`                               | `globals.spacings.sm`                            |
+| `actions-gap`                       | `globals.spacings.xs`                            |
+| `description-max-width`             | `28rem`                                          |
