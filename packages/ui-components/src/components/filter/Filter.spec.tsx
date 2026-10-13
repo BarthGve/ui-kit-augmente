@@ -40,6 +40,21 @@ const option = (name: string) => screen.getByRole("option", { name });
 const resetRow = () => screen.queryByRole("button", { name: "Reset" });
 const focused = () => document.activeElement;
 
+// Errors thrown by an event handler are reported on `window`, not to the
+// test: collect them so a reset that throws (e.g. a missing callback) is red.
+const watchErrors = () => {
+  const errors: unknown[] = [];
+  const onError = (event: ErrorEvent) => {
+    event.preventDefault();
+    errors.push(event.error);
+  };
+  window.addEventListener("error", onError);
+  return () => {
+    window.removeEventListener("error", onError);
+    return errors;
+  };
+};
+
 const tabToTrigger = async () => {
   const user = userEvent.setup();
   screen.getByRole("button", { name: "Before" }).focus();
@@ -175,7 +190,12 @@ describe("Filter states (AC1)", () => {
   });
 
   it("open: expanded trigger, reset row, checkmark on the selected row only", () => {
-    renderFilter({ defaultSelectedKey: "file", defaultOpen: true });
+    // `onReset` is passed to prove it never reaches the DOM.
+    renderFilter({
+      defaultSelectedKey: "file",
+      defaultOpen: true,
+      onReset: () => {},
+    });
     expect(markup()).toBe(OPEN);
   });
 });
@@ -183,28 +203,40 @@ describe("Filter states (AC1)", () => {
 describe("Filter selection and reset (AC2)", () => {
   it("selecting an option marks the trigger active and reports the key", async () => {
     const onSelectionChange = vi.fn();
-    renderFilter({ onSelectionChange });
+    const onReset = vi.fn();
+    renderFilter({ onSelectionChange, onReset });
     const user = userEvent.setup();
     await user.click(trigger());
     await user.click(option("Folder"));
     expect(onSelectionChange).toHaveBeenCalledTimes(1);
     expect(onSelectionChange).toHaveBeenCalledWith("folder");
     expect(trigger()).toHaveAccessibleName("Type : Folder");
+    expect(onReset).not.toHaveBeenCalled();
   });
 
-  it("reset clears the value once, keeps the popover open, drops the active state", async () => {
-    const onSelectionChange = vi.fn();
-    renderFilter({ defaultSelectedKey: "file", onSelectionChange });
-    const user = userEvent.setup();
-    await user.click(trigger());
-    await user.click(resetRow()!);
-    expect(onSelectionChange).toHaveBeenCalledTimes(1);
-    expect(onSelectionChange).toHaveBeenCalledWith(null);
-    expect(screen.getByRole("listbox")).toBeInTheDocument();
-    expect(trigger()).toHaveAccessibleName("Type");
-    // The row only exists while a value is selected.
-    expect(resetRow()).toBeNull();
-  });
+  it.each([
+    ["with onReset", vi.fn()],
+    ["without onReset", undefined],
+  ])(
+    "%s: reset clears the value once, keeps the popover open, drops the active state",
+    async (_, onReset) => {
+      onReset?.mockClear();
+      const onSelectionChange = vi.fn();
+      renderFilter({ defaultSelectedKey: "file", onSelectionChange, onReset });
+      const user = userEvent.setup();
+      await user.click(trigger());
+      const errors = watchErrors();
+      await user.click(resetRow()!);
+      expect(errors()).toEqual([]);
+      expect(onSelectionChange).toHaveBeenCalledTimes(1);
+      expect(onSelectionChange).toHaveBeenCalledWith(null);
+      if (onReset) expect(onReset).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+      expect(trigger()).toHaveAccessibleName("Type");
+      // The row only exists while a value is selected.
+      expect(resetRow()).toBeNull();
+    },
+  );
 
   it.each([
     ["showReset={false}", { defaultSelectedKey: "file", showReset: false }],
@@ -258,7 +290,8 @@ describe("Filter keyboard (AC4)", () => {
     "Tab reaches the reset row from the list, %s activates it",
     async (key) => {
       const onSelectionChange = vi.fn();
-      renderFilter({ defaultSelectedKey: "file", onSelectionChange });
+      const onReset = vi.fn();
+      renderFilter({ defaultSelectedKey: "file", onSelectionChange, onReset });
       const user = await tabToTrigger();
       await user.keyboard("{Enter}");
       expect(focused()).toBe(option("File"));
@@ -267,6 +300,7 @@ describe("Filter keyboard (AC4)", () => {
       await user.keyboard(key);
       expect(onSelectionChange).toHaveBeenCalledTimes(1);
       expect(onSelectionChange).toHaveBeenCalledWith(null);
+      expect(onReset).toHaveBeenCalledTimes(1);
       expect(trigger()).toHaveAccessibleName("Type");
     },
   );
