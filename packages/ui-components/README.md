@@ -4,15 +4,70 @@ The unified React component library for La Suite numérique. It contains all
 components previously published by UI Kit and Cunningham, with a single
 enhanced `CunninghamProvider` that includes the UI Kit locales.
 
-## Install
+## Install the fork
+
+This package is distributed by the fork
+[BarthGve/ui-kit-augmente](https://github.com/BarthGve/ui-kit-augmente) on npm
+as `@barthgve/ui-components`, with versions `x.y.z-fork.N`: `x.y.z` is the
+upstream version it is based on, `N` the fork release (for example
+`1.4.0-fork.1`). Only `ui-components` is distributed by the fork:
+`@gouvfr-lasuite/ui-tokens` and `@gouvfr-lasuite/ui-codemod` remain the
+upstream packages. The repository is public and, once published, the built
+package is public on npm, with npm provenance (see
+[ADR 005](https://github.com/BarthGve/ui-kit-augmente/blob/next/docs/decisions/005-publish-the-fork-on-npm.md)).
+
+> **Not published yet.** The first npm publish of `@barthgve/ui-components` is
+> pending. Until then the alias install below fails (the package does not exist
+> on npm): install from the archive instead.
+
+### Alias install (available after the first publish)
+
+Install the fork under the upstream name, so the imports of your application
+stay `@gouvfr-lasuite/ui-components`. Replace `<version>` with a published fork
+version:
 
 ```bash
-yarn add @gouvfr-lasuite/ui-components @tanstack/react-query
+# Yarn
+yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version> @tanstack/react-query
+# npm
+npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version> @tanstack/react-query
 ```
+
+### Archive install (until the first publish)
+
+From the root of a checkout of
+[the repository](https://github.com/BarthGve/ui-kit-augmente) (dependencies
+installed), build the packages and pack `ui-components` under the fork name.
+The base of the version must be the current version of
+`packages/ui-components/package.json`; the last line printed is the archive
+path:
+
+```bash
+yarn build
+yarn fork:stage 1.4.0-fork.1 --out /path/to/fork-archive
+```
+
+Then, in the application, install the archive under the upstream name:
+
+```bash
+# Yarn
+yarn add "@gouvfr-lasuite/ui-components@file:/path/to/fork-archive/barthgve-ui-components-1.4.0-fork.1.tgz" @tanstack/react-query
+# npm
+npm install "@gouvfr-lasuite/ui-components@file:/path/to/fork-archive/barthgve-ui-components-1.4.0-fork.1.tgz" @tanstack/react-query
+```
+
+The application's `package.json` and lockfile then pin the archive path (Yarn
+writes it absolute, npm relative): keep the archive where the application can
+reach it, and switch to the alias install after the first publish.
+
+### Peers and styles
 
 React 19, React DOM 19 and TanStack React Query 5 are peer dependencies.
 `ui-tokens` is installed transitively. Add it explicitly as a development
-dependency only when generating an application-specific theme.
+dependency only when generating an application-specific theme. Both package
+managers warn that `use-resize-observer`, a dependency, declares React up to 18
+(npm: `ERESOLVE overriding peer dependency`; Yarn: `incorrect peer
+dependency`). The warning is not fatal and `--legacy-peer-deps` is not needed.
 
 ```tsx
 import "@gouvfr-lasuite/ui-components/style";
@@ -40,14 +95,14 @@ export function App() {
 
 ## Public subpaths
 
-| Subpath                | Content                                   |
-| ---------------------- | ----------------------------------------- |
-| `/style`               | Component styles and all generated themes |
-| `/icons`               | Named React SVG components                |
-| `/fonts/material-icons` | Material Icons font CSS                  |
-| `/fonts/roboto`        | Roboto Flex CSS                           |
-| `/fonts/marianne`      | Marianne CSS and bundled font files       |
-| `/sass/fonts/*`        | Sass entries for Roboto and Material Icons |
+| Subpath                 | Content                                    |
+| ----------------------- | ------------------------------------------ |
+| `/style`                | Component styles and all generated themes  |
+| `/icons`                | Named React SVG components                 |
+| `/fonts/material-icons` | Material Icons font CSS                    |
+| `/fonts/roboto`         | Roboto Flex CSS                            |
+| `/fonts/marianne`       | Marianne CSS and bundled font files        |
+| `/sass/fonts/*`         | Sass entries for Roboto and Material Icons |
 
 The package root deliberately does not export named SVG icons. Import them from
 `@gouvfr-lasuite/ui-components/icons` so icon bundles stay explicit.
