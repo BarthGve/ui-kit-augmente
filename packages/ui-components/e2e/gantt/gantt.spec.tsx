@@ -52,7 +52,8 @@ const colorsAt = async (
   locator: Locator,
   points: [number, number][],
 ) => {
-  const png = (await locator.screenshot()).toString("base64");
+  // CSS pixels: the points are CSS offsets, and Desktop Safari is a 2x device.
+  const png = (await locator.screenshot({ scale: "css" })).toString("base64");
   return page.evaluate(
     async ([data, at]) => {
       const img = new Image();
