@@ -68,14 +68,26 @@ test.describe("Timeline", () => {
     page,
   }) => {
     await mount(<TestTimeline orientation="horizontal" />);
-    const geometry = await page.getByRole("listitem").evaluateAll((els) =>
-      els.map((el) => ({
-        item: el.getBoundingClientRect(),
-        marker: el
-          .querySelector(".c__timeline__marker")!
-          .getBoundingClientRect(),
-        connector: getComputedStyle(el, "::after"),
-      })),
+    const items = page.getByRole("listitem");
+    // evaluateAll may run before the list is rendered (empty array on webkit).
+    await expect(items.first()).toBeVisible();
+    // Only chromium serializes a CSSStyleDeclaration's longhands: read the
+    // values inside the page and return plain strings.
+    const geometry = await items.evaluateAll((els) =>
+      els.map((el) => {
+        const after = getComputedStyle(el, "::after");
+        return {
+          item: el.getBoundingClientRect(),
+          marker: el
+            .querySelector(".c__timeline__marker")!
+            .getBoundingClientRect(),
+          connector: {
+            width: after.width,
+            height: after.height,
+            content: after.content,
+          },
+        };
+      }),
     );
     const [first, second] = geometry;
     expect(first.marker.width).toBe(24);
