@@ -106,6 +106,35 @@
     color: var(--c--components--timeline--color--muted);
   }
 
+  // One row that never wraps: the region around it scrolls. The marker sits
+  // on top of each item; the connector runs from it to the next marker.
+  &--horizontal {
+    flex-direction: row;
+  }
+
+  &--horizontal &__item {
+    flex: 1 0 var(--c--components--timeline--item-min-width);
+    padding-inline-start: 0;
+    padding-block-start: calc(
+      var(--c--components--timeline--marker-size) +
+        var(--c--components--timeline--item-gap)
+    );
+
+    &:not(:last-child)::after {
+      inset-inline-start: var(--c--components--timeline--marker-size);
+      inset-inline-end: calc(-1 * var(--c--components--timeline--gap));
+      inset-block-start: calc(
+        (
+            var(--c--components--timeline--marker-size) -
+              var(--c--components--timeline--connector-width)
+          ) / 2
+      );
+      inset-block-end: auto;
+      inline-size: auto;
+      block-size: var(--c--components--timeline--connector-width);
+    }
+  }
+
   // Forced colours drop backgrounds: keep the current dot visible.
   @media (forced-colors: active) {
     &__marker--current {
@@ -113,5 +142,28 @@
       border-color: CanvasText;
       background-color: CanvasText;
     }
+  }
+}
+
+// Wraps the horizontal list: scrolls sideways and takes keyboard focus. The
+// ring is drawn inside the region, over its padding, so no ancestor can clip
+// it and it covers no content.
+.c__timeline-region {
+  overflow-x: auto;
+  padding: calc(
+    var(--c--components--timeline--focus-ring-width) +
+      var(--c--components--timeline--focus-ring-offset)
+  );
+
+  &:focus-visible {
+    outline: var(--c--components--timeline--focus-ring-width) solid
+      var(--c--components--timeline--focus-ring-color);
+    outline-offset: calc(
+      -1 *
+        (
+          var(--c--components--timeline--focus-ring-width) +
+            var(--c--components--timeline--focus-ring-offset)
+        )
+    );
   }
 }

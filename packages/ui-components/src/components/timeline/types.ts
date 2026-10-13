@@ -19,7 +19,7 @@ export type TimelineProps = Omit<
 > & {
   /** Rendered in the given order, never sorted. */
   events: TimelineEvent[];
-  /** `horizontal` lands in a later release; both render vertically today. */
+  /** `horizontal` lays events on one row inside a focusable scroll region. */
   orientation?: "vertical" | "horizontal";
   /** Options of `Intl.DateTimeFormat`; default `{ dateStyle: "medium" }`. */
   dateFormat?: Intl.DateTimeFormatOptions;

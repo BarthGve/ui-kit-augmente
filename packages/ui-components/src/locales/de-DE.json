@@ -360,6 +360,7 @@
       "announce_link_exists": "{to} beginnt bereits nach {from}. Eingabe zum Entfernen der Verknüpfung."
     },
     "timeline": {
+      "region": "Zeitleiste",
       "state": {
         "done": "Erledigt",
         "current": "Aktuell",

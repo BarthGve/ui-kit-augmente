@@ -66,8 +66,20 @@ given.
 
 ## Orientation
 
-`orientation` accepts `"vertical"` (default) and `"horizontal"`. The
-horizontal layout is not available yet: both values render vertically for now.
+`orientation` accepts `"vertical"` (default) and `"horizontal"`.
+
+Horizontal lays the events on one row that never wraps: each event is at
+least `item-min-width` wide, markers sit on top and the connector runs from
+one marker to the next. The list is wrapped in a scroll region
+(`role="region"`, `tabindex="0"`) that scrolls sideways when the row is wider
+than its container, so the page itself never scrolls. Keyboard users focus
+the region with `Tab` and scroll it with the arrow keys; it shows a focus
+ring drawn inside its box. The region takes its name from `aria-label`, or
+the localized "Timeline" when none is given. Vertical renders no region.
+
+<Canvas of={TimelineStories.Horizontal} />
+
+<Canvas of={TimelineStories.HorizontalNarrow} />
 
 ## Tokens
 
