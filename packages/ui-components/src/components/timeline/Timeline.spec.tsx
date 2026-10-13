@@ -53,6 +53,47 @@ describe("Timeline list (AC4)", () => {
   });
 });
 
+describe("Timeline orientation (AC2)", () => {
+  const events = [
+    { id: "c", date: "2026-10-15", title: "Shipped" },
+    { id: "a", date: "2026-10-12", title: "Received" },
+  ];
+
+  it("wraps the horizontal list in a focusable region named by aria-label", () => {
+    renderTimeline({ events, orientation: "horizontal" });
+    const region = screen.getByRole("region", { name: "History" });
+    expect(region).toHaveAttribute("tabindex", "0");
+    expect(region).toContainElement(screen.getByRole("list"));
+    expect(items().map((item) => dateOf(item).dateTime)).toEqual([
+      "2026-10-15",
+      "2026-10-12",
+    ]);
+  });
+
+  it("names the region from the locale when no aria-label is given", () => {
+    render(
+      <CunninghamProvider currentLocale="fr-FR">
+        <Timeline events={events} orientation="horizontal" />
+      </CunninghamProvider>,
+    );
+    expect(screen.getByRole("region", { name: "Chronologie" })).toHaveAttribute(
+      "tabindex",
+      "0",
+    );
+  });
+
+  it.each([["vertical" as const], [undefined]])(
+    "renders no region when orientation is %s (vertical is the default)",
+    (orientation) => {
+      renderTimeline({ events, orientation });
+      expect(screen.queryByRole("region")).toBeNull();
+      expect(
+        screen.getByRole("list", { name: "History" }),
+      ).not.toHaveAttribute("tabindex");
+    },
+  );
+});
+
 describe("Timeline events (AC1)", () => {
   it("shows a date in a time element, a title, and content only when given", () => {
     renderTimeline({
@@ -216,6 +257,14 @@ describe("Timeline stylesheet", () => {
     expect(values).not.toMatch(/#[0-9a-f]{3,8}\b/i);
     expect(values).not.toMatch(/rgba?\(|hsla?\(/);
     expect(values).not.toMatch(/\d(px|rem|em)\b/);
+  });
+
+  it("reads every token of tokens.ts, so none is dead", () => {
+    // Prettier may break `var(` across lines.
+    const used = scss().replace(/var\(\s*(--[\w-]+)\s*\)/g, "var($1)");
+    for (const key of Object.keys(tokens(defaultTokenRefs))) {
+      expect(used).toContain(`var(--c--components--timeline--${key})`);
+    }
   });
 
   it("gives no var() a literal fallback", () => {

@@ -360,6 +360,7 @@
       "announce_link_exists": "{to} begint al na {from}. Enter om de koppeling te verwijderen."
     },
     "timeline": {
+      "region": "Tijdlijn",
       "state": {
         "done": "Voltooid",
         "current": "Huidig",

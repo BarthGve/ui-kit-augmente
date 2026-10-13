@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Badge } from "../badge";
 import { Button } from "../button";
-import { Timeline } from "./index";
+import { Timeline, TimelineEvent } from "./index";
 
 const meta = {
   title: "Components/Timeline",
@@ -93,4 +93,37 @@ export const Localized: Story = {
       { id: "shipped", date: "2026-10-15", title: "Expédiée", state: "upcoming" },
     ],
   },
+};
+
+const steps = [
+  {
+    id: "received",
+    date: "2026-10-12",
+    title: "Order received",
+    state: "done",
+  },
+  { id: "paid", date: "2026-10-12", title: "Payment confirmed", state: "done" },
+  { id: "packed", date: "2026-10-13", title: "Packed", state: "current" },
+  { id: "shipped", date: "2026-10-15", title: "Shipped", state: "upcoming" },
+  {
+    id: "delivered",
+    date: "2026-10-16",
+    title: "Delivered",
+    state: "upcoming",
+  },
+] satisfies TimelineEvent[];
+
+export const Horizontal: Story = {
+  args: { orientation: "horizontal", events: steps },
+};
+
+export const HorizontalNarrow: Story = {
+  args: { orientation: "horizontal", events: steps },
+  decorators: [
+    (Story) => (
+      <div style={{ width: "320px" }}>
+        <Story />
+      </div>
+    ),
+  ],
 };

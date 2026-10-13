@@ -360,6 +360,7 @@
       "announce_link_exists": "{to} ya empieza después de {from}. Intro para quitar el vínculo."
     },
     "timeline": {
+      "region": "Cronología",
       "state": {
         "done": "Completado",
         "current": "Actual",

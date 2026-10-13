@@ -28,14 +28,22 @@ const formatDate = (
 
 export const Timeline = ({
   events,
-  orientation: _orientation,
+  orientation = "vertical",
   dateFormat = { dateStyle: "medium" },
   className,
   ...props
 }: TimelineProps) => {
   const { t, currentLocale } = useCunningham();
-  return (
-    <ol role="list" className={clsx("c__timeline", className)} {...props}>
+  const list = (
+    <ol
+      role="list"
+      className={clsx(
+        "c__timeline",
+        orientation === "horizontal" && "c__timeline--horizontal",
+        className,
+      )}
+      {...props}
+    >
       {events.map(({ id, date, title, content, state }) => {
         const { text, iso } = formatDate(date, currentLocale, dateFormat);
         return (
@@ -75,5 +83,17 @@ export const Timeline = ({
         );
       })}
     </ol>
+  );
+  if (orientation === "vertical") return list;
+  // A focusable, named region lets keyboard users scroll the row.
+  return (
+    <div
+      role="region"
+      tabIndex={0}
+      className="c__timeline-region"
+      aria-label={props["aria-label"] ?? t("components.timeline.region")}
+    >
+      {list}
+    </div>
   );
 };
