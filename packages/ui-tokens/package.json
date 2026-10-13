@@ -30,7 +30,7 @@
     "build-lib": "rm -rf dist/lib && cp src/bin/cunningham.ts src/lib && cp dist/cunningham-tokens.ts src/lib && cd src/lib && tsc -p tsconfig.json && cd ../.. && vite build -c vite.lib.config.mts",
     "build": "yarn build-bin && yarn build-default-theme && yarn build-lib && cd ../.. && ln -sf ../../packages/ui-tokens/dist/bin/Main.js node_modules/.bin/cunningham",
     "build-default-theme": "node ./dist/bin/Main.js -o dist -s html -g scss,css,js,ts --utility-classes",
-    "test": "yarn build && cross-env FORCE_COLOR=1 jest --no-watchman --runInBand --verbose src",
+    "test": "cross-env FORCE_COLOR=1 jest --no-watchman --runInBand --verbose src",
     "test-ci": "yarn build && cross-env FORCE_COLOR=1 jest --no-watchman --runInBand src"
   },
   "dependencies": {

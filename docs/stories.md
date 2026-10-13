@@ -1009,13 +1009,50 @@ ADR 005 owns the decisions. Do not rename in the source; do not publish `ui-toke
 2
 
 ### Acceptance criteria
-- [ ] The Storybook installation page shows the alias install command for Yarn and npm instead of the upstream one, with the version scheme `x.y.z-fork.N`.
+- [ ] The root `README.md`, `packages/ui-components/README.md` and the Storybook installation page no longer show the upstream install command as the way to get the fork: they explain, in this order, (1) what the fork package is (`@barthgve/ui-components`, versions `x.y.z-fork.N`, only `ui-components` is published, `ui-tokens` and `ui-codemod` stay upstream), (2) the install through the alias for Yarn and npm (`@gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version>`), flagged as available after the first publish, (3) until then the install from the archive (`yarn build`, `yarn fork:stage <version>`, then `file:` install), (4) the peer dependencies and the style/fonts imports already documented.
 - [ ] The page states that `ui-tokens` and `ui-codemod` remain the upstream packages and that the built code is public on npm.
 - [ ] The README package table points to the fork package and gains an install line with the alias command.
 - [ ] A throwaway app (outside the repository, not committed) installs the archive produced by the s56 dry-run with the alias and renders a component with its stylesheet; the result is written in the PR. The check validates the archive, not the registry; if the workflow artifact has expired (90 days), rerun the s56 script to regenerate it. After the first real publish and before merging, the command printed on the page is run as written in a throwaway app and the result is written in the PR.
 
 ### Dependencies
-s56-publish-fork. **Merge order:** the page must not go live before the first real publish (owner action after s56): until then the alias command returns a 404. The ticket is built and reviewed behind s56 and merged into `next` only once the package exists on npm; if the owner has not published, the agent stops and reports instead of merging.
+s56-publish-fork. **Merge order, changed by the owner on 2026-10-13:** the owner asked for the README to explain the installation now. Until the first real npm publish the docs describe the true state (package not yet on npm; install from the archive built by `yarn fork:stage`) and give the alias command as the target form once published; they never present a command that returns a 404 as working. A follow-up one-line edit removes the "not yet published" notice after the first publish.
 
 ### Agentic notes
 Docs only (`installation.mdx`, `README.md`); no code change, exempt from the shared component rules (no changeset, artifact page, locale). The other mdx pages (`customization.mdx`, `0_migrating_to_lasuite_ui.mdx`, `docs/MIGRATION.md`) print upstream import names or `npx @gouvfr-lasuite/ui-codemod` commands: they stay valid thanks to the alias and the unchanged codemod, so they are checked, not edited.
+
+## Story s58-ci-green-basics — CI basics: build order and commit lint
+**As a** fork maintainer **I want** the unit-test and commit-lint jobs of the CI to pass **so that** a red CI means a real problem.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] `turbo.json`: the `test` task depends on `^build`, so `@gouvfr-lasuite/ui-tokens` is built before vitest runs; on a clean checkout `yarn test` passes from the first run (no "Failed to resolve entry for package @gouvfr-lasuite/ui-tokens").
+- [ ] The CI jobs `test` and `Publish fork / verify` (delivered by s56, red for the same `yarn test` reason) pass on a pull request; if `yarn lint` or `yarn build` of the same jobs fail for another cause, it is listed in the pull request and fixed here when it is not a component defect.
+- [ ] The `lint-git` job accepts squash and release commits of 80+ characters per line (the squash commit of release v0.2.0 on `main` has body lines up to 103 characters and cannot be rewritten): a `.gitlint` at the repository root ignores commits whose title ends with a pull-request reference `(#<number>)` (GitHub squash commits, including `🔖(release)` ones) while keeping the length rule for every other commit; the exemption applies in both directions (the `sync/main-into-next` pull request #202 and a future `next` → `main` release pull request, which both carry squash commits); a test commit message proves both cases (exempt title with a long line passes, non-exempt title with a long line is rejected).
+- [ ] `docs/architecture.md` states that the CI is active and what it runs; the "no CI on this fork" line of `AGENTS.md` (git-ignored, edited by the owner) is listed in the pull request.
+
+### Dependencies
+None.
+
+### Agentic notes
+No new dependency. Check the effect on the build time of `yarn test` (the build of `ui-components` is a dependency of its own tests only through `^build`, i.e. `ui-tokens`). The sync pull request #202 (`sync/main-into-next`, `-s ours` merge) must pass `lint-git` once the configuration is merged (re-run its checks). Exempt from the shared component rules (no component, no changeset, no artifact page, no locale).
+
+## Story s59-cross-browser-e2e — Playwright component tests green on Firefox and WebKit
+**As a** fork maintainer **I want** the component tests to pass on chromium, Firefox and WebKit **so that** the delivered components are proven in the three engines.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] For each of the 12 Firefox and WebKit failures of the first CI run, the cause is established (test written for chromium, or real rendering defect) and written in the pull request: Gantt (firefox: `gantt.spec.tsx` 214, 235, 610, 1530; webkit: 235, 455, 610, 1028, 1530), Timeline horizontal (`timeline.spec.tsx` 66, firefox and webkit: 24px markers, 2px connector, 192px items), Filter (webkit, `filter.spec.tsx` 49: keyboard focus ring).
+- [ ] A real defect is fixed in the component, with the failing test kept; a chromium-only assumption is fixed in the test (browser-neutral assertion), never by skipping, removing or loosening it without a stated reason. Any `test.skip` or `test.fixme` is a last resort for a documented engine limitation: it names the engine, the reason and a traced follow-up (story id or issue), and the pull request lists their number.
+- [ ] No accessibility regression: the focus ring, contrast and keyboard guards of s07, s17, s22 to s24 keep passing.
+- [ ] The one chromium failure of `e2e/file-preview/pdf-preview-mixed-sizes.spec.tsx:159` (current page 8 instead of 11; it is not a Firefox or WebKit failure but the `e2e` job cannot pass without it) is classified: reproduced on the upstream code (`upstream/main`) or not. If upstream also fails, the test is marked with that evidence and left out of this story's fix; if not, it is fixed.
+- [ ] The `e2e` job of the CI passes on a pull request (chromium, webkit, firefox).
+
+### Dependencies
+s58-ci-green-basics (ordering of priority only: the `e2e` job does not depend on the `test` job, but a green CI needs both).
+
+### Agentic notes
+The agent cannot run WebKit and Firefox locally unless `yarn playwright install webkit firefox` has been run: do it once, outside the repository. Port from `bash .dm/lib/dm-port.sh`, throwaway config, no broad `pkill`. If the investigation finds more than three distinct root causes, split this story at planning. Touches the specs of Gantt, Timeline and Filter and possibly their stylesheets; a stylesheet change must keep the computed values on chromium (the earlier measurements are the reference). Exempt from the shared component rules unless a component changes: then one changeset (patch) and the artifact page.

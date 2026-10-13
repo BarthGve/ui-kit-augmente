@@ -237,6 +237,9 @@ test.describe("SearchFilter — focus ring", () => {
   test("a keyboard-focused trigger draws the ring", async ({ mount, page }) => {
     await mount(<TestSearchFilter />);
     const trigger = page.getByRole("button", { name: /Category/ });
+    // `mount` resolves on `root.render()`, before React commits: a Tab sent
+    // at once can hit an empty page (seen on WebKit). Wait for the trigger.
+    await expect(trigger).toBeVisible();
     await page.keyboard.press("Tab");
     await expect(trigger).toBeFocused();
     expect(await outline(trigger)).toEqual({ style: "solid", width: "2px" });

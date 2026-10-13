@@ -1777,7 +1777,8 @@ export const Gantt = ({
           </Button>
         ))}
       </div>
-      <div ref={scrollerRef} className="c__gantt__scroller">
+      {/* Not a Tab stop: Firefox would add one, the rows hold it (s22). */}
+      <div ref={scrollerRef} className="c__gantt__scroller" tabIndex={-1}>
         <div
           ref={gridRef}
           role="grid"

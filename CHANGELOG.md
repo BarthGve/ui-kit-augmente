@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 - 2026-10-13
+
+Stories delivered: s57 (consume the fork), s58 (CI basics), s59 (component tests green on Chromium, Firefox and WebKit).
+
+Released with the board still in `test` for these stories (forced release, board updated by hand afterwards).
+
 ## 0.2.0 - 2026-10-13
 
 First delivery of the fork. `@gouvfr-lasuite/ui-components` 1.4.0 (`@barthgve/ui-components` 1.4.0-fork.N once published, see ADR 005).

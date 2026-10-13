@@ -52,7 +52,8 @@ const colorsAt = async (
   locator: Locator,
   points: [number, number][],
 ) => {
-  const png = (await locator.screenshot()).toString("base64");
+  // CSS pixels: the points are CSS offsets, and Desktop Safari is a 2x device.
+  const png = (await locator.screenshot({ scale: "css" })).toString("base64");
   return page.evaluate(
     async ([data, at]) => {
       const img = new Image();
@@ -87,6 +88,62 @@ const hittable = (target: Locator, axis: "x" | "y") =>
     }
     return hits;
   }, axis);
+// Real touch input needs CDP (`Input.dispatchTouchEvent`): Playwright offers
+// no touch move or cancel on Firefox and WebKit (`page.touchscreen` only taps).
+const CDP_TOUCH_ONLY =
+  "firefox, webkit: Playwright has no touch move/cancel input outside " +
+  "Chromium (CDP Input.dispatchTouchEvent); neutral pointer test below; " +
+  "follow-up #225";
+
+// Engine-neutral stand-in for a finger: untrusted PointerEvents with
+// pointerType "touch", dispatched on the element a real finger would have
+// captured (the bar, the connector). An untrusted event's pointerId is no
+// active pointer, so every engine refuses `setPointerCapture` for it: capture
+// is shimmed for that one id only (as jsdom does in Gantt.spec.tsx), every
+// other id keeps the native methods. What this still proves over jsdom: real
+// layout (pixels per day, the row under a point) and the engine's dispatch
+// through React. What it cannot prove: real capture and its implicit release,
+// the browser's pan gesture, `touch-action` taking effect; the CDP tests
+// (Chromium) and the follow-up cover those.
+const FINGER = 7;
+const finger = async (page: Page) => {
+  await page.evaluate((id) => {
+    const proto = Element.prototype;
+    const { setPointerCapture, hasPointerCapture, releasePointerCapture } =
+      proto;
+    // At most one element holds the finger.
+    const holder = new Set<Element>();
+    proto.setPointerCapture = function (this: Element, p: number) {
+      if (p !== id) return setPointerCapture.call(this, p);
+      holder.clear();
+      holder.add(this);
+    };
+    proto.hasPointerCapture = function (this: Element, p: number) {
+      return p === id ? holder.has(this) : hasPointerCapture.call(this, p);
+    };
+    proto.releasePointerCapture = function (this: Element, p: number) {
+      if (p !== id) return releasePointerCapture.call(this, p);
+      holder.delete(this);
+    };
+  }, FINGER);
+  return (
+    target: Locator,
+    type: "pointerdown" | "pointermove" | "pointerup" | "pointercancel",
+    x: number,
+    y: number,
+  ) =>
+    target.dispatchEvent(type, {
+      pointerType: "touch",
+      pointerId: FINGER,
+      isPrimary: true,
+      clientX: x,
+      clientY: y,
+      button: type === "pointermove" ? -1 : 0,
+      buttons: type === "pointerdown" || type === "pointermove" ? 1 : 0,
+    });
+};
+const touchAction = (locator: Locator) =>
+  locator.evaluate((el) => getComputedStyle(el).touchAction);
 const ring = (locator: Locator) =>
   locator.evaluate((el) => {
     const style = getComputedStyle(el, "::after");
@@ -216,6 +273,9 @@ test.describe("Gantt", () => {
     page,
   }) => {
     await mount(<TestGantt />);
+    // `mount` resolves on `root.render()`, before React commits: a Tab sent
+    // at once can hit an empty page (seen on WebKit). Wait for the first stop.
+    await expect(page.getByRole("button", { name: "Day" })).toBeVisible();
     for (const name of ["Day", "Week", "Month"]) {
       await page.keyboard.press("Tab");
       await expect(page.getByRole("button", { name })).toBeFocused();
@@ -610,7 +670,9 @@ test.describe("Gantt pointer resize", () => {
     test("a finger drags a bar, scrolls the box from the track, and a cancelled touch restores", async ({
       mount,
       page,
+      browserName,
     }) => {
+      test.skip(browserName !== "chromium", CDP_TOUCH_ONLY);
       const { calls, onTaskChange } = recorder();
       await mount(<EditableGantt onTaskChange={onTaskChange} />);
       const px = await perDay(page);
@@ -687,6 +749,51 @@ test.describe("Gantt pointer resize", () => {
       expect((await box(bar(page, "t2"))).x).toBeGreaterThan(b.x + 10);
       await touch("touchCancel");
       expect((await box(bar(page, "t2"))).x).toBeCloseTo(b.x, 0);
+      expect(await editing(page)).toBeNull();
+      expect(calls).toHaveLength(1);
+    });
+
+    // Every engine; see `finger`. The pan from the track is the browser's own
+    // gesture: here only the rule that allows it (the track keeps panning, a
+    // bar takes the finger), not the scroll itself.
+    test("touch pointers drag a bar and a pointercancel restores it (any engine)", async ({
+      mount,
+      page,
+    }) => {
+      const { calls, onTaskChange } = recorder();
+      await mount(<EditableGantt onTaskChange={onTaskChange} />);
+      const px = await perDay(page);
+      const send = await finger(page);
+      expect(await touchAction(bar(page, "t1"))).toBe("none");
+      expect(
+        await touchAction(row(page, 3).locator(".c__gantt__track")),
+      ).not.toBe("none");
+
+      const t1 = bar(page, "t1");
+      const before = await box(t1);
+      const at = center(before);
+      await send(t1, "pointerdown", at.x, at.y);
+      for (let i = 1; i <= 6; i++) {
+        await send(t1, "pointermove", at.x + (i * 7 * px) / 6, at.y);
+      }
+      expect(await editing(page)).toBe("move");
+      await send(t1, "pointerup", at.x + 7 * px, at.y);
+      await expect.poll(() => calls.length).toBe(1);
+      expect(calls[0]).toEqual([
+        "t1",
+        { start: "2026-01-24", end: "2026-02-02" },
+      ]);
+      expect((await box(t1)).x).toBeCloseTo(before.x + 7 * px, 0);
+      expect(await editing(page)).toBeNull();
+
+      const t2 = bar(page, "t2");
+      const b = await box(t2);
+      const c = center(b);
+      await send(t2, "pointerdown", c.x, c.y);
+      await send(t2, "pointermove", c.x + 7 * px, c.y);
+      expect((await box(t2)).x).toBeGreaterThan(b.x + 10);
+      await send(t2, "pointercancel", c.x + 7 * px, c.y);
+      expect((await box(t2)).x).toBeCloseTo(b.x, 0);
       expect(await editing(page)).toBeNull();
       expect(calls).toHaveLength(1);
     });
@@ -1530,7 +1637,9 @@ test.describe("Gantt link editing", () => {
     test("a finger drags a connector to another row; a cancelled touch reports nothing", async ({
       mount,
       page,
+      browserName,
     }) => {
+      test.skip(browserName !== "chromium", CDP_TOUCH_ONLY);
       const { calls, onDependencyChange } = recorder();
       await mount(
         <TestGantt editable onDependencyChange={onDependencyChange} />,
@@ -1573,6 +1682,56 @@ test.describe("Gantt link editing", () => {
         page.locator('.c__gantt__link[data-state="creating"]'),
       ).toHaveCount(1);
       await touch("touchCancel");
+      await expect(page.getByTestId("gantt")).not.toHaveAttribute(
+        "data-editing",
+      );
+      await expect(
+        page.locator('.c__gantt__link[data-state="creating"]'),
+      ).toHaveCount(0);
+      expect(calls).toHaveLength(1);
+    });
+
+    // Every engine; see `finger`.
+    test("touch pointers drag a connector to another row; a pointercancel reports nothing (any engine)", async ({
+      mount,
+      page,
+    }) => {
+      const { calls, onDependencyChange } = recorder();
+      await mount(
+        <TestGantt editable onDependencyChange={onDependencyChange} />,
+      );
+      const send = await finger(page);
+      const source = connector(page, 3);
+      expect(await touchAction(source)).toBe("none");
+      const start = await centre(source);
+      const target = await box(row(page, 5));
+      const to = { x: start.x, y: target.y + target.height / 2 };
+      await send(source, "pointerdown", start.x, start.y);
+      for (let i = 1; i <= 6; i++) {
+        await send(
+          source,
+          "pointermove",
+          start.x,
+          start.y + ((to.y - start.y) * i) / 6,
+        );
+      }
+      await expect(page.getByTestId("gantt")).toHaveAttribute(
+        "data-editing",
+        "link",
+      );
+      await send(source, "pointerup", to.x, to.y);
+      await expect.poll(() => calls.length).toBe(1);
+      expect(calls[0]).toEqual({
+        kind: "add",
+        dependency: { from: "t1", to: "t3" },
+      });
+
+      await send(source, "pointerdown", start.x, start.y);
+      await send(source, "pointermove", to.x, to.y);
+      await expect(
+        page.locator('.c__gantt__link[data-state="creating"]'),
+      ).toHaveCount(1);
+      await send(source, "pointercancel", to.x, to.y);
       await expect(page.getByTestId("gantt")).not.toHaveAttribute(
         "data-editing",
       );
