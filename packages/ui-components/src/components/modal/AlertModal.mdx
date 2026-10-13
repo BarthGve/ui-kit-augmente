@@ -1,0 +1,87 @@
+import { Canvas, Meta, Source } from '@storybook/blocks';
+import * as Stories from './alert-modal.stories';
+
+<Meta of={Stories}/>
+
+# AlertModal
+
+An `AlertModal` interrupts the user with an important message and asks them to acknowledge it or decide.
+It is a `Modal` with `role="alertdialog"`, named by its title and described by its message.
+
+<Canvas of={Stories.Neutral} story={{inline: false}}/>
+
+<Source
+  language='ts'
+  dark
+  format={false}
+  code={`import { AlertModal } from "@gouvfr-lasuite/ui-components";`}
+/>
+
+> Like every `Modal`, it must be rendered inside `CunninghamProvider` (which mounts the `ModalProvider`).
+
+## Usage
+
+<Source
+  language='tsx'
+  dark
+  format={false}
+  code={`
+const modal = useModal();
+
+<Button onClick={modal.open}>Delete</Button>
+<AlertModal
+  {...modal}
+  severity="error"
+  title="Delete this file?"
+  primaryAction={{ label: "Delete", onClick: () => { remove(); modal.close(); } }}
+>
+  This cannot be undone.
+</AlertModal>
+`}/>
+
+## Props
+
+| Prop | Type | Default | |
+|---|---|---|---|
+| `isOpen` | `boolean` | | |
+| `onClose` | `() => void` | | Called by the dismiss action, Escape and, when enabled, a click outside. |
+| `title` | `ReactNode` | | Names the dialog. |
+| `children` | `ReactNode` | | The message, read as the dialog description. |
+| `severity` | `"info" \| "success" \| "warning" \| "error"` | none | Adds an icon before the title and colours the primary action. Without it the alert is neutral. |
+| `primaryAction` | `{ label: string; onClick: () => void }` | | Optional. **It does not close the modal**: close it yourself when the work is done. |
+| `dismissLabel` | `string` | "Ok" alone, "Cancel" next to a primary action | Translated defaults. |
+| `details` | `ReactNode` | | Extra content after the message, not part of the description. |
+| `media` | `ReactNode` | | Shown above the title, replaces the severity icon. |
+| `size` | `"default" \| "sm"` | `"default"` | `"default"` is `ModalSize.MEDIUM`, `"sm"` is `ModalSize.SMALL`. |
+| `closeOnClickOutside` | `boolean` | `false` | |
+
+There is no close button: the dismiss action and Escape are the ways out.
+
+## Focus
+
+On open, focus goes to the primary action, or to the dismiss action when there is none.
+With `severity="error"` it goes to the dismiss action, so that Enter never confirms a destructive action by accident.
+Tab stays inside the modal and focus returns to the opener on close.
+
+## Severities
+
+<Canvas of={Stories.Info} story={{inline: false}}/>
+<Canvas of={Stories.Success} story={{inline: false}}/>
+<Canvas of={Stories.Warning} story={{inline: false}}/>
+<Canvas of={Stories.Error} story={{inline: false}}/>
+
+## Dismiss only
+
+<Canvas of={Stories.DismissOnly} story={{inline: false}}/>
+
+## Media
+
+<Canvas of={Stories.WithMedia} story={{inline: false}}/>
+
+## Small size
+
+<Canvas of={Stories.SmallSize} story={{inline: false}}/>
+
+## Details
+
+<Canvas of={Stories.WithDetails} story={{inline: false}}/>

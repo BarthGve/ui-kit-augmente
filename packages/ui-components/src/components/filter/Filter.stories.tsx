@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
 
 import { Filter, FilterOption } from "./Filter";
 import { useRef, useState } from "react";
@@ -193,16 +194,40 @@ export const UncontrolledWithDefault: Story = {
 };
 
 /**
+ * The open state: `defaultOpen` renders the popover on mount. Nothing is
+ * selected, so there is no reset row and no checkmark yet.
+ */
+export const Open: Story = {
+  args: {
+    label: "Type",
+    defaultOpen: true,
+    options: OPTIONS,
+  },
+  // The open popover is modal (scroll lock, focus, aria-hidden siblings):
+  // isolated in its own iframe so it does not take over the docs page.
+  parameters: { docs: { story: { inline: false, height: "16rem" } } },
+  decorators: [
+    (Story) => (
+      <div style={{ minHeight: "14rem" }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
  * A value is pre-selected, so opening the dropdown reveals the built-in **Reset**
  * row above the options. Clicking it clears the selection (the trigger falls back
  * to just the `label`) without leaving the menu. The row is shown by default and
- * only while something is selected.
+ * only while something is selected. The optional `onReset` callback is called
+ * after the value is cleared (`onSelectionChange(null)` still fires).
  */
 export const WithReset: Story = {
   args: {
     label: "Type",
     defaultValue: "file",
     options: OPTIONS,
+    onReset: fn(),
   },
 };
 

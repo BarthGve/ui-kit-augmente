@@ -1,0 +1,169 @@
+.c__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--c--components--timeline--gap);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-wrap: anywhere;
+  color: var(--c--components--timeline--color);
+
+  // The marker sits in the inline-start gutter; the connector runs from it
+  // to the next item's marker, across the gap between items.
+  &__item {
+    position: relative;
+    min-width: 0;
+    padding-inline-start: calc(
+      var(--c--components--timeline--marker-size) +
+        var(--c--components--timeline--item-gap)
+    );
+
+    &:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      inset-inline-start: calc(
+        (
+            var(--c--components--timeline--marker-size) -
+              var(--c--components--timeline--connector-width)
+          ) / 2
+      );
+      inset-block-start: var(--c--components--timeline--marker-size);
+      inset-block-end: calc(-1 * var(--c--components--timeline--gap));
+      inline-size: var(--c--components--timeline--connector-width);
+      background-color: var(--c--components--timeline--connector-color);
+    }
+  }
+
+  &__marker {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: var(--c--components--timeline--marker-size);
+    block-size: var(--c--components--timeline--marker-size);
+    border: var(--c--components--timeline--marker-border-width) solid
+      var(--c--components--timeline--connector-color);
+    border-radius: 50%;
+
+    .material-icons {
+      font-size: calc(
+        var(--c--components--timeline--marker-size) - 2 *
+          var(--c--components--timeline--marker-border-width)
+      );
+    }
+
+    // Filled disc with a check glyph.
+    &--done {
+      border-color: var(--c--components--timeline--marker-done-background);
+      background-color: var(
+        --c--components--timeline--marker-done-background
+      );
+      color: var(--c--components--timeline--marker-done-color);
+    }
+
+    // Filled dot inside a ring: the padding leaves a gap between them.
+    &--current {
+      padding: var(--c--components--timeline--marker-border-width);
+      border-color: var(--c--components--timeline--marker-current-background);
+      background-color: var(
+        --c--components--timeline--marker-current-background
+      );
+      background-clip: content-box;
+    }
+
+    // Empty ring.
+    &--upcoming {
+      border-color: var(
+        --c--components--timeline--marker-upcoming-border-color
+      );
+    }
+  }
+
+  &__date {
+    display: block;
+    line-height: var(--c--components--timeline--marker-size);
+    color: var(--c--components--timeline--color--muted);
+  }
+
+  &__title {
+    font-weight: var(--c--components--timeline--title-font-weight);
+  }
+
+  &__content {
+    margin-block-start: var(--c--components--timeline--item-gap);
+  }
+
+  &__item--current &__title {
+    color: var(--c--components--timeline--color--current);
+    font-weight: var(--c--components--timeline--title-font-weight--current);
+  }
+
+  &__item--upcoming &__title {
+    color: var(--c--components--timeline--color--muted);
+  }
+
+  // One row that never wraps: the region around it scrolls. The marker sits
+  // on top of each item; the connector runs from it to the next marker.
+  &--horizontal {
+    flex-direction: row;
+  }
+
+  &--horizontal &__item {
+    flex: 1 0 var(--c--components--timeline--item-min-width);
+    padding-inline-start: 0;
+    padding-block-start: calc(
+      var(--c--components--timeline--marker-size) +
+        var(--c--components--timeline--item-gap)
+    );
+
+    &:not(:last-child)::after {
+      inset-inline-start: var(--c--components--timeline--marker-size);
+      inset-inline-end: calc(-1 * var(--c--components--timeline--gap));
+      inset-block-start: calc(
+        (
+            var(--c--components--timeline--marker-size) -
+              var(--c--components--timeline--connector-width)
+          ) / 2
+      );
+      inset-block-end: auto;
+      inline-size: auto;
+      block-size: var(--c--components--timeline--connector-width);
+    }
+  }
+
+  // Forced colours drop backgrounds: keep the current dot visible.
+  @media (forced-colors: active) {
+    &__marker--current {
+      forced-color-adjust: none;
+      border-color: CanvasText;
+      background-color: CanvasText;
+    }
+  }
+}
+
+// Wraps the horizontal list: scrolls sideways and takes keyboard focus. The
+// ring is drawn inside the region, over its padding, so no ancestor can clip
+// it and it covers no content.
+.c__timeline-region {
+  overflow-x: auto;
+  padding: calc(
+    var(--c--components--timeline--focus-ring-width) +
+      var(--c--components--timeline--focus-ring-offset)
+  );
+
+  &:focus-visible {
+    outline: var(--c--components--timeline--focus-ring-width) solid
+      var(--c--components--timeline--focus-ring-color);
+    outline-offset: calc(
+      -1 *
+        (
+          var(--c--components--timeline--focus-ring-width) +
+            var(--c--components--timeline--focus-ring-offset)
+        )
+    );
+  }
+}

@@ -85,6 +85,11 @@ const meta: Meta<typeof SearchFilter> = {
         defaultValue: { summary: "true" },
       },
     },
+    onReset: {
+      description:
+        "Called when the reset entry is used, after `onItemSelect(undefined)`.",
+      table: { type: { summary: "() => void" } },
+    },
   },
 };
 
@@ -128,6 +133,66 @@ export const Basic: StoryObj = {
       />
     );
   },
+};
+
+const renderSimpleItem = (item: SearchFilterItem) => (
+  <div className="c__dropdown-menu-item">
+    <MenuItemBody label={item.label} />
+  </div>
+);
+
+/** The active state: `selected` and `activeLabel` are set from the start. */
+export const Active: StoryObj = {
+  render: () => {
+    const [search, setSearch] = useState("");
+    const [selected, setSelected] = useState<SearchFilterItem | undefined>(
+      simpleItems[1],
+    );
+
+    return (
+      <SearchFilter
+        label="Category"
+        activeLabel={selected?.label}
+        searchValue={search}
+        onSearchChange={setSearch}
+        placeholder="Search..."
+        items={simpleItems.filter((item) =>
+          item.label.toLowerCase().includes(search.toLowerCase()),
+        )}
+        renderItem={renderSimpleItem}
+        onItemSelect={setSelected}
+        selected={selected}
+      />
+    );
+  },
+};
+
+/** The open state: `isOpen` keeps the popover displayed. */
+export const Open: StoryObj = {
+  render: () => {
+    const [search, setSearch] = useState("");
+
+    return (
+      <SearchFilter
+        label="Category"
+        searchValue={search}
+        onSearchChange={setSearch}
+        placeholder="Search..."
+        items={simpleItems.filter((item) =>
+          item.label.toLowerCase().includes(search.toLowerCase()),
+        )}
+        renderItem={renderSimpleItem}
+        isOpen
+      />
+    );
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ minHeight: "16rem" }}>
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 const mockUsers: UserSearchFilterItem[] = [

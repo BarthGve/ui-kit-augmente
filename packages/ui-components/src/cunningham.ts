@@ -23,6 +23,7 @@ export type {
 export * from "./components/calendar";
 export * from "./components/loader";
 export * from "./components/modal";
+export * from "./components/modal/AlertModal";
 export * from "./components/modal/ConfirmationModal";
 export * from "./components/modal/DeleteConfirmationModal";
 export * from "./components/modal/MessageModal";

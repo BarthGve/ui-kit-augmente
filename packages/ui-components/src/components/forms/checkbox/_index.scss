@@ -195,4 +195,31 @@
       align-items: flex-start;
     }
   }
+
+  // Shared by Checkbox, Radio and Switch (their root carries `c__checkbox`).
+  // Last in the block: the footer rule must win over the default ones by order.
+  &--small {
+    .c__checkbox__container {
+      gap: var(--c--globals--spacings--xs);
+    }
+
+    .c__checkbox__wrapper {
+      input,
+      svg {
+        width: var(--c--components--forms-checkbox--small-size);
+        height: var(--c--components--forms-checkbox--small-size);
+      }
+    }
+
+    .c__checkbox__label {
+      font-size: var(--c--components--forms-checkbox--small-font-size);
+    }
+
+    .c__field__footer {
+      padding-left: calc(
+        var(--c--components--forms-checkbox--small-size) +
+          var(--c--globals--spacings--xs)
+      );
+    }
+  }
 }

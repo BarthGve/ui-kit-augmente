@@ -62,9 +62,11 @@ There are three independent pieces of controlled state, all optional except `onS
 
 The active (highlighted) state of the trigger is derived from `activeLabel` by default, or you can force it with `isActive`.
 
+States and their stories: default (`Basic`), active (`Active`), open (`Open`), loading (`Loading`) and empty (`Empty`).
+
 ## Reset
 
-When `selected` is set and `showReset` is `true` (the default), a "Reset" entry is prepended to the popover. Clicking it calls `onItemSelect(undefined)`, letting the consumer clear the selection. Pass `showReset={false}` to hide it.
+When `selected` is set and `showReset` is `true` (the default), a "Reset" entry is prepended to the popover. Clicking it calls `onItemSelect(undefined)`, letting the consumer clear the selection, then the optional `onReset`. Pass `showReset={false}` to hide it.
 
 ## Loading and empty states
 

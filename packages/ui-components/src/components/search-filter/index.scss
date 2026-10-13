@@ -1,15 +1,15 @@
 .c__search-filter {
   &__popover {
-    min-width: 240px;
-    max-width: 320px;
+    min-width: var(--c--components--search-filter--popover-min-width);
+    max-width: var(--c--components--search-filter--popover-max-width);
   }
 
   &__search {
     display: flex;
     align-items: center;
-    gap: var(--c--globals--spacings--xxs, 6px);
-    height: 36px;
-    padding: 0 var(--c--globals--spacings--xs, 8px);
+    gap: var(--c--globals--spacings--xxs);
+    height: var(--c--components--search-filter--search-height);
+    padding: 0 var(--c--globals--spacings--xs);
     color: var(--c--contextuals--content--semantic--neutral--secondary);
 
     input {
@@ -17,10 +17,10 @@
       border: none;
       outline: none;
       background: transparent;
-      font-size: var(--c--globals--font--sizes--sm, 0.875rem);
+      font-size: var(--c--globals--font--sizes--sm);
       font-family: var(--c--globals--font--families--base);
       color: var(--c--contextuals--content--semantic--neutral--primary);
-      padding: var(--c--globals--spacings--4xs, 2px) 0;
+      padding: var(--c--globals--spacings--4xs) 0;
 
       &::placeholder {
         color: var(--c--contextuals--content--semantic--neutral--tertiary);
@@ -29,15 +29,15 @@
   }
 
   &__list {
-    max-height: 240px;
+    max-height: var(--c--components--search-filter--list-max-height);
     overflow-y: auto;
   }
 
   &__item {
-    min-height: 32px;
+    min-height: var(--c--components--search-filter--item-min-height);
     cursor: pointer;
-    font-size: var(--c--globals--font--sizes--sm, 0.875rem);
-    font-weight: 500;
+    font-size: var(--c--globals--font--sizes--sm);
+    font-weight: var(--c--components--search-filter--item-font-weight);
     color: var(--c--contextuals--content--semantic--neutral--primary);
     box-sizing: border-box;
     outline: none;
@@ -55,7 +55,7 @@
   &__user-row {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: var(--c--components--search-filter--user-row-gap);
   }
 
   &__empty,
@@ -63,8 +63,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
+    padding: var(--c--components--search-filter--message-padding);
     color: var(--c--contextuals--content--semantic--neutral--tertiary);
-    font-size: var(--c--globals--font--sizes--sm, 0.875rem);
+    font-size: var(--c--globals--font--sizes--sm);
   }
 }

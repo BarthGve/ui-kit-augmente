@@ -5,10 +5,18 @@ import {
   Separator,
   SubmenuTrigger,
 } from "react-aria-components";
+import { useInteractOutside } from "react-aria";
 import { MenuItemAction, MenuItemSeparator } from "../menu/types";
 import { MenuItemBody } from "../menu/MenuItemBody";
 import { DropdownMenuItem } from "./types";
-import { Fragment, PropsWithChildren, ReactNode, useId, useRef } from "react";
+import {
+  ComponentProps,
+  Fragment,
+  PropsWithChildren,
+  ReactNode,
+  useId,
+  useRef,
+} from "react";
 import clsx from "clsx";
 import { useCunningham } from ":/components/provider";
 
@@ -37,7 +45,7 @@ export const DropdownMenu = ({
   isOpen = false,
   onOpenChange,
   children,
-  selectedValues = [],
+  selectedValues,
   onSelectValue,
   topMessage,
   bottomMessage,
@@ -45,7 +53,8 @@ export const DropdownMenu = ({
   variant = "default",
 }: PropsWithChildren<DropdownMenuProps>) => {
   const id = useId();
-  const triggerRef = useRef(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLElement>(null);
   const { t } = useCunningham();
   const menuClassName = `c__dropdown-menu${
     variant === "tiny" ? " c__dropdown-menu--tiny" : ""
@@ -54,12 +63,52 @@ export const DropdownMenu = ({
     onOpenChange?.(isOpen);
   };
 
-  const getAriaLabel = (option: MenuItemAction): string => {
-    if (option.opensInNewWindow) {
-      return option.label + t("components.menu.newWindowLabelSuffix");
+  // `isNonModal` (no dialog wrapper, Tab can leave) also drops React Aria's
+  // outside-click dismissal: restore it. The trigger is excluded because
+  // every caller toggles `isOpen` from it; submenus are portaled outside the
+  // root popover (any open submenu counts: fine while one menu is open at a
+  // time).
+  const shouldCloseOnOutside = (element: Element) =>
+    !triggerRef.current?.contains(element) &&
+    !element.closest?.('[data-trigger="SubmenuTrigger"]') &&
+    (shouldCloseOnInteractOutside?.(element) ?? true);
+
+  useInteractOutside({
+    ref: popoverRef,
+    isDisabled: !isOpen,
+    onInteractOutside: (e) => {
+      if (shouldCloseOnOutside(e.target as Element)) {
+        onOpenChangeHandler(false);
+      }
+    },
+  });
+
+  // The name comes from the content (label + subText); an aria-label is only
+  // needed to append the new-window suffix, so it repeats the subText.
+  const getAriaLabel = (option: MenuItemAction): string | undefined => {
+    if (!option.opensInNewWindow) {
+      return undefined;
     }
-    return option.label;
+    return (
+      [option.label, option.subText].filter(Boolean).join(" ") +
+      t("components.menu.newWindowLabelSuffix")
+    );
   };
+
+  // ADR 003: only checkable options get a checked state; the others stay
+  // plain menuitems. `value` alone is not enough: some callers use it as an
+  // action id without `selectedValues`.
+  const getCheckedState = (option: MenuItemAction & { value?: string }) => {
+    if (option.isChecked !== undefined) {
+      return option.isChecked || isSelectedValue(option.value);
+    }
+    if (selectedValues && option.value) {
+      return isSelectedValue(option.value);
+    }
+    return undefined;
+  };
+  const isSelectedValue = (value?: string) =>
+    !!value && !!selectedValues?.includes(value);
 
   const renderMenuItems = (items: DropdownMenuItem[]) =>
     items.map((option, index) => {
@@ -100,6 +149,8 @@ export const DropdownMenu = ({
         );
       }
 
+      const isChecked = getCheckedState(option);
+
       return (
         <Fragment key={itemKey}>
           <MenuItem
@@ -107,6 +158,18 @@ export const DropdownMenu = ({
               "c__dropdown-menu-item--danger": option.variant === "danger",
             })}
             aria-label={getAriaLabel(option)}
+            render={
+              isChecked === undefined
+                ? undefined
+                : (props) => (
+                    <div
+                      // No `href` on these items: always the div branch.
+                      {...(props as ComponentProps<"div">)}
+                      role="menuitemcheckbox"
+                      aria-checked={isChecked}
+                    />
+                  )
+            }
             onAction={() => {
               if (option.value) {
                 onSelectValue?.(option.value);
@@ -123,10 +186,7 @@ export const DropdownMenu = ({
               icon={option.icon}
               label={option.label}
               subText={option.subText}
-              isChecked={
-                option.isChecked ||
-                (!!option.value && selectedValues.includes(option.value))
-              }
+              isChecked={isChecked}
             />
           </MenuItem>
           {/* @deprecated: use { type: "separator" } instead */}
@@ -150,14 +210,16 @@ export const DropdownMenu = ({
       </div>
 
       <Popover
+        ref={popoverRef}
         triggerRef={triggerRef}
         style={{
           marginTop: "0px",
         }}
         isOpen={isOpen}
+        isNonModal
         shouldFlip
         containerPadding={16}
-        shouldCloseOnInteractOutside={shouldCloseOnInteractOutside}
+        shouldCloseOnInteractOutside={shouldCloseOnOutside}
         onOpenChange={onOpenChangeHandler}
       >
         <div className={menuClassName}>

@@ -5,7 +5,8 @@
     },
     "searchFilter": {
       "reset": "Restablecer",
-      "placeholder": "Buscar un nombre"
+      "placeholder": "Buscar un nombre",
+      "loading": "Cargando…"
     },
     "share": {
       "copyLink": "Copiar enlace",
@@ -314,6 +315,58 @@
       "region": "Aviso",
       "close": "Cerrar",
       "newWindow": "(se abre en una nueva ventana)"
+    },
+    "gantt": {
+      "zoom_aria_label": "Nivel de zoom",
+      "zoom_day": "Día",
+      "zoom_week": "Semana",
+      "zoom_month": "Mes",
+      "task_column": "Tarea",
+      "schedule_column": "Planificación",
+      "row_dates_aria": "{name}, del {start} al {end}",
+      "row_date_aria": "{name}, el {date}",
+      "row_no_dates_aria": "{name}, sin fechas",
+      "no_dates": "Sin fechas",
+      "today": "Hoy",
+      "empty": "No hay tareas",
+      "tooltip_dates": "del {start} al {end}",
+      "announce_preview": "{name}: del {start} al {end}",
+      "announce_changed": "{name} reprogramada: del {start} al {end}",
+      "announce_cancelled": "{name}: cambio cancelado, fechas restablecidas",
+      "limit_axis": "Límite del gráfico alcanzado",
+      "limit_end_before_start": "El final no puede ser anterior al inicio",
+      "edit_instructions": "Alt con flecha izquierda o derecha mueve la tarea un paso del zoom. Mayús con flecha izquierda o derecha cambia su fecha de fin. Intro confirma, Escape cancela.",
+      "dependencies_list_label": "Dependencias",
+      "dependency_item": "{from} debe terminar antes de que empiece {to}",
+      "dependency_item_conflict": "{from} debe terminar antes de que empiece {to}. Conflicto: {to} empieza el {start}, {from} termina el {end}",
+      "row_starts_after": "Empieza después de: {names}",
+      "row_required_by": "Requerida por: {names}",
+      "row_conflict": "Conflicto con: {names}",
+      "names_more": "{names}, +{count}",
+      "link_conflict_tip": "Conflicto: {to} empieza antes de que termine {from}",
+      "announce_conflict": "Conflicto: {to} empieza antes de que termine {from}",
+      "link_remove": "Quitar el vínculo de {from} a {to}",
+      "link_tip_target": "Empezar {to} después de {from}",
+      "link_tip_drop": "Soltar sobre una tarea",
+      "link_refused_cycle": "Sin vincular: crearía un bucle",
+      "link_refused_self": "Una tarea no puede depender de sí misma",
+      "link_refused_no_dates": "Sin vincular: {name} no tiene fechas",
+      "link_refused_exists": "Sin vincular: {to} ya empieza después de {from}",
+      "link_refused_limit": "Sin vincular: un gráfico admite como máximo {count} vínculos",
+      "announce_link_added": "{to} empieza ahora después de {from}",
+      "announce_link_removed": "Vínculo quitado: {to} ya no depende de {from}",
+      "announce_link_cancelled": "Vínculo cancelado",
+      "link_instructions": "Alt más Mayús más flecha derecha hace que otra tarea empiece después de esta; Alt más Mayús más flecha izquierda hace que esta tarea empiece después de otra. Las flechas arriba y abajo eligen la tarea, Intro vincula o desvincula, Escape cancela.",
+      "announce_link_target": "Vincular {from} con {to}: {to} empezaría después de que termine {from}. Intro para vincular.",
+      "announce_link_exists": "{to} ya empieza después de {from}. Intro para quitar el vínculo."
+    },
+    "timeline": {
+      "region": "Cronología",
+      "state": {
+        "done": "Completado",
+        "current": "Actual",
+        "upcoming": "Próximo"
+      }
     }
   }
 }

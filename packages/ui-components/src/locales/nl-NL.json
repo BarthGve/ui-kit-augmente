@@ -5,7 +5,8 @@
     },
     "searchFilter": {
       "reset": "Resetten",
-      "placeholder": "Zoek een naam"
+      "placeholder": "Zoek een naam",
+      "loading": "Laden…"
     },
     "share": {
       "copyLink": "Link kopiëren",
@@ -314,6 +315,58 @@
       "region": "Mededeling",
       "close": "Sluit",
       "newWindow": "(opent in een nieuw venster)"
+    },
+    "gantt": {
+      "zoom_aria_label": "Zoomniveau",
+      "zoom_day": "Dag",
+      "zoom_week": "Week",
+      "zoom_month": "Maand",
+      "task_column": "Taak",
+      "schedule_column": "Planning",
+      "row_dates_aria": "{name}, van {start} tot {end}",
+      "row_date_aria": "{name}, op {date}",
+      "row_no_dates_aria": "{name}, geen datums",
+      "no_dates": "Geen datums",
+      "today": "Vandaag",
+      "empty": "Geen taken",
+      "tooltip_dates": "{start} tot {end}",
+      "announce_preview": "{name}: {start} tot {end}",
+      "announce_changed": "{name} verplaatst: {start} tot {end}",
+      "announce_cancelled": "{name}: wijziging geannuleerd, datums hersteld",
+      "limit_axis": "Grens van de grafiek bereikt",
+      "limit_end_before_start": "Het einde kan niet vóór het begin liggen",
+      "edit_instructions": "Alt met pijl links of rechts verplaatst de taak één stap van de zoom. Shift met pijl links of rechts wijzigt de einddatum. Enter bevestigt, Escape annuleert.",
+      "dependencies_list_label": "Afhankelijkheden",
+      "dependency_item": "{from} moet klaar zijn voordat {to} begint",
+      "dependency_item_conflict": "{from} moet klaar zijn voordat {to} begint. Conflict: {to} begint op {start}, {from} eindigt op {end}",
+      "row_starts_after": "Begint na: {names}",
+      "row_required_by": "Vereist voor: {names}",
+      "row_conflict": "Conflict met: {names}",
+      "names_more": "{names}, +{count}",
+      "link_conflict_tip": "Conflict: {to} begint voordat {from} eindigt",
+      "announce_conflict": "Conflict: {to} begint voordat {from} eindigt",
+      "link_remove": "Koppeling van {from} naar {to} verwijderen",
+      "link_tip_target": "{to} na {from} laten beginnen",
+      "link_tip_drop": "Neerzetten op een taak",
+      "link_refused_cycle": "Niet gekoppeld: dit zou een lus maken",
+      "link_refused_self": "Een taak kan niet van zichzelf afhangen",
+      "link_refused_no_dates": "Niet gekoppeld: {name} heeft geen datums",
+      "link_refused_exists": "Niet gekoppeld: {to} begint al na {from}",
+      "link_refused_limit": "Niet gekoppeld: een grafiek bevat hoogstens {count} koppelingen",
+      "announce_link_added": "{to} begint nu na {from}",
+      "announce_link_removed": "Koppeling verwijderd: {to} hangt niet meer af van {from}",
+      "announce_link_cancelled": "Koppeling geannuleerd",
+      "link_instructions": "Alt plus Shift plus pijl rechts laat een andere taak na deze beginnen; Alt plus Shift plus pijl links laat deze taak na een andere beginnen. Pijl omhoog en omlaag kiezen de taak, Enter koppelt of ontkoppelt, Escape annuleert.",
+      "announce_link_target": "{from} aan {to} koppelen: {to} zou beginnen nadat {from} eindigt. Enter om te koppelen.",
+      "announce_link_exists": "{to} begint al na {from}. Enter om de koppeling te verwijderen."
+    },
+    "timeline": {
+      "region": "Tijdlijn",
+      "state": {
+        "done": "Voltooid",
+        "current": "Huidig",
+        "upcoming": "Gepland"
+      }
     }
   }
 }

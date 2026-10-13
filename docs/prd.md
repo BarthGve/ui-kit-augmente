@@ -44,6 +44,7 @@ The shipped baseline (docs/onboarding.md) is in scope by definition. To build:
 | Filters update (#259) | 3 | Several states and filtering logic |
 | Share update (#203) | 3 | Modal with invitations and access, already complex |
 | Waffle and user menu update (#278, #241) | 2 | Visual update, plus label translations |
+| Alert modal (owner request, 2026-10-09) | 2 | Modal with `alertdialog` semantics and `Alert` severities, built on `Modal` |
 
 Scale: 1 trivial CRUD · 2 form + persistence + list · 3 business logic / several states · 4 integrations, payments, roles · 5 real-time, migrations, external systems. A 5 is a graveyard candidate — keep it only if it IS the core value.
 
@@ -66,9 +67,30 @@ Strict respect of the existing product's constraints (tokens, RGAA accessibility
 - Detailed conventions are owned by `/dm-architect`.
 
 ## Success criteria
-- Each in-scope component is published in `@gouvfr-lasuite/ui-components` with its story and tests.
+- Each in-scope component is published in `@gouvfr-lasuite/ui-components` (for the fork, `@barthgve/ui-components`, see ADR 005) with its story and tests.
 - Zero violations on automated accessibility tests, full keyboard navigation, compliant contrasts.
 - The ui-kit issues named in the perimeter are closed: #184, #183, #213, #309, #244, #269, #245, #231, #259, #203, #278, #241, #217, #232, #188, #220, #198, #187, #186.
 - The Gantt is usable in editing mode (move, resize, dependencies) on a demonstration data set.
 
 ## Amendements
+
+### 2026-10-13 — v0.1.0 — publish-fork
+**Entre dans le périmètre :** publishing the fork's `ui-components` on the public npm registry under the owner's scope (`@barthgve/ui-components`), versions `x.y.z-fork.N`, consumed through an npm alias that keeps the upstream import names; publication workflow from `main`; installation page corrected. Architecture impact: an external service (the npm registry) and a CI secret, so ADR 005 (supersedes ADR 004) is part of this amendment.
+**Sorti du cimetière ?** non — "Redesign or migration of the tokens, of the token engine, and of `ui-codemod`" stays excluded: `ui-tokens` and `ui-codemod` are not published by the fork.
+**Stories :** s56, s57.
+
+### 2026-10-09 — v0.1.0 — design-system-artifact
+**Entre dans le périmètre :** each ticket that delivers or changes a component also updates the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP): the component's page, its catalogue entry and the canvas index. Checked by hand through a line in the ticket's PR description, verified by `/dm-review`.
+**Sorti du cimetière ?** oui — the graveyard item "Documentation site outside the existing Storybook" stays excluded for any documentation aimed at the users of the components (Storybook remains the only official documentation). The artifact is a deliberate exception: a private, internal design-review reference kept by the fork owner, used as a visual reference during development. It is neither published nor shipped with the packages. What changed since the exclusion: the owner asked for this reference to follow every delivery.
+**Stories :** s01 to s25 (shared rule, see the shared text of docs/stories.md); s15 as soon as its design check is confirmed.
+
+### 2026-10-09 — v0.1.0 — alert-modal
+**Entre dans le périmètre :** an alert modal (story s26-alert-modal), requested by the owner: a modal exposing `role="alertdialog"` with the four `Alert` severities, built on the existing `Modal`.
+**Sorti du cimetière ?** non — the graveyard is unchanged.
+**Stories :** s26.
+
+### 2026-10-09 — v0.1.0 — shadcn-gap
+**Entre dans le périmètre :** all components of shadcn/ui (https://ui.shadcn.com/docs/components) that ui-kit lacks, at the owner's request: Slider, Sheet, Drawer, Empty, Input OTP, Button Group, Input Group, Toggle, Hover Card, Kbd, Collapsible, Carousel, Aspect Ratio, Menubar, Navigation Menu, Sidebar, Scroll Area, Resizable, Item, Typography, Chart, Bubble, Message, Message Scroller, Marker, Questionnaire, Direction, Native Select, Attachment (stories s27 to s55). Already covered by an existing or planned story, so not duplicated: Accordion (s11), Breadcrumb (s12), Card (s10), Skeleton (s09), Combobox (s19), Alert Dialog (s26), Toggle Group (s13), Progress (s15), Command (`quick-search`), Dialog (`modal`), Spinner (`loader`).
+**Sorti du cimetière ?** oui, partiellement — "Data-visualisation components other than Timeline and Gantt (charts, maps)": charts re-enter the perimeter (story s47-chart, needs an ADR for a charting library); maps stay excluded. "Redesign of tokens" stays excluded: s46-typography does not touch the token scale.
+**Stories :** s27 to s55 (complexities 1 to 4; most in backlog behind the current queue).
+

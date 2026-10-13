@@ -5,7 +5,8 @@
     },
     "searchFilter": {
       "reset": "Reset",
-      "placeholder": "Search for a name"
+      "placeholder": "Search for a name",
+      "loading": "Loading…"
     },
     "share": {
       "copyLink": "Copy link",
@@ -314,6 +315,58 @@
       "region": "Announcement",
       "close": "Close",
       "newWindow": "(opens in a new window)"
+    },
+    "gantt": {
+      "zoom_aria_label": "Zoom level",
+      "zoom_day": "Day",
+      "zoom_week": "Week",
+      "zoom_month": "Month",
+      "task_column": "Task",
+      "schedule_column": "Schedule",
+      "row_dates_aria": "{name}, from {start} to {end}",
+      "row_date_aria": "{name}, {date}",
+      "row_no_dates_aria": "{name}, no dates",
+      "no_dates": "No dates",
+      "today": "Today",
+      "empty": "No tasks",
+      "tooltip_dates": "{start} to {end}",
+      "announce_preview": "{name}: {start} to {end}",
+      "announce_changed": "{name} rescheduled: {start} to {end}",
+      "announce_cancelled": "{name}: change cancelled, dates restored",
+      "limit_axis": "Limit of the chart reached",
+      "limit_end_before_start": "The end cannot be before the start",
+      "edit_instructions": "Alt plus Left or Right arrow moves the task by one step of the zoom. Shift plus Left or Right arrow changes its end date. Enter confirms, Escape cancels.",
+      "dependencies_list_label": "Dependencies",
+      "dependency_item": "{from} must finish before {to} starts",
+      "dependency_item_conflict": "{from} must finish before {to} starts. Conflict: {to} starts on {start}, {from} ends on {end}",
+      "row_starts_after": "Starts after: {names}",
+      "row_required_by": "Required by: {names}",
+      "row_conflict": "Conflict with: {names}",
+      "names_more": "{names}, +{count}",
+      "link_conflict_tip": "Conflict: {to} starts before {from} ends",
+      "announce_conflict": "Conflict: {to} starts before {from} ends",
+      "link_remove": "Remove link from {from} to {to}",
+      "link_tip_target": "Start {to} after {from}",
+      "link_tip_drop": "Drop on a task",
+      "link_refused_cycle": "Not linked: this would create a loop",
+      "link_refused_self": "A task cannot depend on itself",
+      "link_refused_no_dates": "Not linked: {name} has no dates",
+      "link_refused_exists": "Not linked: {to} already starts after {from}",
+      "link_refused_limit": "Not linked: a chart holds at most {count} links",
+      "announce_link_added": "{to} now starts after {from}",
+      "announce_link_removed": "Link removed: {to} no longer depends on {from}",
+      "announce_link_cancelled": "Link cancelled",
+      "link_instructions": "Alt plus Shift plus Right arrow makes another task start after this one; Alt plus Shift plus Left arrow makes this task start after another. Up and Down arrows choose the task, Enter links or unlinks, Escape cancels.",
+      "announce_link_target": "Link {from} to {to}: {to} would start after {from} ends. Enter to link.",
+      "announce_link_exists": "{to} already starts after {from}. Enter to remove the link."
+    },
+    "timeline": {
+      "region": "Timeline",
+      "state": {
+        "done": "Done",
+        "current": "Current",
+        "upcoming": "Upcoming"
+      }
     }
   }
 }

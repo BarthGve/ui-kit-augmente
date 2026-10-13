@@ -1,0 +1,215 @@
+import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
+import { CalendarDate } from "@internationalized/date";
+import { DEMO_DEPENDENCIES, DEMO_TASKS, DEMO_TODAY } from "./demo";
+import { Gantt } from "./index";
+import type { GanttDependency, GanttTask, GanttZoom } from "./types";
+
+const TASKS: GanttTask[] = [
+  {
+    id: "brief",
+    name: "Write the brief",
+    start: "2026-03-02",
+    end: "2026-03-13",
+  },
+  {
+    id: "build",
+    name: "Build the prototype",
+    start: "2026-03-09",
+    end: "2026-04-03",
+  },
+  { id: "review", name: "Review", start: "2026-03-25", end: "2026-03-25" },
+  { id: "plan", name: "Plan the launch" },
+  { id: "release", name: "Release", start: "2026-04-06", end: "2026-04-10" },
+];
+
+// 100 tasks over 18 months, staggered.
+const origin = new CalendarDate(2026, 1, 5);
+const LONG: GanttTask[] = Array.from({ length: 100 }, (_, i) => {
+  const start = origin.add({ days: i * 5 });
+  return {
+    id: `task-${i}`,
+    name: `Task ${i + 1}`,
+    start,
+    end: start.add({ days: 7 + (i % 4) * 7 }),
+  };
+});
+
+const meta = {
+  title: "Components/Gantt",
+  component: Gantt,
+  parameters: { layout: "padded" },
+  decorators: [
+    (Story) => (
+      <div style={{ height: "24rem" }}>
+        <Story />
+      </div>
+    ),
+  ],
+  args: { "aria-label": "Project schedule", tasks: TASKS, today: "2026-03-23" },
+} satisfies Meta<typeof Gantt>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
+export const WithoutDates: Story = {
+  args: {
+    tasks: [
+      { id: "a", name: "Dated", start: "2026-03-02", end: "2026-03-06" },
+      { id: "b", name: "No dates" },
+      { id: "c", name: "Only a start", start: "2026-03-04" },
+      {
+        id: "d",
+        name: "End before start",
+        start: "2026-03-10",
+        end: "2026-03-02",
+      },
+    ],
+  },
+};
+
+export const OneDayTasks: Story = {
+  args: {
+    defaultZoom: "day",
+    tasks: [
+      { id: "a", name: "Kick-off", start: "2026-03-23", end: "2026-03-23" },
+      { id: "b", name: "Demo", start: "2026-03-26", end: "2026-03-26" },
+      {
+        id: "c",
+        name: "Retrospective",
+        start: "2026-03-27",
+        end: "2026-03-27",
+      },
+    ],
+  },
+};
+
+export const LongSchedule: Story = {
+  args: { tasks: LONG, defaultZoom: "month", today: "2026-09-01" },
+};
+
+export const Empty: Story = {
+  args: { tasks: [] },
+};
+
+// Controlled: the story owns the zoom and shows it.
+export const Zoomed: Story = {
+  render: function Render(args) {
+    const [zoom, setZoom] = useState<GanttZoom>("day");
+    return <Gantt {...args} zoom={zoom} onZoomChange={setZoom} />;
+  },
+};
+
+// 30 tasks over five months in day zoom: both axes scroll.
+export const WideSchedule: Story = {
+  args: { tasks: LONG.slice(0, 30), defaultZoom: "day" },
+};
+
+// Editable and controlled: the story applies every change to its tasks.
+export const Editable: Story = {
+  args: { editable: true, defaultZoom: "day" },
+  render: function Render(args) {
+    const [tasks, setTasks] = useState(args.tasks);
+    return (
+      <Gantt
+        {...args}
+        tasks={tasks}
+        onTaskChange={(id, change) =>
+          setTasks((all) =>
+            all.map((task) => (task.id === id ? { ...task, ...change } : task)),
+          )
+        }
+      />
+    );
+  },
+};
+
+// Editable from month zoom: short bars carry no handles (move only).
+export const EditableByMonth: Story = {
+  ...Editable,
+  args: { editable: true, defaultZoom: "month" },
+};
+
+// Read-only links: Build starts before the brief ends (a conflict), Plan
+// has no dates (listed for assistive technology, not drawn).
+export const WithDependencies: Story = {
+  args: {
+    defaultZoom: "day",
+    dependencies: [
+      { from: "brief", to: "build" },
+      { from: "brief", to: "review" },
+      { from: "build", to: "release" },
+      { from: "review", to: "release" },
+      { from: "plan", to: "release" },
+    ],
+  },
+};
+
+// Link editing, controlled: the story applies every task and link change and
+// shows the last one. Drag a bar's connector onto another task to link it;
+// click a link, then Remove (or Delete) to unlink it.
+export const LinkEditable: Story = {
+  args: {
+    editable: true,
+    dependencies: [
+      { from: "brief", to: "build" },
+      { from: "brief", to: "review" },
+      { from: "build", to: "release" },
+    ],
+  },
+  render: function Render(args) {
+    const [tasks, setTasks] = useState(args.tasks);
+    const [dependencies, setDependencies] = useState<GanttDependency[]>(
+      args.dependencies ?? [],
+    );
+    const [last, setLast] = useState("");
+    return (
+      <>
+        <Gantt
+          {...args}
+          tasks={tasks}
+          dependencies={dependencies}
+          onTaskChange={(id, change) => {
+            setLast(`${id}: ${change.start} to ${change.end}`);
+            setTasks((all) =>
+              all.map((task) =>
+                task.id === id ? { ...task, ...change } : task,
+              ),
+            );
+          }}
+          onDependencyChange={({ kind, dependency }) => {
+            setLast(`${kind} ${dependency.from} to ${dependency.to}`);
+            setDependencies((all) =>
+              kind === "add"
+                ? [...all, dependency]
+                : all.filter(
+                    (link) =>
+                      link.from !== dependency.from ||
+                      link.to !== dependency.to,
+                  ),
+            );
+          }}
+        />
+        <output>{last}</output>
+      </>
+    );
+  },
+};
+
+// The demonstration data set (also driven by the CT smoke): a chain, a
+// diamond, a conflict already there, a task without dates, and a one-day
+// retrospective far right that leaves three weeks of room to drag into (the
+// axis does not grow while dragging). Move, resize, link and unlink: the
+// story applies every change and shows the last one.
+export const Dependencies: Story = {
+  ...LinkEditable,
+  args: {
+    editable: true,
+    tasks: DEMO_TASKS,
+    dependencies: DEMO_DEPENDENCIES,
+    today: DEMO_TODAY,
+    defaultZoom: "week",
+  },
+};

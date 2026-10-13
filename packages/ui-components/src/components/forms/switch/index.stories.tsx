@@ -114,6 +114,81 @@ export const Success = {
   },
 };
 
+export const Small = {
+  args: {
+    size: "small",
+    "aria-label": "Small switch",
+  },
+};
+
+export const SmallWithLabel = {
+  args: {
+    size: "small",
+    label: "Label",
+    defaultChecked: true,
+  },
+};
+
+export const SmallLabelRight = {
+  args: {
+    size: "small",
+    label: "Label",
+    labelSide: "right",
+    text: "This is an optional text",
+  },
+};
+
+export const SmallWithText = {
+  args: {
+    size: "small",
+    label: "Label",
+    text: "This is an optional text",
+    defaultChecked: true,
+  },
+};
+
+export const SmallDisabled = {
+  args: {
+    size: "small",
+    label: "Label",
+    text: "This is an optional text",
+    disabled: true,
+    defaultChecked: true,
+  },
+};
+
+export const SmallError = {
+  args: {
+    size: "small",
+    label: "Label",
+    text: "This is an optional text",
+    state: "error",
+    defaultChecked: true,
+  },
+};
+
+export const SmallSuccess = {
+  args: {
+    size: "small",
+    label: "Label",
+    text: "This is an optional text",
+    state: "success",
+    defaultChecked: true,
+  },
+};
+
+export const SizesCompared = () => (
+  <div>
+    <Switch label="Medium" text="Default size" defaultChecked={true} />
+    <Switch
+      label="Small"
+      text="Dense layouts"
+      size="small"
+      defaultChecked={true}
+    />
+  </div>
+);
+
 export const Controlled = {
   render: () => {
     const [checked, setChecked] = React.useState(false);

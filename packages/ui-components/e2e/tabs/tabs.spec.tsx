@@ -210,6 +210,68 @@ for (const variant of ["default", "line"] as const) {
         await list.evaluate((node) => node.getBoundingClientRect().width),
       ).toBeLessThanOrEqual(180);
     });
+
+    test("keeps a narrow viewport free of horizontal page scroll", async ({
+      mount,
+      page,
+    }) => {
+      await page.setViewportSize({ width: 320, height: 640 });
+      // Five fixed long labels with icons; `width={320}` is capped by the
+      // helper's `maxWidth: 100%`, so the tabs take the full available width.
+      await mount(
+        <TestTabs
+          variant={variant}
+          width={320}
+          tabs={[
+            ["overview", "Project overview", "dashboard"],
+            ["activity", "Recent activity", "history"],
+            ["members", "Team members", "group"],
+            ["documents", "Shared documents", "description"],
+            ["settings", "Advanced settings", "settings"],
+          ].map(([id, label, icon]) => ({ id, label, icon, content: label }))}
+        />,
+      );
+      const list = page.getByRole("tablist");
+      await expect(page.getByRole("tab")).toHaveCount(5);
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth,
+        ),
+      ).toBe(true);
+      expect(
+        await list.evaluate((node) => node.scrollWidth > node.clientWidth),
+      ).toBe(true);
+      await expect(list).toHaveCSS("overflow-x", "auto");
+
+      // The ring of the first tab is not clipped by the list or the viewport.
+      await page.getByRole("button", { name: "Before tabs" }).focus();
+      await page.keyboard.press("Tab");
+      const first = page.getByRole("tab", { name: "Project overview" });
+      await expect(first).toBeFocused();
+      await expect(first).toHaveCSS("outline-style", "solid");
+      const ringLeft = await first.evaluate((node) => {
+        const style = getComputedStyle(node);
+        return (
+          node.getBoundingClientRect().left -
+          parseFloat(style.outlineOffset) -
+          parseFloat(style.outlineWidth)
+        );
+      });
+      expect(ringLeft).toBeGreaterThanOrEqual(0);
+      expect(ringLeft).toBeGreaterThanOrEqual((await list.boundingBox())!.x);
+
+      await page.keyboard.press("End");
+      const last = page.getByRole("tab", { name: "Advanced settings" });
+      await expect(last).toBeFocused();
+      await expect
+        .poll(async () => {
+          const box = (await last.boundingBox())!;
+          return box.x >= 0 && box.x + box.width <= 320;
+        })
+        .toBe(true);
+    });
   });
 }
 

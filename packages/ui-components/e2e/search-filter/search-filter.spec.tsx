@@ -226,6 +226,87 @@ test.describe("SearchFilter", () => {
   });
 });
 
+// s07 t04: the trigger reuses Filter's ring, on keyboard focus only.
+test.describe("SearchFilter — focus ring", () => {
+  const outline = (trigger: import("@playwright/test").Locator) =>
+    trigger.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { style: s.outlineStyle, width: s.outlineWidth };
+    });
+
+  test("a keyboard-focused trigger draws the ring", async ({ mount, page }) => {
+    await mount(<TestSearchFilter />);
+    const trigger = page.getByRole("button", { name: /Category/ });
+    await page.keyboard.press("Tab");
+    await expect(trigger).toBeFocused();
+    expect(await outline(trigger)).toEqual({ style: "solid", width: "2px" });
+  });
+
+  // Observed in chromium: the press focuses the trigger, the popover only
+  // opens on release, so the pointer focus can be read in between.
+  test("a pointer-focused trigger draws none", async ({ mount, page }) => {
+    await mount(<TestSearchFilter />);
+    const trigger = page.getByRole("button", { name: /Category/ });
+    const box = (await trigger.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await expect(trigger).toBeFocused();
+    expect((await outline(trigger)).style).toBe("none");
+    await page.mouse.up();
+  });
+});
+
+// The literals moved to `--c--components--search-filter--*` tokens (s07 t03):
+// the rendered popover keeps the exact pre-token values.
+test.describe("SearchFilter — computed styles from the search-filter tokens", () => {
+  test("popover bounds, search row, list and item", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<TestSearchFilter />);
+    await page.getByRole("button", { name: /Category/ }).click();
+    await expect(page.getByRole("listbox")).toBeVisible();
+
+    const style = await page.evaluate(() => {
+      const css = (selector: string) =>
+        getComputedStyle(document.querySelector(selector)!);
+      const popover = css(".c__search-filter__popover");
+      const search = css(".c__search-filter__search");
+      const list = css(".c__search-filter__list");
+      const item = css(".c__search-filter__item");
+      return {
+        popoverMinWidth: popover.minWidth,
+        popoverMaxWidth: popover.maxWidth,
+        searchHeight: search.height,
+        searchGap: search.columnGap,
+        searchPadding: search.padding,
+        listMaxHeight: list.maxHeight,
+        itemMinHeight: item.minHeight,
+        itemFontWeight: item.fontWeight,
+      };
+    });
+    expect(style).toEqual({
+      popoverMinWidth: "240px",
+      popoverMaxWidth: "320px",
+      searchHeight: "36px",
+      searchGap: "6px",
+      searchPadding: "0px 8px",
+      listMaxHeight: "240px",
+      itemMinHeight: "32px",
+      itemFontWeight: "500",
+    });
+  });
+
+  test("loading row padding", async ({ mount, page }) => {
+    await mount(<TestSearchFilter isLoading />);
+    await page.getByRole("button", { name: /Category/ }).click();
+    await expect(page.locator(".c__search-filter__loading")).toHaveCSS(
+      "padding",
+      "8px",
+    );
+  });
+});
+
 test.describe("UserSearchFilter", () => {
   test("renders each user's full name as an option", async ({
     mount,

@@ -5,7 +5,8 @@
     },
     "searchFilter": {
       "reset": "Réinitialiser",
-      "placeholder": "Rechercher un nom"
+      "placeholder": "Rechercher un nom",
+      "loading": "Chargement…"
     },
     "share": {
       "copyLink": "Copier le lien",
@@ -314,6 +315,58 @@
       "region": "Annonce",
       "close": "Fermer",
       "newWindow": "(ouvre une nouvelle fenêtre)"
+    },
+    "gantt": {
+      "zoom_aria_label": "Niveau de zoom",
+      "zoom_day": "Jour",
+      "zoom_week": "Semaine",
+      "zoom_month": "Mois",
+      "task_column": "Tâche",
+      "schedule_column": "Planning",
+      "row_dates_aria": "{name}, du {start} au {end}",
+      "row_date_aria": "{name}, le {date}",
+      "row_no_dates_aria": "{name}, sans dates",
+      "no_dates": "Sans dates",
+      "today": "Aujourd'hui",
+      "empty": "Aucune tâche",
+      "tooltip_dates": "du {start} au {end}",
+      "announce_preview": "{name} : du {start} au {end}",
+      "announce_changed": "{name} replanifiée : du {start} au {end}",
+      "announce_cancelled": "{name} : modification annulée, dates rétablies",
+      "limit_axis": "Limite du graphique atteinte",
+      "limit_end_before_start": "La fin ne peut pas précéder le début",
+      "edit_instructions": "Alt avec flèche gauche ou droite déplace la tâche d'un pas du zoom. Maj avec flèche gauche ou droite modifie sa date de fin. Entrée valide, Échap annule.",
+      "dependencies_list_label": "Dépendances",
+      "dependency_item": "{from} doit se terminer avant le début de {to}",
+      "dependency_item_conflict": "{from} doit se terminer avant le début de {to}. Conflit : {to} commence le {start}, {from} se termine le {end}",
+      "row_starts_after": "Commence après : {names}",
+      "row_required_by": "Requise par : {names}",
+      "row_conflict": "Conflit avec : {names}",
+      "names_more": "{names}, +{count}",
+      "link_conflict_tip": "Conflit : {to} commence avant la fin de {from}",
+      "announce_conflict": "Conflit : {to} commence avant la fin de {from}",
+      "link_remove": "Supprimer le lien de {from} vers {to}",
+      "link_tip_target": "Faire commencer {to} après {from}",
+      "link_tip_drop": "Déposer sur une tâche",
+      "link_refused_cycle": "Lien refusé : il créerait une boucle",
+      "link_refused_self": "Une tâche ne peut pas dépendre d'elle-même",
+      "link_refused_no_dates": "Lien refusé : {name} n'a pas de dates",
+      "link_refused_exists": "Lien refusé : {to} commence déjà après {from}",
+      "link_refused_limit": "Lien refusé : un graphique contient au plus {count} liens",
+      "announce_link_added": "{to} commence désormais après {from}",
+      "announce_link_removed": "Lien supprimé : {to} ne dépend plus de {from}",
+      "announce_link_cancelled": "Lien annulé",
+      "link_instructions": "Alt plus Maj plus flèche droite fait commencer une autre tâche après celle-ci ; Alt plus Maj plus flèche gauche fait commencer cette tâche après une autre. Les flèches haut et bas choisissent la tâche, Entrée lie ou délie, Échap annule.",
+      "announce_link_target": "Lier {from} à {to} : {to} commencerait après la fin de {from}. Entrée pour lier.",
+      "announce_link_exists": "{to} commence déjà après {from}. Entrée pour supprimer le lien."
+    },
+    "timeline": {
+      "region": "Chronologie",
+      "state": {
+        "done": "Terminé",
+        "current": "En cours",
+        "upcoming": "À venir"
+      }
     }
   }
 }

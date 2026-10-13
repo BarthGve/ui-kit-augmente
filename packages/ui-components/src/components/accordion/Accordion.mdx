@@ -1,0 +1,114 @@
+import { Meta, Canvas, ArgTypes } from "@storybook/blocks";
+import * as AccordionStories from "./accordion.stories";
+
+<Meta of={AccordionStories} name="Docs" />
+
+# Accordion
+
+`Accordion` stacks collapsible sections: each `AccordionItem` has a trigger
+(its `title`) that shows or hides its panel. State, ARIA and Enter / Space come
+from React Aria's `DisclosureGroup`; the component holds no state of its own.
+
+## Structure
+
+```tsx
+import { Accordion, AccordionItem } from "@gouvfr-lasuite/ui-components";
+
+<Accordion>
+  <AccordionItem id="delivery" title="Delivery">
+    Orders ship within two working days.
+  </AccordionItem>
+  <AccordionItem id="returns" title="Returns">
+    Items can be returned within thirty days.
+  </AccordionItem>
+</Accordion>;
+```
+
+<Canvas of={AccordionStories.Default} />
+
+Each trigger is a `button` inside a heading. The heading level is set per item
+with `headingLevel` (default `3`): pick the level that fits the page outline.
+The panel is linked to its trigger (`aria-controls` / `aria-labelledby`); a
+collapsed panel is hidden from assistive technologies and from `Tab`.
+
+The trigger's accessible name comes from `title`, which is also the panel's
+name. Keep it short and self-explanatory.
+
+## Single and multiple mode
+
+By default one panel is open at a time: opening a section closes the other.
+With `allowsMultipleExpanded`, several panels stay open.
+
+<Canvas of={AccordionStories.Multiple} />
+
+## Controlled and uncontrolled
+
+Item `id`s are the keys. Uncontrolled, `defaultExpandedKeys` sets the
+initially open items. Controlled, `expandedKeys` decides what is open and
+`onExpandedChange` receives the requested keys as a `Set<Key>`; the accordion
+only changes when the parent updates `expandedKeys`.
+
+```tsx
+const [keys, setKeys] = useState<Set<Key>>(new Set(["delivery"]));
+
+<Accordion expandedKeys={keys} onExpandedChange={setKeys}>
+  …
+</Accordion>;
+```
+
+<Canvas of={AccordionStories.DefaultExpanded} />
+<Canvas of={AccordionStories.Controlled} />
+
+**Controlled single mode with several keys.** In single mode, passing more than
+one key to `expandedKeys` makes React Aria keep only the first one: it calls
+`onExpandedChange` with that single key on every render until the parent's
+state matches. Pass at most one key, or use `allowsMultipleExpanded`.
+
+## Disabled
+
+`isDisabled` on an item disables its trigger; on the `Accordion` it disables
+every item. A disabled trigger cannot be focused and is skipped by arrow keys.
+
+<Canvas of={AccordionStories.WithDisabledItem} />
+
+## Keyboard
+
+| Key                       | Action                                                |
+| ------------------------- | ----------------------------------------------------- |
+| `Tab` / `Shift+Tab`       | Moves through triggers and the content of open panels |
+| `Enter` / `Space`         | Opens or closes the focused section                   |
+| `Arrow Down` / `Arrow Up` | Focuses the next / previous trigger, wrapping around  |
+| `Home` / `End`            | Focuses the first / last trigger                      |
+
+Arrow keys only act on triggers: in a field inside a panel they keep their
+usual behaviour. In a nested accordion they stay within the inner one.
+
+<Canvas of={AccordionStories.Nested} />
+<Canvas of={AccordionStories.WithFormControls} />
+
+Keyboard focus shows an outline ring inside the trigger row, also in
+forced-colors mode; there is no ring after a mouse click. Transitions are
+removed when reduced motion is requested.
+
+<Canvas of={AccordionStories.LongContent} />
+
+## Tokens
+
+| Token (`--c--components--accordion--…`) | Default                                            |
+| --------------------------------------- | -------------------------------------------------- |
+| `color`                                 | `contextuals.content.semantic.neutral.primary`     |
+| `color--disabled`                       | `contextuals.content.semantic.disabled.primary`    |
+| `border-color`                          | `contextuals.border.surface.primary`               |
+| `border-width`                          | `1px`                                              |
+| `trigger-background-color--hover`       | `contextuals.background.semantic.neutral.tertiary` |
+| `trigger-font-weight`                   | `globals.font.weights.bold`                        |
+| `trigger-padding`                       | `globals.spacings.base`                            |
+| `panel-padding`                         | `globals.spacings.base`                            |
+| `icon-size`                             | `1.5rem`                                           |
+| `focus-ring-color`                      | `contextuals.content.semantic.brand.tertiary`      |
+| `focus-ring-width`                      | `2px`                                              |
+| `focus-ring-offset`                     | `-2px`                                             |
+
+## Props
+
+<ArgTypes of={AccordionStories} />

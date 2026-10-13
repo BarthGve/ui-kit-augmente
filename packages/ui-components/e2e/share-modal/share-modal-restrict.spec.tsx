@@ -4,7 +4,7 @@ import { TestShareModal } from "../helpers/mount-share-modal";
 
 const openConfirmation = async (page: Page, title: string) => {
   await page.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: title, exact: true }).click();
+  await page.getByRole("menuitem", { name: new RegExp(`^${title}`) }).click();
   return page.getByRole("dialog", { name: title, exact: true });
 };
 

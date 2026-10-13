@@ -19,4 +19,8 @@ export const tokens = (defaults: DefaultTokens) => ({
   "checkmark-color": defaults.contextuals.content.semantic.contextual.primary,
 
   size: "1.5rem",
+  // Small size, shared with Radio. Keep `small-size` >= 14px: with the label's
+  // 4px padding and 1px border, that keeps the hit area >= 24x24 (WCAG 2.5.8).
+  "small-size": "1rem",
+  "small-font-size": defaults.globals.font.sizes.xs,
 });

@@ -1,0 +1,526 @@
+import { Meta, Canvas, ArgTypes } from "@storybook/blocks";
+import * as GanttStories from "./gantt.stories";
+
+<Meta of={GanttStories} name="Docs" />
+
+# Gantt
+
+`Gantt` shows tasks on a time axis: one row per task, a bar from its start to
+its end date, a marker on today. It is read-only by default. With `editable`
+and `onTaskChange`, bars can be moved and resized, with the pointer or the
+keyboard, by whole zoom units (see [Editing](#editing)). With `dependencies`
+it draws finish-to-start links between tasks and shows the ones in conflict;
+with `onDependencyChange` as well, the user links and unlinks tasks (see
+[Dependencies](#dependencies)).
+
+## Structure
+
+```tsx
+import { Gantt } from "@gouvfr-lasuite/ui-components";
+
+<div style={{ height: "24rem" }}>
+  <Gantt
+    aria-label="Project schedule"
+    tasks={[
+      {
+        id: "brief",
+        name: "Write the brief",
+        start: "2026-03-02",
+        end: "2026-03-13",
+      },
+      { id: "review", name: "Review", start: "2026-03-25", end: "2026-03-25" },
+      { id: "plan", name: "Plan the launch" },
+    ]}
+  />
+</div>;
+```
+
+<Canvas of={GanttStories.Default} />
+
+The chart is a single scroll box. The task column and the axis are sticky: the
+list stays in place while the timeline scrolls horizontally, and the axis stays
+on top while the rows scroll vertically.
+
+**Give the chart a size.** It fills the width of its container and takes at
+most the height of a sized parent (`max-block-size: 100%`), beyond which the
+box scrolls. In a shrink-to-fit parent (a flex row item, `inline-block`, an
+`auto` grid track) it collapses to no width: give it a width there, for
+example `flex: 1` or `width: 100%`.
+
+`aria-label` is required: it names the grid, which has no visible title.
+
+## Data
+
+```ts
+interface GanttTask {
+  id: string; // stable, unique
+  name: string;
+  start?: string | CalendarDate; // "YYYY-MM-DD"
+  end?: string | CalendarDate; // inclusive
+}
+```
+
+- **Calendar dates, not instants.** Dates are ISO days (`"2026-03-30"`) or
+  `CalendarDate`s from `@internationalized/date`. No time and no time zone is
+  involved, so a bar never shifts by a day across a daylight-saving change.
+- **The end is inclusive**: a one-day task has `start` equal to `end` and is one
+  day wide.
+- Rows follow the array order. The component never modifies `tasks`.
+- The axis starts on the first day of the locale's week (Monday in `fr-FR`,
+  Sunday in `en-US`) before the earliest start, and ends with the week or the
+  month of the latest end.
+
+### Tasks without dates
+
+A task with no dates, only one of the two, an end before its start, or a date
+that does not exist (`"2026-02-30"`) keeps its row and its name, shows
+"No dates" and draws no bar.
+
+<Canvas of={GanttStories.WithoutDates} />
+
+### Today
+
+`today` sets the marker's day (default: today in the local time zone). The
+marker is a line with a "Today" label, not drawn when today is outside the
+axis. Pass a fixed `today` in tests and stories. The marker does not move at
+midnight while the page stays open.
+
+<Canvas of={GanttStories.OneDayTasks} />
+
+## Zoom
+
+Day, Week and Month change the width of a day (and the axis labels). Week is
+the default. Uncontrolled, `defaultZoom` sets the initial zoom. Controlled,
+`zoom` decides and `onZoomChange` receives the requested zoom; the chart only
+changes when the parent updates `zoom`. A zoom change from the control keeps
+the left-most visible day in place; in controlled mode, as long as the chart
+is not scrolled between the request and the parent's update (a request the
+parent refuses is dropped once the chart scrolls). A `zoom` change that does
+not come from the control keeps the scroll offset.
+
+<Canvas of={GanttStories.Zoomed} />
+<Canvas of={GanttStories.WideSchedule} />
+
+## Keyboard
+
+| Key                       | Action                                                                  |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `Tab`                     | Reaches the Day, Week and Month buttons, then the current task row once |
+| `Shift+Tab`               | The same, backwards                                                     |
+| `Enter` / `Space`         | On a zoom button, switches the zoom                                     |
+| `Arrow Down` / `Arrow Up` | Focuses the next / previous task row, without wrapping                  |
+| `Home` / `End`            | Focuses the first / last task row                                       |
+
+The chart is one tab stop: `Tab` enters on the current row (the first one
+initially, then the last row focused, by keyboard or by click) and the next
+`Tab` leaves the chart. Moving to a row scrolls its bar into view. Arrow keys
+with `Ctrl` or `Meta` are always left to the browser; with `Alt` or `Shift`
+they edit the task when the chart is `editable` (see
+[Editing](#editing)), with `Alt+Shift` they link it when link editing is on
+(see [Linking from the keyboard](#linking-from-the-keyboard)), and are left to
+the browser otherwise.
+
+The focused row announces the task and its dates, formatted for the active
+locale:
+
+| Task         | Announcement (en-US)                                    |
+| ------------ | ------------------------------------------------------- |
+| Dated        | "Write the brief, from March 2, 2026 to March 13, 2026" |
+| One day      | "Review, March 25, 2026"                                |
+| Without date | "Plan the launch, no dates"                             |
+
+Keyboard focus draws a ring around the visible part of the row, also in
+forced-colors mode; there is no ring after a mouse click. The bars, the today
+marker and the dense lower axis labels are hidden from assistive technologies:
+the row's name carries the dates.
+
+## Editing
+
+<Canvas of={GanttStories.Editable} />
+
+```tsx
+const [tasks, setTasks] = useState(initialTasks);
+
+<Gantt
+  aria-label="Project schedule"
+  tasks={tasks}
+  editable
+  onTaskChange={(id, change) =>
+    setTasks((all) =>
+      all.map((task) => (task.id === id ? { ...task, ...change } : task)),
+    )
+  }
+/>;
+```
+
+| Prop           | Type                                                           | Default |
+| -------------- | -------------------------------------------------------------- | ------- |
+| `editable`     | `boolean`                                                      | `false` |
+| `onTaskChange` | `(id: string, change: { start: string; end: string }) => void` | none    |
+
+- **Controlled.** The chart never modifies `tasks`. An edit shows a preview
+  (the bar at its new dates, a dashed outline at the old ones, a date chip),
+  then calls `onTaskChange` **once**, when it is confirmed. Apply the change to
+  your data: otherwise the bar goes back to its dates. A cancelled edit, or one
+  that ends on the original dates, calls nothing.
+- **Payload.** `start` and `end` are ISO calendar days (`"2026-03-09"`), the end
+  inclusive, as in `GanttTask`.
+- **Without `editable`** (the default) the chart is exactly the read-only
+  chart: no handles, no shortcuts, the modified arrows left to the browser.
+  `editable` without `onTaskChange` previews edits and reports nothing.
+
+### Steps follow the zoom
+
+| Zoom    | One step                                                                |
+| ------- | ----------------------------------------------------------------------- |
+| `day`   | 1 day                                                                   |
+| `week`  | 7 days                                                                  |
+| `month` | 1 calendar month, clamped to the month's last day (Jan 31 + 1 = Feb 28) |
+
+A move keeps the length in days. Every step is counted from the dates the edit
+started from, so one step forward and one back always returns to them (Jan 31,
+not Jan 28).
+
+### Limits
+
+- **The end never goes before the start**: a task is at least one day long.
+  The edit stops there and says "The end cannot be before the start".
+- **The axis does not grow during an edit**: a task stops at the first or last
+  day drawn, with "Limit of the chart reached". Confirm, then edit again from
+  the new axis.
+- A task without dates, or cut by the ten-year window, cannot be edited.
+- **Right-to-left** (`dir="rtl"` on the chart or an ancestor, read once when it
+  mounts): editing is not supported and `editable` is ignored.
+
+### Pointer
+
+- Drag a bar to move it; drag one of its edge handles (shown on hover and on
+  the focused row) to change only that date. The bar jumps by whole steps.
+- Each handle is a 24px-wide target (`handle-hit-size`) over the row's height.
+  Under 72px a bar's handles shrink to a third of it, and a bar narrower than
+  24px has none (it still moves): zoom in, or use the keyboard.
+- Held near the edge of the visible timeline (48px), the box scrolls and the
+  dates follow.
+- Touch: a finger on a bar or a handle drags it; on the timeline or the task
+  column it scrolls. There is no long press.
+- `Escape`, a lost pointer (cancelled touch, another window) or leaving the
+  window cancel the drag. While a drag runs, `Escape` is not passed on: in a
+  dialog, the first `Escape` cancels the drag, the next one closes the dialog.
+
+### Keyboard
+
+On a focused task row of an `editable` chart:
+
+| Key                          | Action                                                  |
+| ---------------------------- | ------------------------------------------------------- |
+| `Alt+Arrow Right` / `Left`   | Previews the task one step later / earlier (both dates) |
+| `Shift+Arrow Right` / `Left` | Previews the end one step later / earlier               |
+| `Enter`                      | Confirms the edit: `onTaskChange` is called once        |
+| `Escape`                     | Cancels the edit: the dates are restored                |
+
+`Alt` and `Shift` steps combine in one edit (to change only the start, move
+then shorten the end). Moving to another row (`Arrow Up`, `Arrow Down`,
+`Home`, `End`, `Tab`, a click) or leaving the window cancels the edit, then
+navigates as usual. The row keeps the focus after `Enter` and `Escape`, and its
+bar is scrolled into view after `Enter`.
+
+`Alt+Arrow Left` / `Right` is history back / forward in browsers on Windows and
+Linux. The chart keeps the key from the browser only when it edits (an
+editable row with dates is focused): elsewhere the browser shortcut works.
+
+### Assistive technologies
+
+Editable rows expose the shortcuts (`aria-keyshortcuts`) and a short
+instruction as their description. The row's name does not change during an
+edit; a polite status region announces the new dates at each step, the limit
+reached, the confirmed dates ("Write the brief rescheduled: March 9, 2026 to
+March 20, 2026") and a cancel ("Write the brief: change cancelled, dates
+restored"), in the active locale. Repeating the same limit is announced once.
+
+Dragging has no pointer-only alternative without the keyboard (WCAG 2.5.7):
+a pointer user who cannot drag edits the dates with the keyboard, or in your
+own form.
+
+<Canvas of={GanttStories.EditableByMonth} />
+
+## Dependencies
+
+<Canvas of={GanttStories.WithDependencies} />
+
+```tsx
+const [tasks, setTasks] = useState(initialTasks);
+const [dependencies, setDependencies] = useState(initialDependencies);
+
+<Gantt
+  aria-label="Project schedule"
+  tasks={tasks}
+  dependencies={dependencies}
+  editable
+  onTaskChange={(id, change) =>
+    setTasks((all) =>
+      all.map((task) => (task.id === id ? { ...task, ...change } : task)),
+    )
+  }
+  onDependencyChange={({ kind, dependency }) =>
+    setDependencies((all) =>
+      kind === "add"
+        ? [...all, dependency]
+        : all.filter(
+            (link) =>
+              link.from !== dependency.from || link.to !== dependency.to,
+          ),
+    )
+  }
+/>;
+```
+
+| Prop                 | Type                                                                                      | Default |
+| -------------------- | ----------------------------------------------------------------------------------------- | ------- |
+| `dependencies`       | `GanttDependency[]` (`{ from: string; to: string }`)                                      | none    |
+| `onDependencyChange` | `(change: { kind: "add" \| "remove"; dependency: { from: string; to: string } }) => void` | none    |
+
+- **Finish-to-start only**: `to` starts after `from` ends. There is no other
+  link type and no lag.
+- **A link is its pair.** `{ from, to }` identifies it: the same pair twice is
+  one link (the first wins), the reverse pair is another link.
+- **Invalid and surplus entries are ignored**: unknown task ids, a task linked
+  to itself, duplicates, and every entry past the first 1000 valid ones
+  (`MAX_LINKS`). The chart never modifies `dependencies`.
+- **Drawn from the end of one bar to the start of the other**, with an arrow
+  into the successor. When there is room, the line goes straight: out of the
+  predecessor, down (or up) just before the successor, in. When the successor
+  starts too close, or before, the line makes a U: out past the predecessor's
+  end, along the line between the two rows, back to the successor's start. A
+  thin halo in the page colour keeps the line visible across a bar.
+- **Listed, not drawn**: a link to a task without dates or outside the drawn
+  window is not drawn, but it is still listed for assistive technologies.
+- **Right-to-left**: links are not drawn in a `dir="rtl"` chart (they are still
+  listed), and link editing, like editing, is off.
+
+### Conflicts
+
+A link is **in conflict** when the successor starts on or before the
+predecessor's last day: `successor.start <= predecessor.end` (the end is
+inclusive, so starting on the same day is a conflict, the next day is not).
+The line turns dashed, takes the conflict colour and carries a "!" chip, never
+colour alone. While a task is moved or resized, its links follow the preview
+and a conflict appears or disappears live; the chart announces a conflict the
+edit creates ("Conflict: Build the prototype starts before Write the brief
+ends").
+
+**Nothing moves automatically.** A conflict is shown, never resolved: moving a
+task never changes another task, and `onTaskChange` only reports the task the
+user edited.
+
+### Linking and unlinking
+
+<Canvas of={GanttStories.LinkEditable} />
+
+Link editing is on with `editable` **and** `onDependencyChange` (and not in
+right-to-left). Without one of them there is no connector, no Remove button and
+no shortcut.
+
+- **Controlled.** Each user action calls `onDependencyChange` **once**, with
+  `{ kind: "add" | "remove", dependency: { from, to } }`. Apply it to your
+  `dependencies`: otherwise nothing appears or disappears. A cancelled or
+  refused action calls nothing.
+- **Link with the pointer**: hover a dated row (or focus it) to show the
+  connector, a dot just after the bar's end; drag it onto another task's row.
+  While dragging, the target's row says "Start Build the prototype after
+  Write the brief"; over nothing, "Drop on a task". Release to link. `Escape`,
+  a lost pointer or leaving the window cancel.
+- **Unlink with the pointer**: click a link (on one of its vertical parts) to
+  select it. A **Remove link** button appears in the successor's row and takes
+  the focus: `Enter`, `Space` or a click remove the link, `Delete` or
+  `Backspace` too; `Escape` deselects.
+
+A refused link is not reported. The reason shows next to the target's bar,
+outlined in the invalid colour, and is announced; it stays until the next
+pointer press, key or focus change:
+
+| Refusal                       | Message (en-US)                                                        |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| It would close a loop         | "Not linked: this would create a loop"                                 |
+| A task on itself              | "A task cannot depend on itself"                                       |
+| A task without dates          | "Not linked: Plan the launch has no dates"                             |
+| The pair already exists       | "Not linked: Build the prototype already starts after Write the brief" |
+| `MAX_LINKS` (1000) is reached | "Not linked: a chart holds at most 1000 links"                         |
+
+A loop is any chain that comes back to its start: with A to B and B to C,
+C to A is refused.
+
+#### Linking from the keyboard
+
+On a focused, dated task row when link editing is on:
+
+| Key                       | Action                                                                      |
+| ------------------------- | --------------------------------------------------------------------------- |
+| `Alt+Shift+Arrow Right`   | Starts a link where this task comes first: another task will start after it |
+| `Alt+Shift+Arrow Left`    | Starts a link where this task comes second: it will start after another     |
+| `Arrow Down` / `Arrow Up` | Picks the next / previous task (skips this one, does not wrap)              |
+| `Home` / `End`            | Picks the first / last task                                                 |
+| `Enter`                   | Links the pair, or **unlinks** it when the link already exists              |
+| `Escape`                  | Cancels: nothing is reported, the row keeps the focus                       |
+
+The first task picked is the nearest dated row on the arrow's side (below for
+Right, above for Left), else on the other side. The picked task is scrolled
+into view and shows the prospective link; the status region says what `Enter`
+will do ("Link Write the brief to Build the prototype: Build the prototype
+would start after Write the brief ends. Enter to link." or "… Enter to remove
+the link."). `Enter` on a
+refused pair keeps the session open to pick another task. Moving the focus off
+the row or leaving the window cancels.
+
+On Windows, `Alt+Shift` switches the keyboard layout when several layouts are
+installed, and the system may take the chord before the browser: try it with
+your users' layouts. The chart takes the chord only on a focused, dated row
+with link editing on; everywhere else it is left to the system and the
+browser.
+
+#### Touch and pointer limits
+
+- Touch: a finger on the connector drags a link (`touch-action: none` on the
+  connector only, so the timeline still scrolls). There is no long press. The
+  connector and the Remove button are 24px targets.
+- **No click-only way to create a link** (WCAG 2.5.7, dragging movements):
+  creating a link with the pointer needs a drag. A pointer user who cannot
+  drag links with the keyboard, or in your own form. Unlinking has a click
+  path.
+- **A link's hit strip can cover a bar.** With link editing on, the 24px
+  clickable strip of a link that runs down through a third task's row takes
+  the press that would move or resize that task's bar there; a bar narrower
+  than 24px under a strip cannot be dragged while the link is there. Edit it
+  from the keyboard (`Alt` or `Shift` + arrows), or zoom in.
+
+### Links for assistive technologies
+
+The links are an `aria-hidden` drawing; what they mean is in text:
+
+- Each linked row gets a description after its name, for "Build the
+  prototype" in `WithDependencies`: "Starts after: Write the brief. Required
+  by: Release. Conflict with: Write the brief." (at most five names, then
+  "+2").
+- A hidden list named "Dependencies" holds every link, including the ones not
+  drawn: "Write the brief must finish before Build the prototype starts", and
+  for a conflict "… Conflict: Build the prototype starts on March 9, 2026,
+  Write the brief ends on March 13, 2026", in the active locale.
+- With link editing on, dated rows also list the two `Alt+Shift` arrows in
+  `aria-keyshortcuts` and the link instructions in their description; links
+  added, removed, refused and cancelled are announced in the polite status
+  region. The row's name never changes.
+
+### Demonstration and hand check
+
+<Canvas of={GanttStories.Dependencies} />
+
+The `Dependencies` story loads a demonstration data set (the same one the
+component tests drive): a chain from "Write the brief" to "Retrospective", a
+diamond (the design leads to the API and to the interface, both lead to the
+integration), a conflict already there ("Build the interface" starts the day
+"Design the service" ends), a task without dates ("Plan the training", its
+link to the launch is listed, not drawn), and a one-day "Retrospective" far
+right. **The axis does not grow while dragging**: that milestone keeps three
+weeks of free axis after every other task at week zoom. The story applies
+every change and shows the last one under the chart.
+
+To check that the chart is usable in editing mode:
+
+1. Drag "Design the service" one week later: the link to "Build the API" turns
+   dashed with a "!" while dragging; release, the line under the chart reads
+   `design: 2026-03-16 to 2026-03-27` and the conflict stays.
+2. Drag the end handle of "Write the help pages" one week later: only its end
+   changes (`docs: 2026-04-13 to 2026-05-15`).
+3. Hover "Build the API", drag its connector down onto "Write the help pages"
+   and release: `add api to docs`, and a new link is drawn.
+4. Drag the connector of "Integrate" up onto "Write the brief": "Not linked:
+   this would create a loop" shows next to the brief, and nothing is reported.
+5. Click the link from "Write the brief" to "Design the service", then Remove:
+   `remove brief to design`, the link disappears.
+6. From the keyboard: focus the "Write the brief" row, press
+   `Alt+Shift+Arrow Right` ("Design the service" is picked), then `Enter`:
+   `add brief to design`, the link is back. The same chord and `Enter` again
+   remove it.
+7. There is no undo: every step above is final for the story; reload the page
+   to start again.
+
+## Size and performance
+
+Every task is rendered, there is no windowing. Off-screen rows skip layout
+and paint (`content-visibility: auto`), and grid lines are a background, not
+one element per day, so the DOM grows with rows plus axis labels. The task
+count is up to the caller and is not capped: `LongSchedule` (100 rows) is the
+size checked; beyond a few hundred rows, measure with your data, and split or
+page it if needed.
+
+The drawn range is capped at about ten years (3660 days). A wider schedule is
+windowed around today; bars are cut at the window's edges, and a task wholly
+outside the window keeps its row and its announced dates but draws no bar.
+
+<Canvas of={GanttStories.LongSchedule} />
+
+Transitions are removed when reduced motion is requested.
+
+## Empty
+
+<Canvas of={GanttStories.Empty} />
+
+## Tokens
+
+| Token (`--c--components--gantt--…`) | Default                                            |
+| ----------------------------------- | -------------------------------------------------- |
+| `background-color`                  | `contextuals.background.surface.secondary`         |
+| `header-background-color`           | `contextuals.background.surface.tertiary`          |
+| `color`                             | `contextuals.content.semantic.neutral.primary`     |
+| `color--muted`                      | `contextuals.content.semantic.neutral.secondary`   |
+| `border-color`                      | `contextuals.border.surface.primary`               |
+| `row-background-color--hover`       | `contextuals.background.semantic.neutral.tertiary` |
+| `bar-background-color`              | `contextuals.content.semantic.brand.tertiary`      |
+| `bar-border-color`                  | `contextuals.content.semantic.brand.tertiary`      |
+| `today-color`                       | `contextuals.content.semantic.error.tertiary`      |
+| `padding`                           | `globals.spacings.sm`                              |
+| `focus-ring-color`                  | `contextuals.content.semantic.brand.tertiary`      |
+| `border-width`                      | `1px`                                              |
+| `bar-radius`                        | `4px`                                              |
+| `bar-height`                        | `1.25rem`                                          |
+| `row-height`                        | `2.5rem`                                           |
+| `task-column-width`                 | `16rem` (at most 40% of the chart)                 |
+| `day-width--day`                    | `2.5rem`                                           |
+| `day-width--week`                   | `0.75rem`                                          |
+| `day-width--month`                  | `0.25rem`                                          |
+| `today-width`                       | `2px`                                              |
+| `focus-ring-width`                  | `2px`                                              |
+| `focus-ring-offset`                 | `-2px`                                             |
+| `ghost-border-color`                | `contextuals.content.semantic.brand.tertiary`      |
+| `drag-outline-color`                | `contextuals.content.semantic.neutral.primary`     |
+| `tooltip-background-color`          | `contextuals.content.semantic.neutral.primary`     |
+| `tooltip-color`                     | `contextuals.background.surface.secondary`         |
+| `handle-grip-color`                 | `contextuals.background.surface.secondary`         |
+| `invalid-color`                     | `contextuals.content.semantic.error.tertiary`      |
+| `handle-hit-size`                   | `1.5rem`                                           |
+| `handle-grip-width`                 | `2px`                                              |
+| `link-color`                        | `contextuals.content.semantic.neutral.secondary`   |
+| `link-selected-color`               | `contextuals.content.semantic.neutral.primary`     |
+| `link-conflict-color`               | `contextuals.content.semantic.error.tertiary`      |
+| `link-casing-color`                 | `contextuals.background.surface.secondary`         |
+| `link-flag-background-color`        | `contextuals.content.semantic.error.tertiary`      |
+| `link-flag-color`                   | `contextuals.background.surface.secondary`         |
+| `connector-border-color`            | `contextuals.content.semantic.brand.tertiary`      |
+| `connector-background-color`        | `contextuals.background.surface.secondary`         |
+| `link-width`                        | `2px`                                              |
+| `link-width--selected`              | `3px`                                              |
+| `link-gutter`                       | `2.75rem`                                          |
+| `link-lead`                         | `0.75rem`                                          |
+| `link-arrow-size`                   | `0.5rem`                                           |
+| `link-hit-size`                     | `1.5rem`                                           |
+
+## Later versions
+
+Nothing further is planned. Possible additions (link types and lag, an axis
+that grows while dragging) would be additive: `id` is stable, `tasks` and
+`dependencies` are never modified, the bar is a stable element
+(`.c__gantt__bar[data-task-id]`) in its row, and a link is identified by its
+pair. An edit does not move other tasks.
+
+## Props
+
+<ArgTypes of={GanttStories} />

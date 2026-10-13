@@ -1,5 +1,82 @@
 import { test, expect } from "@playwright/experimental-ct-react";
-import { TestFilter } from "../helpers/mount-filter";
+import { TestFilter, TestResetFilter } from "../helpers/mount-filter";
+
+// The literals moved to `--c--components--filter--*` tokens (s07 t03): the
+// rendered trigger keeps the exact pre-token values. The chevron's own size is
+// not checked: `.material-icons` (24px) wins over it here.
+test.describe("Filter — computed styles from the filter tokens", () => {
+  test("trigger box, type and the active weight", async ({ mount, page }) => {
+    await mount(<TestResetFilter />);
+    const trigger = page.getByRole("button", { name: /Type/ });
+
+    const style = await trigger.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        height: s.height,
+        borderRadius: s.borderRadius,
+        borderWidth: s.borderTopWidth,
+        fontSize: s.fontSize,
+        fontWeight: s.fontWeight,
+        gap: s.columnGap,
+        padding: s.padding,
+      };
+    });
+    expect(style).toEqual({
+      height: "32px",
+      borderRadius: "4px",
+      borderWidth: "1px",
+      fontSize: "14px",
+      fontWeight: "400",
+      gap: "6px",
+      padding: "0px 6px 0px 8px",
+    });
+
+    await trigger.click();
+    await page.getByRole("option", { name: "File" }).click();
+    await expect(trigger).toHaveAccessibleName("Type : File");
+    await expect(trigger).toHaveCSS("font-weight", "500");
+  });
+});
+
+// s07 t04: the tokenised ring shows on keyboard focus only.
+test.describe("Filter — focus ring", () => {
+  const outline = (trigger: import("@playwright/test").Locator) =>
+    trigger.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { style: s.outlineStyle, width: s.outlineWidth };
+    });
+
+  test("a keyboard-focused trigger draws the ring", async ({ mount, page }) => {
+    await mount(<TestResetFilter />);
+    const trigger = page.getByRole("button", { name: /Type/ });
+    await page.keyboard.press("Tab");
+    await expect(trigger).toBeFocused();
+    expect(await outline(trigger)).toEqual({ style: "solid", width: "2px" });
+  });
+});
+
+test.describe("Filter — keyboard only (plain options)", () => {
+  test("opens, moves, selects and returns focus without a pointer", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<TestResetFilter />);
+    const trigger = page.getByRole("button", { name: /Type/ });
+    await trigger.focus();
+
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("listbox")).toBeVisible();
+    await expect(page.getByRole("option", { name: "All" })).toBeFocused();
+
+    await page.keyboard.press("ArrowDown");
+    await expect(page.getByRole("option", { name: "File" })).toBeFocused();
+
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("listbox")).not.toBeVisible();
+    await expect(trigger).toHaveAccessibleName("Type : File");
+    await expect(trigger).toBeFocused();
+  });
+});
 
 test.describe("Filter", () => {
   test.beforeEach(async ({ mount, page }) => {

@@ -52,6 +52,20 @@ You can use the following props to change the state of the Input component by us
 
 <Canvas of={Stories.Error} />
 
+## Size
+
+Use `size="small"` for dense layouts (`"medium"` is the default). The small size
+keeps the label, the texts, the states and the focus ring, and its clickable area
+stays at least 24x24 px.
+
+<Canvas of={Stories.SizesCompared} />
+<Canvas of={Stories.Small} />
+<Canvas of={Stories.SmallWithLabel} />
+<Canvas of={Stories.SmallIndeterminate} />
+<Canvas of={Stories.SmallError} />
+<Canvas of={Stories.SmallSuccess} />
+<Canvas of={Stories.SmallDisabled} />
+
 ## Group
 
 It will happen often that you will need to use multiple grouped checkboxes. You can use the `CheckboxGroup` component to do so.
@@ -89,6 +103,8 @@ Here are available custom design tokens.
 | accent-color     	| Color of the checkmark and the indeterminate mark      	|
 | width     	| Width of the checkbox      	|
 | height     	| Height of the checkbox      	|
+| small-size     	| Box size of the small checkbox ( shared with radio ), keep it >= 14px      	|
+| small-font-size     	| Label font size of the small size ( shared with radio )      	|
 
 See also [Field](?path=/story/components-forms-field-doc--page)
 

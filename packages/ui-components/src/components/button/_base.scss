@@ -11,7 +11,7 @@
 
     &:focus-visible {
       box-shadow:
-        0 0 0 1px #fff,
+        0 0 0 1px var(--c--contextuals--background--surface--primary),
         0 0 0 4px var(--c--contextuals--border--semantic--#{$context}--primary);
     }
     &:hover,
@@ -35,7 +35,7 @@
 
     &:focus-visible {
       box-shadow:
-        0 0 0 1px #fff,
+        0 0 0 1px var(--c--contextuals--background--surface--primary),
         0 0 0 4px var(--c--contextuals--border--semantic--#{$context}--primary);
     }
     &:hover,
@@ -58,7 +58,7 @@
 
     &:focus-visible {
       box-shadow:
-        0 0 0 1px #fff,
+        0 0 0 1px var(--c--contextuals--background--surface--primary),
         0 0 0 4px var(--c--contextuals--border--semantic--#{$context}--primary);
     }
     &:hover,
@@ -80,7 +80,7 @@
 
     &:focus-visible {
       box-shadow:
-        0 0 0 1px #fff,
+        0 0 0 1px var(--c--contextuals--background--surface--primary),
         0 0 0 4px var(--c--contextuals--border--semantic--#{$context}--primary);
     }
     &:hover,

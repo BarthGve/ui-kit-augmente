@@ -1,0 +1,837 @@
+// Single scroll box: the task column and the axis are sticky, so the list
+// stays fixed while the timeline scrolls, without any scroll synchronisation.
+// Geometry comes from custom properties set in Gantt.tsx, in days:
+// --gantt-days (grid), --gantt-start and --gantt-span (bars, labels, today).
+.c__gantt {
+  --gantt-day-width: var(--c--components--gantt--day-width--week);
+  // Vertical guides: every day in day zoom, every week otherwise (a repeating
+  // gradient cannot follow irregular months; months are marked in the axis).
+  --gantt-grid-step: calc(7 * var(--gantt-day-width));
+  --gantt-line-color: var(--c--components--gantt--border-color);
+  // At most 40% of the chart: container units, so the grid width, the task
+  // column and the today line all resolve against the same box.
+  --gantt-task-width: min(
+    var(--c--components--gantt--task-column-width),
+    40cqi
+  );
+
+  // Bounded by a sized parent, so the scroller (not the page) scrolls.
+  display: flex;
+  flex-direction: column;
+  max-block-size: 100%;
+  min-width: 0;
+  container-type: inline-size;
+  color: var(--c--components--gantt--color);
+
+  &[data-zoom="day"] {
+    --gantt-day-width: var(--c--components--gantt--day-width--day);
+    --gantt-grid-step: var(--gantt-day-width);
+  }
+
+  &[data-zoom="month"] {
+    --gantt-day-width: var(--c--components--gantt--day-width--month);
+  }
+
+  &__zoom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--c--globals--spacings--3xs);
+    padding-block-end: var(--c--globals--spacings--3xs);
+
+    // Button has no pressed look and its secondary fill is under 3:1 on the
+    // page: the underline is the non-colour cue (>= 3:1, six themes).
+    [aria-pressed="true"] {
+      text-decoration: underline var(--c--components--gantt--focus-ring-width)
+        var(--c--components--gantt--focus-ring-color);
+    }
+  }
+
+  &__scroller {
+    min-block-size: 0;
+    overflow: auto;
+    // A container too: `cqi` inside is the visible width (the focus ring).
+    container-type: inline-size;
+    // Keyboard moves scroll a bar into view clear of the sticky column/axis.
+    scroll-padding-inline-start: var(--gantt-task-width);
+    scroll-padding-block-start: calc(
+      var(--c--components--gantt--row-height) + 2 *
+        var(--c--components--gantt--border-width)
+    );
+    border: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--border-color);
+    background-color: var(--c--components--gantt--background-color);
+  }
+
+  // Explicit width: off-screen rows are size-contained (content-visibility),
+  // so the width must not come from their content.
+  &__grid {
+    position: relative;
+    inline-size: calc(
+      var(--gantt-task-width) + var(--gantt-days) * var(--gantt-day-width)
+    );
+    min-inline-size: 100%;
+  }
+
+  // Room after the axis' last day for the connector of a task ending there
+  // (rows clip their paint): the end handle's outer third and one target.
+  &[data-linkable] &__grid {
+    inline-size: calc(
+      var(--gantt-task-width) + var(--gantt-days) * var(--gantt-day-width) +
+        var(--c--components--gantt--handle-hit-size) / 3 +
+        var(--c--components--gantt--link-hit-size)
+    );
+  }
+
+  &__axis,
+  &__row {
+    display: grid;
+    grid-template-columns: var(--gantt-task-width) 1fr;
+    border-block-end: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--border-color);
+  }
+
+  &__axis {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background-color: var(--c--components--gantt--header-background-color);
+    font-weight: var(--c--globals--font--weights--bold);
+  }
+
+  &__row {
+    position: relative;
+    block-size: var(--c--components--gantt--row-height);
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto var(--c--components--gantt--row-height);
+
+    &:hover > .c__gantt__task,
+    &:hover > .c__gantt__track {
+      background-color: var(
+        --c--components--gantt--row-background-color--hover
+      );
+    }
+
+    // Placed, so the ring layer below overlaps them instead of pushing
+    // them to a second grid row.
+    > .c__gantt__task {
+      grid-area: 1 / 1;
+    }
+
+    > .c__gantt__track {
+      grid-area: 1 / 2;
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    // Drawn on a layer above the sticky task cell, which would hide a plain
+    // outline of the row; sticky and as wide as the box, so all four sides
+    // stay visible while the timeline scrolls.
+    &:focus-visible::after {
+      content: "";
+      position: sticky;
+      inset-inline-start: 0;
+      z-index: 2;
+      grid-area: 1 / 1 / 2 / -1;
+      inline-size: 100cqi;
+      outline: var(--c--components--gantt--focus-ring-width) solid
+        var(--c--components--gantt--focus-ring-color);
+      outline-offset: var(--c--components--gantt--focus-ring-offset);
+      pointer-events: none;
+    }
+  }
+
+  // Opaque, so bars scroll under it.
+  &__task {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--c--components--gantt--padding);
+    min-width: 0;
+    padding-inline: var(--c--components--gantt--padding);
+    border-inline-end: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--border-color);
+    background-color: var(--c--components--gantt--background-color);
+    transition: background-color var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+  }
+
+  // Above the today chip, which scrolls under the corner cell.
+  &__axis > &__task {
+    z-index: 2;
+    background-color: var(--c--components--gantt--header-background-color);
+  }
+
+  &__task-name {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__no-dates {
+    flex: none;
+    color: var(--c--components--gantt--color--muted);
+    font-size: var(--c--globals--font--sizes--xs);
+  }
+
+  &__track {
+    position: relative;
+    background-image: repeating-linear-gradient(
+      to right,
+      transparent 0
+        calc(var(--gantt-grid-step) - var(--c--components--gantt--border-width)),
+      var(--gantt-line-color)
+        calc(var(--gantt-grid-step) - var(--c--components--gantt--border-width))
+        var(--gantt-grid-step)
+    );
+    transition: background-color var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+  }
+
+  &__axis > &__track {
+    background-image: none;
+  }
+
+  &__axis-tier {
+    position: relative;
+    block-size: calc(var(--c--components--gantt--row-height) / 2);
+
+    & + & {
+      border-block-start: var(--c--components--gantt--border-width) solid
+        var(--c--components--gantt--border-color);
+    }
+  }
+
+  &__axis-label {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--gantt-start) * var(--gantt-day-width));
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    inline-size: calc(var(--gantt-span) * var(--gantt-day-width));
+    padding-inline-start: var(--c--globals--spacings--3xs);
+    overflow: hidden;
+    border-inline-start: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--border-color);
+    color: var(--c--components--gantt--color--muted);
+    font-size: var(--c--globals--font--sizes--xs);
+    font-weight: var(--c--globals--font--weights--regular);
+    white-space: nowrap;
+
+    // Chip on top of the upper tier, starting at today's column.
+    &[data-today] {
+      z-index: 1;
+      inset-block-end: auto;
+      block-size: calc(var(--c--components--gantt--row-height) / 2);
+      inline-size: auto;
+      padding-inline-end: var(--c--globals--spacings--3xs);
+      border-inline-start: var(--c--components--gantt--today-width) solid
+        var(--c--components--gantt--today-color);
+      background-color: var(--c--components--gantt--header-background-color);
+      color: var(--c--components--gantt--today-color);
+      font-weight: var(--c--globals--font--weights--bold);
+    }
+  }
+
+  &__bar {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--gantt-start) * var(--gantt-day-width));
+    box-sizing: border-box;
+    inline-size: calc(var(--gantt-span) * var(--gantt-day-width));
+    block-size: var(--c--components--gantt--bar-height);
+    margin-block: auto;
+    border: var(--c--components--gantt--border-width) solid
+      var(--c--components--gantt--bar-border-color);
+    border-radius: var(--c--components--gantt--bar-radius);
+    background-color: var(--c--components--gantt--bar-background-color);
+    // Only the bars move on a zoom change: the grid width must not lag, or
+    // the anchored scroll offset would be clamped to the old width.
+    transition:
+      inset-inline-start var(--c--globals--transitions--duration)
+        var(--c--globals--transitions--ease-out),
+      inline-size var(--c--globals--transitions--duration)
+        var(--c--globals--transitions--ease-out);
+  }
+
+  // Editing (s23), opt-in: the bar is the move surface.
+  &[data-editable] &__bar {
+    cursor: grab;
+  }
+
+  // During a session the bar jumps unit by unit (no tween, or it would lag
+  // behind the pointer) and dragging across names selects nothing.
+  &[data-editing] {
+    user-select: none;
+  }
+
+  &[data-editing] &__bar {
+    transition: none;
+  }
+
+  &[data-editing="move"],
+  &[data-editing="move"] &__bar {
+    cursor: grabbing;
+  }
+
+  &[data-editable] &__handle {
+    cursor: ew-resize;
+  }
+
+  &[data-editing^="resize"],
+  &[data-editing^="resize"] &__bar {
+    cursor: ew-resize;
+  }
+
+  // Touch drags the bar (and a link from the connector) at once; fingers on
+  // the track or the task column still scroll the box.
+  &[data-editable] &__bar,
+  &[data-editable] &__handle,
+  &__connector {
+    touch-action: none;
+  }
+
+  // The bar being edited, or the source of a link being drawn.
+  &__bar[data-preview],
+  &__bar[data-link-source] {
+    outline: var(--c--components--gantt--focus-ring-width) solid
+      var(--c--components--gantt--drag-outline-color);
+  }
+
+  // A refused link target: the tooltip sentence is the first cue.
+  &__bar[data-refused] {
+    outline: var(--c--components--gantt--focus-ring-width) solid
+      var(--c--components--gantt--invalid-color);
+  }
+
+  // Clamped (axis or end before start): the colour is a second cue, the
+  // tooltip sentence is the first.
+  &__bar[data-clamped] {
+    outline-color: var(--c--components--gantt--invalid-color);
+  }
+
+  // Edge handles: a transparent target across the row height (not the
+  // 20px bar), a third of it outside the bar; a third of the bar when the
+  // bar is narrower than three targets (Gantt.tsx drops them under one).
+  &__handle {
+    --gantt-handle-width: min(
+      var(--c--components--gantt--handle-hit-size),
+      calc(var(--gantt-span) * var(--gantt-day-width) / 3)
+    );
+
+    position: absolute;
+    inset-block: calc(
+      (
+          var(--c--components--gantt--bar-height) - var(
+              --c--components--gantt--row-height
+            )
+        ) /
+        2 - var(--c--components--gantt--border-width)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--gantt-handle-width);
+
+    &[data-edge="start"] {
+      inset-inline-start: calc(var(--gantt-handle-width) / -3);
+    }
+
+    &[data-edge="end"] {
+      inset-inline-end: calc(var(--gantt-handle-width) / -3);
+    }
+  }
+
+  // The grip, on the bar fill: shown on the row's hover or focus and while
+  // editing, so a static chart stays calm. The target is always live.
+  &__handle::after {
+    content: "";
+    inline-size: var(--c--components--gantt--handle-grip-width);
+    block-size: calc(var(--c--components--gantt--bar-height) / 2);
+    background-color: var(--c--components--gantt--handle-grip-color);
+    visibility: hidden;
+  }
+
+  &__row:hover &__handle::after,
+  &__row:focus-within &__handle::after,
+  &__bar[data-preview] &__handle::after {
+    visibility: visible;
+  }
+
+  // Link editing (s24): the connector, a track child after the bar (a press
+  // never starts a move), its 24px target just past the end handle (which
+  // reaches a third of its own target out of the bar).
+  &__connector {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      (var(--gantt-start) + var(--gantt-span)) * var(--gantt-day-width) +
+        var(--c--components--gantt--handle-hit-size) / 3
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--c--components--gantt--link-hit-size);
+    block-size: var(--c--components--gantt--link-hit-size);
+    margin-block: auto;
+  }
+
+  &[data-editable] &__connector {
+    cursor: crosshair;
+  }
+
+  &[data-editing="link"],
+  &[data-editing="link"] &__bar {
+    cursor: crosshair;
+  }
+
+  // The dot: shown like the grips (the target is always live).
+  &__connector::after {
+    content: "";
+    box-sizing: border-box;
+    inline-size: calc(var(--c--components--gantt--bar-height) / 2);
+    block-size: calc(var(--c--components--gantt--bar-height) / 2);
+    border: var(--c--components--gantt--link-width) solid
+      var(--c--components--gantt--connector-border-color);
+    border-radius: 50%;
+    background-color: var(--c--components--gantt--connector-background-color);
+    visibility: hidden;
+  }
+
+  &__row:hover &__connector::after,
+  &__row:focus-within &__connector::after,
+  &__bar[data-link-source] ~ &__connector::after {
+    visibility: visible;
+  }
+
+  // Remove link: in the successor row, left of the arrow and clear of the
+  // last vertical segment's hit strip.
+  & &__remove {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: max(
+      0%,
+      calc(
+        var(--gantt-start) *
+          var(--gantt-day-width) - var(--c--components--gantt--link-lead) -
+          1.5 * var(--c--components--gantt--link-hit-size)
+      )
+    );
+    min-inline-size: var(--c--components--gantt--link-hit-size);
+    min-block-size: var(--c--components--gantt--link-hit-size);
+    margin-block: auto;
+  }
+
+  // The original dates: a shape (dashed), not a colour.
+  &__ghost {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--gantt-start) * var(--gantt-day-width));
+    box-sizing: border-box;
+    inline-size: calc(var(--gantt-span) * var(--gantt-day-width));
+    block-size: var(--c--components--gantt--bar-height);
+    margin-block: auto;
+    border: var(--c--components--gantt--border-width) dashed
+      var(--c--components--gantt--ghost-border-color);
+    border-radius: var(--c--components--gantt--bar-radius);
+    pointer-events: none;
+  }
+
+  // Inside the row, never a popover: rows clip their paint
+  // (content-visibility). After the bar, or before it on its wider side.
+  &__tip {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      (var(--gantt-start) + var(--gantt-span)) * var(--gantt-day-width)
+    );
+    display: flex;
+    align-items: center;
+    block-size: var(--c--components--gantt--bar-height);
+    margin-block: auto;
+    margin-inline: var(--c--globals--spacings--3xs);
+    padding-inline: var(--c--globals--spacings--3xs);
+    border-radius: var(--c--components--gantt--bar-radius);
+    background-color: var(--c--components--gantt--tooltip-background-color);
+    color: var(--c--components--gantt--tooltip-color);
+    font-size: var(--c--globals--font--sizes--xs);
+    white-space: nowrap;
+    pointer-events: none;
+
+    // Ends one margin before the bar (not from the track's end: the track
+    // can be wider than the axis).
+    &[data-side="start"] {
+      inset-inline-start: calc(var(--gantt-start) * var(--gantt-day-width));
+      translate: calc(-100% - 2 * var(--c--globals--spacings--3xs)) 0;
+    }
+  }
+
+  // Before the rows in the DOM and without z-index: each row is a stacking
+  // context (content-visibility), so the line passes under the task column.
+  &__today {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      var(--gantt-task-width) + var(--gantt-start) * var(--gantt-day-width)
+    );
+    inline-size: var(--c--components--gantt--today-width);
+    background-color: var(--c--components--gantt--today-color);
+    pointer-events: none;
+  }
+
+  // Dependencies (s24). Above the rows (each row is its own stacking context,
+  // and its opaque hover would hide a layer below) and under the sticky
+  // axis; clipped by the scroll offset (Gantt.tsx) so that it never paints
+  // over the sticky task column. Geometry in days and rows like the bars:
+  // --gantt-x/g/l (days, gutters, leads) and --gantt-y/c (rows, centre) for
+  // the two corners of each segment.
+  &__links {
+    --gantt-pitch: calc(
+      var(--c--components--gantt--row-height) +
+        var(--c--components--gantt--border-width)
+    );
+    --gantt-scroll: 0;
+
+    position: absolute;
+    // Under the axis: two half-height tiers and two borders.
+    inset-block-start: calc(
+      var(--c--components--gantt--row-height) + 2 *
+        var(--c--components--gantt--border-width)
+    );
+    inset-inline-start: var(--gantt-task-width);
+    z-index: 1;
+    inline-size: calc(var(--gantt-days) * var(--gantt-day-width));
+    block-size: calc(var(--gantt-rows) * var(--gantt-pitch));
+    // Open on the right by one gutter and a line: a U route leaving the
+    // axis' last day goes out that far (the scroll box grows to show it).
+    clip-path: inset(
+      0
+        calc(
+          -1 *
+            (
+              var(--c--components--gantt--link-gutter) +
+                var(--c--components--gantt--link-width)
+            )
+        )
+        0 var(--gantt-scroll)
+    );
+    pointer-events: none;
+  }
+
+  // A link session's sentence (Gantt.tsx): in the overlay, after the lines,
+  // so that none paints over it; placed by row like the segments.
+  &__links > &__tip {
+    inset-block: auto;
+    inset-block-start: calc(
+      var(--gantt-y) * var(--gantt-pitch) +
+        (
+          var(--c--components--gantt--row-height) - var(
+              --c--components--gantt--bar-height
+            )
+        ) /
+        2
+    );
+    margin-block: 0;
+  }
+
+  &__link {
+    --gantt-link-color: var(--c--components--gantt--link-color);
+    --gantt-link-style: solid;
+    --gantt-link-width: var(--c--components--gantt--link-width);
+  }
+
+  // A shape and a marker, not only a colour.
+  &__link[data-conflict] {
+    --gantt-link-color: var(--c--components--gantt--link-conflict-color);
+    --gantt-link-style: dashed;
+  }
+
+  // Selected or hovered (link editing on): darker and wider.
+  &__link[data-selected],
+  &__link:has(.c__gantt__link-hit:hover) {
+    --gantt-link-color: var(--c--components--gantt--link-selected-color);
+    --gantt-link-width: var(--c--components--gantt--link-width--selected);
+  }
+
+  // The prospective link of a pointer session, like the dragged bar.
+  &__link[data-state="creating"] {
+    --gantt-link-color: var(--c--components--gantt--drag-outline-color);
+  }
+
+  &[data-editable] &__link-hit {
+    cursor: pointer;
+  }
+
+  // A transparent 24px strip centred on a middle vertical segment
+  // (Gantt.tsx): the overlay ignores the pointer, the strip takes it back.
+  // Placed from the padding box, which starts after the line's border.
+  &__link-hit {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      -1 *
+        (var(--gantt-link-width) + var(--c--components--gantt--link-hit-size)) /
+        2
+    );
+    inline-size: var(--c--components--gantt--link-hit-size);
+    pointer-events: auto;
+  }
+
+  &__link-segment {
+    --gantt-ax: calc(
+      var(--gantt-x1) * var(--gantt-day-width) + var(--gantt-g1) *
+        var(--c--components--gantt--link-gutter) + var(--gantt-l1) *
+        var(--c--components--gantt--link-lead)
+    );
+    --gantt-bx: calc(
+      var(--gantt-x2) * var(--gantt-day-width) + var(--gantt-g2) *
+        var(--c--components--gantt--link-gutter) + var(--gantt-l2) *
+        var(--c--components--gantt--link-lead)
+    );
+    --gantt-ay: calc(
+      var(--gantt-y1) * var(--gantt-pitch) + var(--gantt-c1) *
+        var(--c--components--gantt--row-height) / 2
+    );
+    --gantt-by: calc(
+      var(--gantt-y2) * var(--gantt-pitch) + var(--gantt-c2) *
+        var(--c--components--gantt--row-height) / 2
+    );
+
+    // The line's width centred on the corners, overlapping at the joints.
+    position: absolute;
+    inset-inline-start: calc(
+      min(var(--gantt-ax), var(--gantt-bx)) - var(--gantt-link-width) / 2
+    );
+    inset-block-start: calc(
+      min(var(--gantt-ay), var(--gantt-by)) - var(--gantt-link-width) / 2
+    );
+    box-sizing: border-box;
+    inline-size: calc(
+      max(var(--gantt-ax), var(--gantt-bx)) - min(
+          var(--gantt-ax),
+          var(--gantt-bx)
+        ) +
+        var(--gantt-link-width)
+    );
+    block-size: calc(
+      max(var(--gantt-ay), var(--gantt-by)) - min(
+          var(--gantt-ay),
+          var(--gantt-by)
+        ) +
+        var(--gantt-link-width)
+    );
+    // Tweens with the bars on a zoom change.
+    transition:
+      inset-inline-start var(--c--globals--transitions--duration)
+        var(--c--globals--transitions--ease-out),
+      inline-size var(--c--globals--transitions--duration)
+        var(--c--globals--transitions--ease-out);
+
+    &[data-axis="x"] {
+      border-block-start: var(--gantt-link-width) var(--gantt-link-style)
+        var(--gantt-link-color);
+    }
+
+    &[data-axis="y"] {
+      border-inline-start: var(--gantt-link-width) var(--gantt-link-style)
+        var(--gantt-link-color);
+    }
+
+    // The last one stops at the successor's start, under the arrowhead.
+    &[data-end] {
+      inline-size: calc(
+        max(var(--gantt-ax), var(--gantt-bx)) - min(
+            var(--gantt-ax),
+            var(--gantt-bx)
+          ) +
+          var(--gantt-link-width) / 2
+      );
+    }
+  }
+
+  // Casing: a halo in the page colour, so the line shows across a bar (no
+  // content colour does). Behind every line of the overlay (z-index -1 in
+  // its stacking context), so it never cuts a joint.
+  &__link-segment::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: calc(-1 * var(--c--components--gantt--border-width));
+    background-color: var(--c--components--gantt--link-casing-color);
+  }
+
+  // The border is outside the padding box the casing is placed in.
+  &__link-segment[data-axis="x"]::before {
+    inset-block-start: calc(
+      -1 * (var(--gantt-link-width) + var(--c--components--gantt--border-width))
+    );
+  }
+
+  &__link-segment[data-axis="y"]::before {
+    inset-inline-start: calc(
+      -1 * (var(--gantt-link-width) + var(--c--components--gantt--border-width))
+    );
+  }
+
+  // Arrowhead: a border triangle (kept in forced colors), its tip on the
+  // successor's start.
+  &__link-segment[data-end]::after {
+    content: "";
+    position: absolute;
+    inset-block-start: calc(
+      (var(--gantt-link-width) + var(--c--components--gantt--link-arrow-size)) /
+        -2
+    );
+    inset-inline-end: 0;
+    border-block: calc(var(--c--components--gantt--link-arrow-size) / 2) solid
+      transparent;
+    border-inline-start: var(--c--components--gantt--link-arrow-size) solid
+      var(--gantt-link-color);
+  }
+
+  // "!" chip before the arrow, on the successor's row (no flag-size token:
+  // the bar height).
+  &__link-flag {
+    position: absolute;
+    inset-inline-start: calc(
+      var(--gantt-x) *
+        var(--gantt-day-width) - var(--c--components--gantt--link-lead) - var(
+          --c--components--gantt--bar-height
+        ) - var(--gantt-link-width)
+    );
+    inset-block-start: calc(
+      var(--gantt-y) * var(--gantt-pitch) +
+        (
+          var(--c--components--gantt--row-height) - var(
+              --c--components--gantt--bar-height
+            )
+        ) /
+        2
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--c--components--gantt--bar-height);
+    block-size: var(--c--components--gantt--bar-height);
+    border-radius: 50%;
+    background-color: var(--c--components--gantt--link-flag-background-color);
+    color: var(--c--components--gantt--link-flag-color);
+    font-size: var(--c--globals--font--sizes--xs);
+    font-weight: var(--c--globals--font--weights--bold);
+    line-height: 1;
+    transition: inset-inline-start var(--c--globals--transitions--duration)
+      var(--c--globals--transitions--ease-out);
+  }
+
+  // Links follow a dragged bar unit by unit, and jump back with it.
+  &[data-editing] &__link-segment,
+  &[data-editing] &__link-flag,
+  &__links[data-settling] &__link-segment,
+  &__links[data-settling] &__link-flag {
+    transition: none;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: var(--c--components--gantt--padding);
+    color: var(--c--components--gantt--color--muted);
+    text-align: center;
+  }
+
+  @media (forced-colors: active) {
+    --gantt-line-color: GrayText;
+
+    &__bar,
+    &__today {
+      forced-color-adjust: none;
+    }
+
+    &__bar {
+      border-color: CanvasText;
+      background-color: Highlight;
+    }
+
+    &__today {
+      background-color: Highlight;
+    }
+
+    &__row:focus-visible::after {
+      outline-color: Highlight;
+    }
+
+    &__zoom [aria-pressed="true"] {
+      text-decoration-color: Highlight;
+    }
+
+    &__bar[data-preview],
+    &__bar[data-clamped],
+    &__bar[data-link-source],
+    &__bar[data-refused] {
+      outline-color: Highlight;
+    }
+
+    &__connector::after {
+      forced-color-adjust: none;
+      border-color: CanvasText;
+      background-color: Canvas;
+    }
+
+    & &__remove {
+      border: var(--c--components--gantt--border-width) solid CanvasText;
+    }
+
+    &__handle::after {
+      background-color: CanvasText;
+    }
+
+    &__ghost {
+      border-color: CanvasText;
+    }
+
+    &__tip {
+      forced-color-adjust: none;
+      border: var(--c--components--gantt--border-width) solid CanvasText;
+      background-color: Canvas;
+      color: CanvasText;
+    }
+
+    &__links {
+      forced-color-adjust: none;
+    }
+
+    &__link,
+    &__link[data-conflict] {
+      --gantt-link-color: CanvasText;
+    }
+
+    &__link[data-selected],
+    &__link[data-state="creating"] {
+      --gantt-link-color: Highlight;
+    }
+
+    &__link-segment::before {
+      background-color: Canvas;
+    }
+
+    &__link-flag {
+      border: var(--c--components--gantt--border-width) solid CanvasText;
+      background-color: Canvas;
+      color: CanvasText;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__task,
+    &__track,
+    &__bar,
+    &__link-segment,
+    &__link-flag {
+      transition: none;
+    }
+  }
+}

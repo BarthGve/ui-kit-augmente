@@ -77,6 +77,12 @@ type ModalBaseProps = {
   /** Height constraints, ignored when `size` is `ModalSize.FULL`. */
   constraints?: ModalConstraints;
   "aria-label"?: string;
+  /** Defaults to `"dialog"`; `"alertdialog"` for an interrupting message. */
+  role?: "dialog" | "alertdialog";
+  /** Id of the node naming the modal; replaces the `aria-label` from `title`. */
+  "aria-labelledby"?: string;
+  /** Id of the node describing the modal. */
+  "aria-describedby"?: string;
 };
 
 export type ModalDefaultVariantProps = ModalBaseProps &
@@ -130,11 +136,14 @@ export const ModalInner = (props: ModalProps) => {
     return null;
   }
 
-  const contentLabel =
-    props["aria-label"] ||
-    (variant === "tab"
-      ? (props as ModalTabVariantProps).sidebarTitle?.toString()
-      : (props as ModalDefaultVariantProps).title?.toString());
+  // With aria-labelledby the name comes from the referenced node: no
+  // aria-label, which would be "[object Object]" for a ReactNode title.
+  const contentLabel = props["aria-labelledby"]
+    ? undefined
+    : props["aria-label"] ||
+      (variant === "tab"
+        ? (props as ModalTabVariantProps).sidebarTitle?.toString()
+        : (props as ModalDefaultVariantProps).title?.toString());
 
   // A full-screen modal always spans the viewport height: inline height
   // constraints would take precedence over the stylesheet and shrink it.
@@ -166,6 +175,11 @@ export const ModalInner = (props: ModalProps) => {
       shouldCloseOnEsc={closeOnEsc}
       bodyOpenClassName={classNames("c__modals--opened", NOSCROLL_CLASS)}
       contentLabel={contentLabel}
+      role={props.role}
+      aria={{
+        labelledby: props["aria-labelledby"],
+        describedby: props["aria-describedby"],
+      }}
     >
       {variant === "tab" ? (
         <ModalTabLayout

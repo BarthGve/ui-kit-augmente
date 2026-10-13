@@ -5,22 +5,23 @@
     background-color: var(
       --c--contextuals--background--semantic--neutral--tertiary
     );
-    height: 32px;
+    height: var(--c--components--filter--button-height);
     display: flex;
     align-items: center;
     cursor: pointer;
-    border-radius: 4px;
-    border: 1px solid var(--c--contextuals--border--semantic--neutral--tertiary);
-    font-size: 14px;
-    font-weight: 400;
+    border-radius: var(--c--components--filter--button-radius);
+    border: var(--c--components--filter--button-border-width) solid
+      var(--c--contextuals--border--semantic--neutral--tertiary);
+    font-size: var(--c--components--filter--button-font-size);
+    font-weight: var(--c--components--filter--button-font-weight);
     font-family: var(--c--globals--font--families--base);
-    gap: 6px;
-    padding: 0 6px 0 8px;
+    gap: var(--c--components--filter--button-gap);
+    padding: var(--c--components--filter--button-padding);
     color: var(--c--contextuals--content--semantic--neutral--tertiary);
     white-space: nowrap;
 
     &__icon {
-      font-size: 1.25rem;
+      font-size: var(--c--components--filter--icon-size);
       transition: all var(--c--globals--transitions--duration)
         var(--c--globals--transitions--ease-out);
       &.opened {
@@ -35,7 +36,14 @@
         background-color: var(
           --c--contextuals--background--semantic--neutral--tertiary-hover
         );
+        color: var(--c--components--filter--button-color--hover);
       }
+    }
+
+    &:focus-visible {
+      outline: var(--c--components--filter--focus-ring-width) solid
+        var(--c--components--filter--focus-ring-color);
+      outline-offset: var(--c--components--filter--focus-ring-offset);
     }
 
     &--active {
@@ -43,7 +51,7 @@
         --c--contextuals--background--semantic--brand--secondary
       );
       border-color: var(--c--contextuals--border--semantic--brand--secondary);
-      font-weight: 500;
+      font-weight: var(--c--components--filter--button-active-font-weight);
       color: var(--c--contextuals--content--semantic--brand--primary);
 
       &:hover,
@@ -60,7 +68,7 @@
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--c--components--filter--item-gap);
     justify-content: space-between;
   }
 
@@ -72,8 +80,9 @@
 
   &__popover {
     background-color: var(--c--contextuals--background--surface--primary);
-    border: 1px solid var(--c--contextuals--border--surface--primary);
-    border-radius: 4px;
-    padding: 8px;
+    border: var(--c--components--filter--popover-border-width) solid
+      var(--c--contextuals--border--surface--primary);
+    border-radius: var(--c--components--filter--popover-radius);
+    padding: var(--c--components--filter--popover-padding);
   }
 }
