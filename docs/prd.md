@@ -67,12 +67,17 @@ Strict respect of the existing product's constraints (tokens, RGAA accessibility
 - Detailed conventions are owned by `/dm-architect`.
 
 ## Success criteria
-- Each in-scope component is published in `@gouvfr-lasuite/ui-components` with its story and tests.
+- Each in-scope component is published in `@gouvfr-lasuite/ui-components` (for the fork, `@barthgve/ui-components`, see ADR 005) with its story and tests.
 - Zero violations on automated accessibility tests, full keyboard navigation, compliant contrasts.
 - The ui-kit issues named in the perimeter are closed: #184, #183, #213, #309, #244, #269, #245, #231, #259, #203, #278, #241, #217, #232, #188, #220, #198, #187, #186.
 - The Gantt is usable in editing mode (move, resize, dependencies) on a demonstration data set.
 
 ## Amendements
+
+### 2026-10-13 — v0.1.0 — publish-fork
+**Entre dans le périmètre :** publishing the fork's `ui-components` on the public npm registry under the owner's scope (`@barthgve/ui-components`), versions `x.y.z-fork.N`, consumed through an npm alias that keeps the upstream import names; publication workflow from `main`; installation page corrected. Architecture impact: an external service (the npm registry) and a CI secret, so ADR 005 (supersedes ADR 004) is part of this amendment.
+**Sorti du cimetière ?** non — "Redesign or migration of the tokens, of the token engine, and of `ui-codemod`" stays excluded: `ui-tokens` and `ui-codemod` are not published by the fork.
+**Stories :** s56, s57.
 
 ### 2026-10-09 — v0.1.0 — design-system-artifact
 **Entre dans le périmètre :** each ticket that delivers or changes a component also updates the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP): the component's page, its catalogue entry and the canvas index. Checked by hand through a line in the ticket's PR description, verified by `/dm-review`.

@@ -981,3 +981,41 @@ s20-upload-module.
 
 ### Agentic notes
 shadcn Attachment. Partially covered by the upload module (s20): this story is the display component only. Added on 2026-10-09 from the comparison with shadcn/ui (owner request). Same shared rules as the other component stories: Storybook story, tests, five locales if text, one changeset (minor), artifact page and catalogue entry.
+
+## Story s56-publish-fork — Publish the fork on npm
+**As a** fork owner **I want** `ui-components` published on npm under my scope **so that** any project installs the fork with a version.
+
+### Complexity
+3
+
+### Acceptance criteria
+- [ ] A publish script `scripts/stage-fork-package.mjs` takes the version as an argument, builds a staging copy of `packages/ui-components` where only `name` (`@barthgve/ui-components`) and `version` are rewritten, and prints the path of the packed archive (`npm pack`); the source `package.json` is unchanged (`git diff` empty). It refuses a version that does not end in `-fork.<N>` or whose base part is not the current `ui-components` version.
+- [ ] A check installs that archive in a throwaway project with the alias `@gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version>`, and imports a component, `./style` and `./icons` through the `exports` map; it fails if any entry does not resolve.
+- [ ] The package contents are limited to `dist` (`npm pack --dry-run` lists it) and `ui-tokens` stays a regular dependency at its current version.
+- [ ] `.changeset/config.json` has `baseBranch: "next"`.
+- [ ] A workflow `.github/workflows/publish-fork.yml` runs on tags `fork@<version>` and on pull requests (dry-run only). On a tag it requires the tag commit to be an ancestor of `main`, the version extracted from the tag to be accepted by the script (`-fork.<N>` suffix, base version equal to the `ui-components` version), then lint, tests and build, then `npm publish` with the `NPM_TOKEN` secret and the `latest` dist-tag. On a pull request it runs the script and the install check, uploads the archive as a workflow artifact, uses no secret, and publishes nothing.
+- [ ] `docs/RELEASING.md` states at its top that it describes the upstream packages, and points to ADR 005 and the workflow for the fork; the `baseBranch` trap in `docs/architecture.md` and in the technical conventions of `AGENTS.md` is updated to match the corrected value.
+
+### Dependencies
+None.
+
+### Agentic notes
+ADR 005 owns the decisions. Do not rename in the source; do not publish `ui-tokens` or `ui-codemod`. The agent never holds the npm token: the story ends with the dry-run on a pull request and the archive artifact; the first real publish (scope confirmation, `NPM_TOKEN` secret, first tag, and checking the tag branch of the workflow ran: ancestor of `main`, publish, `latest` tag) is the owner's, listed in the PR. Exempt from the shared component rules (no component, no changeset since the package source does not change, no artifact page, no locale): the check is the pack-and-install test and the workflow dry-run. A new script and a new workflow file are the only code; no dependency added (use `npm`, `node`).
+
+## Story s57-consume-fork — Consume the fork in an application
+**As a** developer of an application **I want** installation instructions for the fork **so that** I use it without changing my imports.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] The Storybook installation page shows the alias install command for Yarn and npm instead of the upstream one, with the version scheme `x.y.z-fork.N`.
+- [ ] The page states that `ui-tokens` and `ui-codemod` remain the upstream packages and that the built code is public on npm.
+- [ ] The README package table points to the fork package and gains an install line with the alias command.
+- [ ] A throwaway app (outside the repository, not committed) installs the archive produced by the s56 dry-run with the alias and renders a component with its stylesheet; the result is written in the PR. The check validates the archive, not the registry; if the workflow artifact has expired (90 days), rerun the s56 script to regenerate it. After the first real publish and before merging, the command printed on the page is run as written in a throwaway app and the result is written in the PR.
+
+### Dependencies
+s56-publish-fork. **Merge order:** the page must not go live before the first real publish (owner action after s56): until then the alias command returns a 404. The ticket is built and reviewed behind s56 and merged into `next` only once the package exists on npm; if the owner has not published, the agent stops and reports instead of merging.
+
+### Agentic notes
+Docs only (`installation.mdx`, `README.md`); no code change, exempt from the shared component rules (no changeset, artifact page, locale). The other mdx pages (`customization.mdx`, `0_migrating_to_lasuite_ui.mdx`, `docs/MIGRATION.md`) print upstream import names or `npx @gouvfr-lasuite/ui-codemod` commands: they stay valid thanks to the alias and the unchanged codemod, so they are checked, not edited.
