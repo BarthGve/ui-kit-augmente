@@ -15,6 +15,7 @@ Not research, not the plan, not the review.
 
 ## Visible rules
 
+- The done and current markers reach at least 3:1 against the page in all six themes, including the dark ones.
 - Events appear in the order given. They are never sorted.
 - Each event can have a state: done, current or upcoming. The marker shape differs for each, and a hidden label is read by screen readers. Colour is not the only signal.
 - Without a state, the marker is neutral and no label is read.
@@ -22,10 +23,6 @@ Not research, not the plan, not the review.
 - A date-only string such as `2026-10-13` shows the same day in every time zone.
 - The events are exposed as an ordered list.
 - The horizontal list is in a scrollable region. Keyboard users reach it with Tab and scroll with the arrow keys.
-
-## Known limits
-
-- In the dark theme, the contrast of some markers is below the target. A follow-up fixes it.
 
 ## Out of scope
 

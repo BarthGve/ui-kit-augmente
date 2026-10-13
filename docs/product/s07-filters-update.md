@@ -15,16 +15,14 @@ Not research, not the plan, not the review.
 
 ## Visible rules
 
+- The trigger label keeps at least 4.5:1 contrast on hover and focus, in all six themes.
+- Keyboard focus shows a ring of at least 3:1 around the trigger. Pointer clicks do not (after closing by an outside click, the browser may show it again).
+- The SearchFilter popover is named after its trigger, and its loading row has a translated name.
 - `onReset` is a new optional prop on both components.
 - `SearchFilter` shows a loading row (`isLoading`) and an empty row (`emptyState`).
 - Searching in `SearchFilter` keeps the current selection.
 - Both are operable by keyboard.
 - Existing props `label`, `options` and `showReset` keep working.
-
-## Known limits
-
-- The contrast of the trigger label on hover is lower than it should be. The trigger focus ring is also weak. A follow-up improves both.
-- Loading and empty rows are not yet announced with their own name by screen readers. This is part of the same follow-up.
 
 ## Out of scope
 
