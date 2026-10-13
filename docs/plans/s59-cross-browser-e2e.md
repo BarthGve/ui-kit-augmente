@@ -87,7 +87,7 @@ Tasks (test first):
 - **scope:** verification only, no code (unless a residual failure appears, in which case it goes back to the owning ticket).
 
 Tasks:
-1. [ ] After the last merge, open (or use) a PR into `next`; the `e2e` job (chromium, webkit, firefox) passes; rerun it three times (`gh run rerun`) and record the results; list the two `test.skip` with engine, reason and follow-up number.
+1. [x] After the last merge, open (or use) a PR into `next`; the `e2e` job (chromium, webkit, firefox) passes; rerun it three times (`gh run rerun`) and record the results; list the two `test.skip` with engine, reason and follow-up number.
 2. [x] Confirm no accessibility test was weakened: list, per ticket, the spec lines changed and that no assertion value or tolerance changed (diff reviewed).
 3. [x] Update `docs/architecture.md` line on e2e (CI runs the three engines; macOS WebKit differs, the Linux image recipe). PR line `Artifact: not applicable (CI and specs only)`.
 
