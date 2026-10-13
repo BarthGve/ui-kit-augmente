@@ -226,6 +226,57 @@ test.describe("SearchFilter", () => {
   });
 });
 
+// The literals moved to `--c--components--search-filter--*` tokens (s07 t03):
+// the rendered popover keeps the exact pre-token values.
+test.describe("SearchFilter — computed styles from the search-filter tokens", () => {
+  test("popover bounds, search row, list and item", async ({
+    mount,
+    page,
+  }) => {
+    await mount(<TestSearchFilter />);
+    await page.getByRole("button", { name: /Category/ }).click();
+    await expect(page.getByRole("listbox")).toBeVisible();
+
+    const style = await page.evaluate(() => {
+      const css = (selector: string) =>
+        getComputedStyle(document.querySelector(selector)!);
+      const popover = css(".c__search-filter__popover");
+      const search = css(".c__search-filter__search");
+      const list = css(".c__search-filter__list");
+      const item = css(".c__search-filter__item");
+      return {
+        popoverMinWidth: popover.minWidth,
+        popoverMaxWidth: popover.maxWidth,
+        searchHeight: search.height,
+        searchGap: search.columnGap,
+        searchPadding: search.padding,
+        listMaxHeight: list.maxHeight,
+        itemMinHeight: item.minHeight,
+        itemFontWeight: item.fontWeight,
+      };
+    });
+    expect(style).toEqual({
+      popoverMinWidth: "240px",
+      popoverMaxWidth: "320px",
+      searchHeight: "36px",
+      searchGap: "6px",
+      searchPadding: "0px 8px",
+      listMaxHeight: "240px",
+      itemMinHeight: "32px",
+      itemFontWeight: "500",
+    });
+  });
+
+  test("loading row padding", async ({ mount, page }) => {
+    await mount(<TestSearchFilter isLoading />);
+    await page.getByRole("button", { name: /Category/ }).click();
+    await expect(page.locator(".c__search-filter__loading")).toHaveCSS(
+      "padding",
+      "8px",
+    );
+  });
+});
+
 test.describe("UserSearchFilter", () => {
   test("renders each user's full name as an option", async ({
     mount,

@@ -7,6 +7,7 @@ import { tokens as alertTokens } from "./src/components/alert/tokens";
 import { tokens as buttonTokens } from "./src/components/button/tokens";
 import { tokens as calendarTokens } from "./src/components/calendar/tokens";
 import { tokens as cardTokens } from "./src/components/card/tokens";
+import { tokens as filterTokens } from "./src/components/filter/tokens";
 import { tokens as checkboxTokens } from "./src/components/forms/checkbox/tokens";
 import { tokens as datePickerTokens } from "./src/components/forms/date-picker/tokens";
 import { tokens as fieldTokens } from "./src/components/forms/field/tokens";
@@ -18,6 +19,7 @@ import { tokens as switchTokens } from "./src/components/forms/switch/tokens";
 import { tokens as textAreaTokens } from "./src/components/forms/text-area/tokens";
 import { tokens as ganttTokens } from "./src/components/gantt/tokens";
 import { tokens as modalTokens } from "./src/components/modal/tokens";
+import { tokens as searchFilterTokens } from "./src/components/search-filter/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
 import { tokens as tooltipTokens } from "./src/components/tooltip/tokens";
 import { tokens as userMenuTokens } from "./src/components/users/menu/tokens";
@@ -29,6 +31,7 @@ const componentTokenDefaults = {
   button: buttonTokens(defaultTokenRefs),
   calendar: calendarTokens(defaultTokenRefs),
   card: cardTokens(defaultTokenRefs),
+  filter: filterTokens(defaultTokenRefs),
   "forms-checkbox": checkboxTokens(defaultTokenRefs),
   "forms-datepicker": datePickerTokens(defaultTokenRefs),
   "forms-field": fieldTokens(defaultTokenRefs),
@@ -40,6 +43,7 @@ const componentTokenDefaults = {
   "forms-textarea": textAreaTokens(defaultTokenRefs),
   gantt: ganttTokens(defaultTokenRefs),
   modal: modalTokens(defaultTokenRefs),
+  "search-filter": searchFilterTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
   tooltip: tooltipTokens(defaultTokenRefs),
   "user-menu": userMenuTokens(defaultTokenRefs),

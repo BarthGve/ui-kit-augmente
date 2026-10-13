@@ -1,9 +1,13 @@
+import { readFileSync } from "fs";
+import { resolve } from "path";
+import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ReactNode, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CunninghamProvider } from ":/components/provider/Provider";
 import { SearchFilter } from "./SearchFilter";
+import { tokens } from "./tokens";
 import { SearchFilterItem } from "./types";
 
 // Bounded input: three items, fixed labels, the en-US locale for "Reset".
@@ -394,5 +398,74 @@ describe("SearchFilter keyboard (AC4)", () => {
       visited.push(focused());
     }
     expect(visited).toEqual([option("Apple"), resetRow(), input()]);
+  });
+});
+
+// --- Tokens (s07 t03) --------------------------------------------------------
+// Vitest stubs stylesheets, so the sources are read from disk.
+const read = (path: string) => readFileSync(resolve(__dirname, path), "utf8");
+
+// Theme blocks of the shipped `cunningham-tokens.css`: flat declarations only,
+// the first `}` closes the block.
+const THEMES = [
+  ":root ",
+  ".cunningham-theme--dark",
+  ".cunningham-theme--dsfr-light",
+  ".cunningham-theme--dsfr-dark",
+  ".cunningham-theme--anct-light",
+  ".cunningham-theme--anct-dark",
+];
+const themeBlock = (selector: string) =>
+  read("../../cunningham-tokens.css").split(`${selector}{`)[1]?.split("}")[0];
+
+// Comments stripped (they may quote a literal), whitespace collapsed.
+const stylesheet = () =>
+  read("index.scss")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "")
+    .replace(/\s+/g, " ");
+
+describe("SearchFilter tokens (AC1)", () => {
+  it("holds the values of the stylesheet it replaced", () => {
+    expect(tokens(defaultTokenRefs)).toEqual({
+      "popover-min-width": "240px",
+      "popover-max-width": "320px",
+      "search-height": "36px",
+      "list-max-height": "240px",
+      "item-min-height": "32px",
+      "item-font-weight": "500",
+      "message-padding": "8px",
+      "user-row-gap": "16px",
+    });
+  });
+
+  it.each(THEMES)("are emitted in the %s theme block", (selector) => {
+    const block = themeBlock(selector);
+    expect(block).toBeDefined();
+    const missing = Object.keys(tokens(defaultTokenRefs)).filter(
+      (key) => !block!.includes(`--c--components--search-filter--${key}:`),
+    );
+    expect(missing).toEqual([]);
+  });
+});
+
+describe("SearchFilter stylesheet (AC1)", () => {
+  it("holds no literal size, weight or colour, and no var() fallback", () => {
+    const scss = stylesheet();
+    expect(scss).not.toMatch(/var\(\s*--[\w-]+\s*,/);
+    // Custom property names may contain digits or `px`: drop them first.
+    const values = scss.replace(/--[\w-]+/g, "--");
+    expect(values).not.toMatch(/\d(px|r?em)\b/);
+    expect(values).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+    expect(values).not.toMatch(/\brgba?\(/);
+    expect(values).not.toMatch(/font-weight:\s*\d/);
+  });
+
+  it("reads every search-filter token", () => {
+    const scss = stylesheet();
+    const unused = Object.keys(tokens(defaultTokenRefs)).filter(
+      (key) => !scss.includes(`var(--c--components--search-filter--${key})`),
+    );
+    expect(unused).toEqual([]);
   });
 });
