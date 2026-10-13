@@ -1,6 +1,6 @@
 # ADR 004 — Distribute the fork to consuming apps
 
-- Status: accepted
+- Status: superseded by ADR 005
 - Date: 2026-10-09
 - Scope: framing
 
