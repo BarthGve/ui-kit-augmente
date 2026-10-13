@@ -328,30 +328,25 @@ const PAIRS = [
   ["upcoming ring", "marker-upcoming-border-color", 3],
 ] as const;
 
-// STOP finding, reported and not asserted (plan rule: no token is changed
-// here, the owner decides). Measured against `surface.primary`:
-// done marker 2.42 / 2.47 / 2.46 and current marker 2.43 / 2.46 / 2.44 in
-// dark / dsfr-dark / anct-dark. Remove an entry once its pair passes.
-const KNOWN_FAILURES: ReadonlyArray<[Theme, string]> = [
-  ["dark", "done marker"],
-  ["dsfr-dark", "done marker"],
-  ["anct-dark", "done marker"],
-  ["dark", "current marker"],
-  ["dsfr-dark", "current marker"],
-  ["anct-dark", "current marker"],
-];
-
 describe("Timeline contrast", () => {
   describe.each(THEMES)("theme %s", (theme) => {
     const vars = declarations(theme);
     const surface = over(resolveVar(vars, SURFACE), [1, 1, 1]);
-    const pairs = PAIRS.filter(
-      ([name]) => !KNOWN_FAILURES.some(([t, n]) => t === theme && n === name),
-    );
-
-    it.each(pairs)("%s reaches the minimum ratio", (_, key, minimum) => {
+    it.each(PAIRS)("%s reaches the minimum ratio", (_, key, minimum) => {
       const fore = over(resolveVar(vars, tokenVar(key)), surface);
       expect(contrast(fore, surface)).toBeGreaterThanOrEqual(minimum);
+    });
+
+    it("done check glyph reaches 3:1 on the done marker", () => {
+      const marker = over(
+        resolveVar(vars, tokenVar("marker-done-background")),
+        surface,
+      );
+      const glyph = over(
+        resolveVar(vars, tokenVar("marker-done-color")),
+        marker,
+      );
+      expect(contrast(glyph, marker)).toBeGreaterThanOrEqual(3);
     });
   });
 });

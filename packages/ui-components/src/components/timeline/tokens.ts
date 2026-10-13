@@ -6,10 +6,10 @@ export const tokens = (defaults: DefaultTokens) => ({
   "color--current": defaults.contextuals.content.semantic.brand.primary,
   "connector-color": defaults.contextuals.border.surface.primary,
   "marker-done-background":
-    defaults.contextuals.background.semantic.success.primary,
+    defaults.contextuals.border.semantic.success.primary,
   "marker-done-color": defaults.contextuals.content.semantic.success["on-success"],
   "marker-current-background":
-    defaults.contextuals.background.semantic.brand.primary,
+    defaults.contextuals.border.semantic.brand.primary,
   "marker-upcoming-border-color":
     defaults.contextuals.content.semantic.neutral.tertiary,
   "title-font-weight": defaults.globals.font.weights.regular,
