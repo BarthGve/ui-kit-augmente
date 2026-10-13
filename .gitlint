@@ -1,0 +1,9 @@
+# Squash and release commits (title ending with "(#<pr>)") repeat the squashed
+# PR titles in their body and cannot be rewritten once merged: skip them.
+# Every other commit keeps gitlint's default rules.
+[general]
+regex-style-search=true
+
+[ignore-by-title]
+regex=.*\(#[0-9]+\)$
+ignore=all
