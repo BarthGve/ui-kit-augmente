@@ -29,9 +29,9 @@ Tasks (test first):
 - **scope:** `colorsAt` in `e2e/gantt/gantt.spec.tsx` (cause B: `:235` and `:1028` on webkit).
 
 Tasks (test first):
-1. [ ] Red on webkit (ring edge pixels `false`, link pixel white); record that Desktop Safari is a 2x device.
-2. [ ] `locator.screenshot({ scale: "css" })` in `colorsAt`; a short comment says why. No tolerance widened (`<= 8` stays), no point moved.
-3. [ ] Green on webkit and firefox, still green on chromium. Mutation: drop the ring colour in `index.scss` locally, see `:235` fail on webkit (revert).
+1. [x] Red on webkit (ring edge pixels `false`, link pixel white); record that Desktop Safari is a 2x device.
+2. [x] `locator.screenshot({ scale: "css" })` in `colorsAt`; a short comment says why. No tolerance widened (`<= 8` stays), no point moved.
+3. [x] Green on webkit and firefox, still green on chromium. Mutation: drop the ring colour in `index.scss` locally, see `:235` fail on webkit (revert).
 
 ### t03-gantt-engine-defects
 - **size:** S
