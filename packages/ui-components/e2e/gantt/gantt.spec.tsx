@@ -273,6 +273,9 @@ test.describe("Gantt", () => {
     page,
   }) => {
     await mount(<TestGantt />);
+    // `mount` resolves on `root.render()`, before React commits: a Tab sent
+    // at once can hit an empty page (seen on WebKit). Wait for the first stop.
+    await expect(page.getByRole("button", { name: "Day" })).toBeVisible();
     for (const name of ["Day", "Week", "Month"]) {
       await page.keyboard.press("Tab");
       await expect(page.getByRole("button", { name })).toBeFocused();
