@@ -27,6 +27,7 @@ export const SearchFilter = <T extends SearchFilterItem = SearchFilterItem>(
     onOpenChange,
     showReset = true,
     selected,
+    onReset,
   } = props;
 
   const id = useId();
@@ -112,7 +113,12 @@ export const SearchFilter = <T extends SearchFilterItem = SearchFilterItem>(
         style={{ marginTop: "0px" }}
       >
         {showReset && selected && (
-          <FilterResetRow onReset={() => onItemSelect?.(undefined)} />
+          <FilterResetRow
+            onReset={() => {
+              onItemSelect?.(undefined);
+              onReset?.();
+            }}
+          />
         )}
         <div className="c__search-filter__search">
           <Zoom size={IconSize.SMALL} />

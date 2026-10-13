@@ -20,6 +20,7 @@ type HarnessProps = {
   emptyState?: ReactNode;
   showReset?: boolean;
   onItemSelect?: (item?: SearchFilterItem) => void;
+  onReset?: () => void;
 };
 
 // SearchFilter is fully controlled: this stateful wrapper plays the caller,
@@ -81,6 +82,21 @@ const option = (name: string) => screen.getByRole("option", { name });
 const resetRow = () => screen.queryByRole("button", { name: "Reset" });
 const listbox = () => screen.queryByRole("listbox", { hidden: true });
 const focused = () => document.activeElement;
+
+// Errors thrown by an event handler are reported on `window`, not to the
+// test: collect them so a reset that throws (e.g. a missing callback) is red.
+const watchErrors = () => {
+  const errors: unknown[] = [];
+  const onError = (event: ErrorEvent) => {
+    event.preventDefault();
+    errors.push(event.error);
+  };
+  window.addEventListener("error", onError);
+  return () => {
+    window.removeEventListener("error", onError);
+    return errors;
+  };
+};
 
 // The input is focused one animation frame after the popover opens.
 const open = async () => {
@@ -278,16 +294,40 @@ describe("SearchFilter selection kept while searching (AC3)", () => {
 });
 
 describe("SearchFilter reset (AC2)", () => {
-  it("reset calls onItemSelect(undefined) once", async () => {
+  it.each([
+    ["with onReset", vi.fn()],
+    ["without onReset", undefined],
+  ])("%s: reset calls onItemSelect(undefined) once", async (_, onReset) => {
+    onReset?.mockClear();
     const onItemSelect = vi.fn();
-    renderSearchFilter({ initialSelected: ITEMS[1], onItemSelect });
+    renderSearchFilter({ initialSelected: ITEMS[1], onItemSelect, onReset });
     const user = await open();
+    const errors = watchErrors();
     await user.click(resetRow()!);
+    expect(errors()).toEqual([]);
     expect(onItemSelect).toHaveBeenCalledTimes(1);
     expect(onItemSelect).toHaveBeenCalledWith(undefined);
+    if (onReset) expect(onReset).toHaveBeenCalledTimes(1);
     expect(trigger()).toHaveAccessibleName("Category");
     expect(resetRow()).toBeNull();
   });
+
+  it.each(["{Enter}", " "])(
+    "%s on the reset row resets once and calls onReset once",
+    async (key) => {
+      const onItemSelect = vi.fn();
+      const onReset = vi.fn();
+      renderSearchFilter({ initialSelected: ITEMS[1], onItemSelect, onReset });
+      const user = await open();
+      await user.tab();
+      await user.tab();
+      expect(focused()).toBe(resetRow());
+      await user.keyboard(key);
+      expect(onItemSelect).toHaveBeenCalledTimes(1);
+      expect(onItemSelect).toHaveBeenCalledWith(undefined);
+      expect(onReset).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it.each([
     ["showReset={false}", { initialSelected: ITEMS[1], showReset: false }],
@@ -302,7 +342,8 @@ describe("SearchFilter reset (AC2)", () => {
 describe("SearchFilter keyboard (AC4)", () => {
   it("Enter opens and focuses the input, ArrowDown reaches the first option, Enter selects", async () => {
     const onItemSelect = vi.fn();
-    renderSearchFilter({ onItemSelect });
+    const onReset = vi.fn();
+    renderSearchFilter({ onItemSelect, onReset });
     const user = await tabToTrigger();
     await user.keyboard("{Enter}");
     expect(trigger()).toHaveAttribute("aria-expanded", "true");
@@ -312,6 +353,7 @@ describe("SearchFilter keyboard (AC4)", () => {
     await user.keyboard("{Enter}");
     expect(onItemSelect).toHaveBeenCalledTimes(1);
     expect(onItemSelect).toHaveBeenCalledWith(ITEMS[0]);
+    expect(onReset).not.toHaveBeenCalled();
     expect(listbox()).toBeNull();
     expect(trigger()).toHaveAccessibleName("Category : Apple");
     await waitFor(() => expect(focused()).toBe(trigger()));

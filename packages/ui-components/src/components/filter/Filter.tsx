@@ -48,6 +48,8 @@ export type FilterProps = {
   label: string;
   options: FilterOption[];
   showReset?: boolean;
+  /** Called when the reset row is used, after the value is cleared. */
+  onReset?: () => void;
 } & SelectProps;
 
 /** Minimal slice of react-aria's SelectState used to drive custom selection. */
@@ -58,7 +60,7 @@ type SelectStateLike = {
 
 type RowRefMap = RefObject<Map<string, RefObject<HTMLDivElement | null>>>;
 
-export const Filter = (props: FilterProps) => {
+export const Filter = ({ onReset, ...props }: FilterProps) => {
   // The sub-panel state lives here, in the stable parent, on purpose: react-aria
   // renders the Select/ListBox children subtree twice (a hidden collection pass +
   // the real pass), so any state held inside the Select would be split across two
@@ -144,6 +146,7 @@ export const Filter = (props: FilterProps) => {
       >
         <FilterInner
           {...props}
+          onReset={onReset}
           getRowRef={getRowRef}
           openSub={openSub}
           selectStateRef={selectStateRef}
@@ -204,6 +207,7 @@ const FilterInner = (props: FilterInnerProps) => {
     openSub,
     selectStateRef,
     showReset = true,
+    onReset,
     ...filterProps
   } = props;
   const state = useContext(SelectStateContext);
@@ -263,7 +267,12 @@ const FilterInner = (props: FilterInnerProps) => {
          * `state` from SelectStateContext is available) makes it show reliably.
          */}
         {showReset && state?.value && (
-          <FilterResetRow onReset={() => state?.setValue(null)} />
+          <FilterResetRow
+            onReset={() => {
+              state?.setValue(null);
+              onReset?.();
+            }}
+          />
         )}
         <div
           onKeyDownCapture={(event) => {

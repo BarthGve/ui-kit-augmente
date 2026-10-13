@@ -85,6 +85,11 @@ const meta: Meta<typeof SearchFilter> = {
         defaultValue: { summary: "true" },
       },
     },
+    onReset: {
+      description:
+        "Called when the reset entry is used, after `onItemSelect(undefined)`.",
+      table: { type: { summary: "() => void" } },
+    },
   },
 };
 
