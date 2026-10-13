@@ -640,6 +640,10 @@
 	--c--components--filter--popover-border-width: 1px;
 	--c--components--filter--popover-radius: 4px;
 	--c--components--filter--popover-padding: 8px;
+	--c--components--filter--button-color--hover: var(--c--contextuals--content--semantic--neutral--secondary);
+	--c--components--filter--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--filter--focus-ring-width: 2px;
+	--c--components--filter--focus-ring-offset: 2px;
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
 	--c--components--forms-checkbox--font-size: var(--c--globals--font--sizes--sm);
@@ -1563,6 +1567,10 @@
 	--c--components--filter--popover-border-width: 1px;
 	--c--components--filter--popover-radius: 4px;
 	--c--components--filter--popover-padding: 8px;
+	--c--components--filter--button-color--hover: var(--c--contextuals--content--semantic--neutral--secondary);
+	--c--components--filter--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--filter--focus-ring-width: 2px;
+	--c--components--filter--focus-ring-offset: 2px;
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
 	--c--components--forms-checkbox--font-size: var(--c--globals--font--sizes--sm);
@@ -2461,6 +2469,10 @@
 	--c--components--filter--popover-border-width: 1px;
 	--c--components--filter--popover-radius: 4px;
 	--c--components--filter--popover-padding: 8px;
+	--c--components--filter--button-color--hover: var(--c--contextuals--content--semantic--neutral--secondary);
+	--c--components--filter--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--filter--focus-ring-width: 2px;
+	--c--components--filter--focus-ring-offset: 2px;
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
 	--c--components--forms-checkbox--font-size: var(--c--globals--font--sizes--sm);
@@ -3359,6 +3371,10 @@
 	--c--components--filter--popover-border-width: 1px;
 	--c--components--filter--popover-radius: 4px;
 	--c--components--filter--popover-padding: 8px;
+	--c--components--filter--button-color--hover: var(--c--contextuals--content--semantic--neutral--secondary);
+	--c--components--filter--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--filter--focus-ring-width: 2px;
+	--c--components--filter--focus-ring-offset: 2px;
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
 	--c--components--forms-checkbox--font-size: var(--c--globals--font--sizes--sm);
@@ -4260,6 +4276,10 @@
 	--c--components--filter--popover-border-width: 1px;
 	--c--components--filter--popover-radius: 4px;
 	--c--components--filter--popover-padding: 8px;
+	--c--components--filter--button-color--hover: var(--c--contextuals--content--semantic--neutral--secondary);
+	--c--components--filter--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--filter--focus-ring-width: 2px;
+	--c--components--filter--focus-ring-offset: 2px;
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
 	--c--components--forms-checkbox--font-size: var(--c--globals--font--sizes--sm);
@@ -5161,6 +5181,10 @@
 	--c--components--filter--popover-border-width: 1px;
 	--c--components--filter--popover-radius: 4px;
 	--c--components--filter--popover-padding: 8px;
+	--c--components--filter--button-color--hover: var(--c--contextuals--content--semantic--neutral--secondary);
+	--c--components--filter--focus-ring-color: var(--c--contextuals--content--semantic--brand--tertiary);
+	--c--components--filter--focus-ring-width: 2px;
+	--c--components--filter--focus-ring-offset: 2px;
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
 	--c--components--forms-checkbox--font-size: var(--c--globals--font--sizes--sm);

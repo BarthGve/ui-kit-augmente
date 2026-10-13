@@ -72,19 +72,22 @@ const background = (name: string) =>
   `--c--contextuals--background--semantic--${name}`;
 const SURFACE = "--c--contextuals--background--surface--primary";
 
+const filter = (name: string) => `--c--components--filter--${name}`;
+
 // Text/background pairs as used by `filter/index.scss` (trigger, shared by
 // SearchFilter) and `search-filter/index.scss` (loading and empty rows, on
-// the popover's surface). 14px regular text: 4.5:1.
-//
-// Deliberately absent: the hover/focus label `neutral.tertiary` on
-// `neutral.tertiary-hover` measures 4.16 to 4.21:1 in the three light themes
-// and fails. Existing tokens are not changed here (research, STOP rule); the
-// fix is the deferred t04, an owner decision.
+// the popover's surface). 14px regular text: 4.5:1. The hover/focus label is
+// read through its component token (s07 t04), so a token change is red here.
 const PAIRS = [
   [
     "trigger at rest",
     content("neutral--tertiary"),
     background("neutral--tertiary"),
+  ],
+  [
+    "trigger hovered or focused",
+    filter("button-color--hover"),
+    background("neutral--tertiary-hover"),
   ],
   ["active trigger", content("brand--primary"), background("brand--secondary")],
   [
@@ -104,6 +107,30 @@ describe("Filter and SearchFilter text contrast", () => {
       const back = over(resolveVar(vars, bg), surface);
       const fore = over(resolveVar(vars, text), back);
       expect(contrast(fore, back)).toBeGreaterThanOrEqual(4.5);
+    });
+  });
+});
+
+// The trigger's focus ring (s07 t04) is a non-text indicator: 3:1 against
+// every background the trigger can show and against the page surface it is
+// offset onto.
+const RING_BACKGROUNDS = [
+  ["page surface", SURFACE],
+  ["trigger at rest", background("neutral--tertiary")],
+  ["trigger hovered", background("neutral--tertiary-hover")],
+  ["active trigger", background("brand--secondary")],
+  ["active trigger hovered", background("brand--secondary-hover")],
+] as const;
+
+describe("Filter and SearchFilter focus ring contrast", () => {
+  describe.each(THEMES)("theme %s", (theme) => {
+    const vars = declarations(theme);
+    const surface = over(resolveVar(vars, SURFACE), [1, 1, 1]);
+
+    it.each(RING_BACKGROUNDS)("against the %s reaches 3:1", (_, bg) => {
+      const back = over(resolveVar(vars, bg), surface);
+      const ring = over(resolveVar(vars, filter("focus-ring-color")), back);
+      expect(contrast(ring, back)).toBeGreaterThanOrEqual(3);
     });
   });
 });

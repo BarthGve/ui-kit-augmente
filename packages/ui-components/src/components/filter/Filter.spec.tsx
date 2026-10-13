@@ -350,6 +350,13 @@ describe("Filter tokens (AC1)", () => {
       "popover-border-width": "1px",
       "popover-radius": "4px",
       "popover-padding": "8px",
+      // s07 t04: contrast and focus ring.
+      "button-color--hover":
+        defaultTokenRefs.contextuals.content.semantic.neutral.secondary,
+      "focus-ring-color":
+        defaultTokenRefs.contextuals.content.semantic.brand.tertiary,
+      "focus-ring-width": "2px",
+      "focus-ring-offset": "2px",
     });
   });
 
@@ -373,6 +380,18 @@ describe("Filter stylesheet (AC1)", () => {
     expect(values).not.toMatch(/#[0-9a-f]{3,8}\b/i);
     expect(values).not.toMatch(/\brgba?\(/);
     expect(values).not.toMatch(/font-weight:\s*\d/);
+  });
+
+  // s07 t04: the ring only on keyboard focus (`:focus-visible`), the raised
+  // label colour wherever the hover background applies.
+  it("draws the focus ring on :focus-visible and the hover label from tokens", () => {
+    const scss = stylesheet();
+    expect(scss).toMatch(
+      /&:focus-visible \{ outline: var\(--c--components--filter--focus-ring-width\) solid var\(--c--components--filter--focus-ring-color\); outline-offset: var\(--c--components--filter--focus-ring-offset\); \}/,
+    );
+    expect(scss).toMatch(
+      /&:not\(\.c__filter__button--active\) \{ &:hover, &:focus, &:focus-within \{ background-color: var\( ?--c--contextuals--background--semantic--neutral--tertiary-hover ?\); color: var\(--c--components--filter--button-color--hover\); \} \}/,
+    );
   });
 
   it("reads every filter token", () => {

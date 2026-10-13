@@ -38,6 +38,23 @@ test.describe("Filter — computed styles from the filter tokens", () => {
   });
 });
 
+// s07 t04: the tokenised ring shows on keyboard focus only.
+test.describe("Filter — focus ring", () => {
+  const outline = (trigger: import("@playwright/test").Locator) =>
+    trigger.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { style: s.outlineStyle, width: s.outlineWidth };
+    });
+
+  test("a keyboard-focused trigger draws the ring", async ({ mount, page }) => {
+    await mount(<TestResetFilter />);
+    const trigger = page.getByRole("button", { name: /Type/ });
+    await page.keyboard.press("Tab");
+    await expect(trigger).toBeFocused();
+    expect(await outline(trigger)).toEqual({ style: "solid", width: "2px" });
+  });
+});
+
 test.describe("Filter — keyboard only (plain options)", () => {
   test("opens, moves, selects and returns focus without a pointer", async ({
     mount,

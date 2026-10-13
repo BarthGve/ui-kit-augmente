@@ -7,6 +7,7 @@ import { SearchFilterItem, SearchFilterProps } from "./types";
 import { FilterResetRow } from "../filter/FilterResetRow";
 import { Zoom } from ":/icons";
 import { IconSize } from "../icon";
+import { useCunningham } from ":/components/provider";
 
 export const SearchFilter = <T extends SearchFilterItem = SearchFilterItem>(
   props: SearchFilterProps<T>,
@@ -30,6 +31,7 @@ export const SearchFilter = <T extends SearchFilterItem = SearchFilterItem>(
     onReset,
   } = props;
 
+  const { t } = useCunningham();
   const id = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -111,6 +113,7 @@ export const SearchFilter = <T extends SearchFilterItem = SearchFilterItem>(
         onOpenChange={setIsOpen}
         className="c__dropdown-menu c__search-filter__popover"
         style={{ marginTop: "0px" }}
+        aria-labelledby={id}
       >
         {showReset && selected && (
           <FilterResetRow
@@ -149,7 +152,8 @@ export const SearchFilter = <T extends SearchFilterItem = SearchFilterItem>(
             <ListBoxItem
               id="__loading"
               className="c__search-filter__loading"
-              textValue="Loading"
+              textValue={t("components.searchFilter.loading")}
+              aria-label={t("components.searchFilter.loading")}
             >
               <Spinner />
             </ListBoxItem>
