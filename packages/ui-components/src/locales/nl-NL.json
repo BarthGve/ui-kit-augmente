@@ -358,6 +358,13 @@
       "link_instructions": "Alt plus Shift plus pijl rechts laat een andere taak na deze beginnen; Alt plus Shift plus pijl links laat deze taak na een andere beginnen. Pijl omhoog en omlaag kiezen de taak, Enter koppelt of ontkoppelt, Escape annuleert.",
       "announce_link_target": "{from} aan {to} koppelen: {to} zou beginnen nadat {from} eindigt. Enter om te koppelen.",
       "announce_link_exists": "{to} begint al na {from}. Enter om de koppeling te verwijderen."
+    },
+    "timeline": {
+      "state": {
+        "done": "Voltooid",
+        "current": "Huidig",
+        "upcoming": "Gepland"
+      }
     }
   }
 }

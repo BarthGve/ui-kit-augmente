@@ -342,6 +342,16 @@ export type {
 } from "./components/accordion";
 
 export {
+  Timeline,
+} from "./components/timeline";
+
+export type {
+  TimelineEvent,
+  TimelineProps,
+  TimelineState,
+} from "./components/timeline";
+
+export {
   Gantt,
 } from "./components/gantt";
 

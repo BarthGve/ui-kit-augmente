@@ -1,0 +1,98 @@
+import { Meta, Canvas, ArgTypes } from "@storybook/blocks";
+import * as TimelineStories from "./timeline.stories";
+
+<Meta of={TimelineStories} name="Docs" />
+
+# Timeline
+
+`Timeline` shows events as an ordered list: each event has a date, a title and
+optional content, and may carry a state. It is presentational: no state, no
+data fetching.
+
+```tsx
+import { Timeline } from "@gouvfr-lasuite/ui-components";
+
+<Timeline
+  aria-label="Order history"
+  events={[
+    { id: "received", date: "2026-10-12", title: "Order received", state: "done" },
+    { id: "packed", date: "2026-10-13", title: "Packed", state: "current" },
+    { id: "shipped", date: "2026-10-15", title: "Shipped", state: "upcoming" },
+  ]}
+/>;
+```
+
+<Canvas of={TimelineStories.Default} />
+
+The root is an `<ol role="list">` (the role keeps list semantics that
+`list-style: none` removes in Safari / VoiceOver): assistive technologies
+announce an ordered list of N items. Name it with `aria-label` or
+`aria-labelledby`. `className` and other attributes go to the `<ol>`.
+
+**Order is the caller's.** Events are rendered in the order of `events`, never
+sorted by date: an intentional order (newest first, grouped steps) is kept.
+An empty `events` renders an empty list; show an empty state around it if
+needed.
+
+## States
+
+`state` is `done`, `current` or `upcoming`. A state is never shown by colour
+alone: each has its own marker shape (a check on a filled disc, a dot inside
+a ring, an empty ring) and a visually hidden label read after the title
+("Done", "Current", "Upcoming", from the locales). The current event carries
+`aria-current="step"`. Without `state`, the marker is a neutral ring and no
+label is read. Markers are decorative (`aria-hidden`).
+
+<Canvas of={TimelineStories.WithStates} />
+
+## Content
+
+`title` and `content` accept any React node. Long text wraps.
+
+<Canvas of={TimelineStories.WithContent} />
+
+## Dates and time zone
+
+`date` is a `Date` or an ISO string, rendered in a `<time dateTime>` and
+formatted with `Intl.DateTimeFormat` in the provider's locale, by default
+`{ dateStyle: "medium" }`; `dateFormat` replaces those options.
+
+A date-only string (`"2026-10-13"`) is a calendar day: it is formatted in UTC,
+so it shows the same day in every time zone. A `Date` or a string with a time
+is formatted in the user's time zone. A string that is not a date is shown as
+given.
+
+<Canvas of={TimelineStories.Localized} />
+
+## Orientation
+
+`orientation` accepts `"vertical"` (default) and `"horizontal"`. The
+horizontal layout is not available yet: both values render vertically for now.
+
+## Tokens
+
+| Token (`--c--components--timeline--…`) | Default                                            |
+| -------------------------------------- | -------------------------------------------------- |
+| `color`                                | `contextuals.content.semantic.neutral.primary`     |
+| `color--muted`                         | `contextuals.content.semantic.neutral.secondary`   |
+| `color--current`                       | `contextuals.content.semantic.brand.primary`       |
+| `connector-color`                      | `contextuals.border.surface.primary`               |
+| `connector-width`                      | `2px`                                              |
+| `marker-size`                          | `1.5rem`                                           |
+| `marker-border-width`                  | `2px`                                              |
+| `marker-done-background`               | `contextuals.background.semantic.success.primary`  |
+| `marker-done-color`                    | `contextuals.content.semantic.success.on-success`  |
+| `marker-current-background`            | `contextuals.background.semantic.brand.primary`    |
+| `marker-upcoming-border-color`         | `contextuals.content.semantic.neutral.tertiary`    |
+| `title-font-weight`                    | `globals.font.weights.regular`                     |
+| `title-font-weight--current`           | `globals.font.weights.bold`                        |
+| `gap`                                  | `globals.spacings.base`                            |
+| `item-gap`                             | `globals.spacings.xs`                              |
+| `item-min-width`                       | `12rem` (horizontal layout)                        |
+| `focus-ring-color`                     | `contextuals.content.semantic.brand.tertiary`      |
+| `focus-ring-width`                     | `2px`                                              |
+| `focus-ring-offset`                    | `2px`                                              |
+
+## Props
+
+<ArgTypes of={TimelineStories} />
