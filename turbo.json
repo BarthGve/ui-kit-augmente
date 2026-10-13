@@ -11,6 +11,12 @@
     },
     "test": {
       "cache": false,
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@gouvfr-lasuite/ui-tokens#test": {
+      "cache": false,
+      "dependsOn": ["build"],
       "outputs": []
     },
     "test:ct": {
