@@ -53,9 +53,9 @@ Tasks (test first):
 - **scope:** `e2e/filter/filter.spec.tsx` (cause F, `:49` webkit), possibly a shared helper in `e2e/helpers/` if the same first-Tab pattern appears in other specs.
 
 Tasks (test first):
-1. [ ] Reproduce in the Linux image (`mcr.microsoft.com/playwright:v1.61.1-noble`, container kept alive; recipe in the research): `--project=webkit --repeat-each=20 --workers=2` on the whole `filter.spec.tsx`; record the failure rate with the current spec. If it never fails, run the complete e2e suite in the image with the CI worker count and record it. If still not reproduced, stop and report the evidence (this is the only task allowed to end in "cannot reproduce").
-2. [ ] Fix browser-neutrally without hiding the keyboard path: make the page focused before the first `Tab` (e.g. `page.bringToFront()` / focus the document body first) or wrap the `Tab` in `expect.poll`/retry on `:focus`, whichever the repeat runs show to be stable. The assertions (`toBeFocused`, outline `solid` `2px`) stay.
-3. [ ] 20 repeats x 2 workers green on webkit and firefox in the image; chromium green locally. Note in the PR that the local macOS WebKit project fails these Tab tests by platform (Safari does not Tab to buttons) and that the Linux image is the reference.
+1. [x] Reproduce in the Linux image (`mcr.microsoft.com/playwright:v1.61.1-noble`, container kept alive; recipe in the research): `--project=webkit --repeat-each=20 --workers=2` on the whole `filter.spec.tsx`; record the failure rate with the current spec. If it never fails, run the complete e2e suite in the image with the CI worker count and record it. If still not reproduced, stop and report the evidence (this is the only task allowed to end in "cannot reproduce").
+2. [x] Fix browser-neutrally without hiding the keyboard path: make the page focused before the first `Tab` (e.g. `page.bringToFront()` / focus the document body first) or wrap the `Tab` in `expect.poll`/retry on `:focus`, whichever the repeat runs show to be stable. The assertions (`toBeFocused`, outline `solid` `2px`) stay.
+3. [x] 20 repeats x 2 workers green on webkit and firefox in the image; chromium green locally. Note in the PR that the local macOS WebKit project fails these Tab tests by platform (Safari does not Tab to buttons) and that the Linux image is the reference.
 
 ### t05-gantt-touch-neutral
 - **size:** M
