@@ -18,9 +18,9 @@ Acceptance criteria: see `docs/stories.md` (cause of each of the 12 failures wri
 - **scope:** `e2e/timeline/timeline.spec.tsx` only (cause A, `:66`, firefox and webkit).
 
 Tasks (test first):
-1. [ ] Reproduce red on firefox and webkit (`undefined` connector height; empty geometry) with a throwaway config on the port of `bash .dm/lib/dm-port.sh`; record in the PR.
-2. [ ] Read the pseudo-element longhands inside the `evaluateAll` callback (return plain `{ width, height, content }`) and wait for the first `listitem` to be visible before measuring. Assertions (24px, 2px, 192px, connector width, last `content: none`) unchanged.
-3. [ ] Green on the three engines, three runs each; mutation: change the connector height in `timeline` SCSS to 3px locally and see the test fail on the three engines (revert).
+1. [x] Reproduce red on firefox and webkit (`undefined` connector height; empty geometry) with a throwaway config on the port of `bash .dm/lib/dm-port.sh`; record in the PR.
+2. [x] Read the pseudo-element longhands inside the `evaluateAll` callback (return plain `{ width, height, content }`) and wait for the first `listitem` to be visible before measuring. Assertions (24px, 2px, 192px, connector width, last `content: none`) unchanged.
+3. [x] Green on the three engines, three runs each; mutation: change the connector height in `timeline` SCSS to 3px locally and see the test fail on the three engines (revert).
 
 ### t02-gantt-pixel-device-scale
 - **size:** XS
