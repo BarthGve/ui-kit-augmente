@@ -74,6 +74,11 @@ Strict respect of the existing product's constraints (tokens, RGAA accessibility
 
 ## Amendements
 
+### 2026-10-13 — v0.2.0 — ci-green
+**Entre dans le périmètre :** make the GitHub CI (re-enabled on 2026-10-13 after the first release) green on the fork: build order of `ui-tokens` before the unit tests (Turborepo), commit-message lint that does not reject squash and release commits on `main`, and the Playwright component tests on Firefox and WebKit (until now only chromium ran locally). The chromium failure of the PDF preview (upstream code) is classified, because the `e2e` job cannot pass without it. Architecture impact: none (no new runtime dependency, external service, store, authentication or queue).
+**Sorti du cimetière ?** non — no graveyard item concerns CI.
+**Stories :** s58, s59.
+
 ### 2026-10-13 — v0.1.0 — publish-fork
 **Entre dans le périmètre :** publishing the fork's `ui-components` on the public npm registry under the owner's scope (`@barthgve/ui-components`), versions `x.y.z-fork.N`, consumed through an npm alias that keeps the upstream import names; publication workflow from `main`; installation page corrected. Architecture impact: an external service (the npm registry) and a CI secret, so ADR 005 (supersedes ADR 004) is part of this amendment.
 **Sorti du cimetière ?** non — "Redesign or migration of the tokens, of the token engine, and of `ui-codemod`" stays excluded: `ui-tokens` and `ui-codemod` are not published by the fork.
