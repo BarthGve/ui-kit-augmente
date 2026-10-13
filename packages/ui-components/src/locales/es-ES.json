@@ -5,7 +5,8 @@
     },
     "searchFilter": {
       "reset": "Restablecer",
-      "placeholder": "Buscar un nombre"
+      "placeholder": "Buscar un nombre",
+      "loading": "Cargando…"
     },
     "share": {
       "copyLink": "Copiar enlace",

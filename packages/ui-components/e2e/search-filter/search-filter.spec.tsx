@@ -226,6 +226,36 @@ test.describe("SearchFilter", () => {
   });
 });
 
+// s07 t04: the trigger reuses Filter's ring, on keyboard focus only.
+test.describe("SearchFilter — focus ring", () => {
+  const outline = (trigger: import("@playwright/test").Locator) =>
+    trigger.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { style: s.outlineStyle, width: s.outlineWidth };
+    });
+
+  test("a keyboard-focused trigger draws the ring", async ({ mount, page }) => {
+    await mount(<TestSearchFilter />);
+    const trigger = page.getByRole("button", { name: /Category/ });
+    await page.keyboard.press("Tab");
+    await expect(trigger).toBeFocused();
+    expect(await outline(trigger)).toEqual({ style: "solid", width: "2px" });
+  });
+
+  // Observed in chromium: the press focuses the trigger, the popover only
+  // opens on release, so the pointer focus can be read in between.
+  test("a pointer-focused trigger draws none", async ({ mount, page }) => {
+    await mount(<TestSearchFilter />);
+    const trigger = page.getByRole("button", { name: /Category/ });
+    const box = (await trigger.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await expect(trigger).toBeFocused();
+    expect((await outline(trigger)).style).toBe("none");
+    await page.mouse.up();
+  });
+});
+
 // The literals moved to `--c--components--search-filter--*` tokens (s07 t03):
 // the rendered popover keeps the exact pre-token values.
 test.describe("SearchFilter — computed styles from the search-filter tokens", () => {

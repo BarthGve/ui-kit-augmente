@@ -5,7 +5,8 @@
     },
     "searchFilter": {
       "reset": "Resetten",
-      "placeholder": "Zoek een naam"
+      "placeholder": "Zoek een naam",
+      "loading": "Laden…"
     },
     "share": {
       "copyLink": "Link kopiëren",

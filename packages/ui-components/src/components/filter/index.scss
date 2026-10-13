@@ -36,7 +36,14 @@
         background-color: var(
           --c--contextuals--background--semantic--neutral--tertiary-hover
         );
+        color: var(--c--components--filter--button-color--hover);
       }
+    }
+
+    &:focus-visible {
+      outline: var(--c--components--filter--focus-ring-width) solid
+        var(--c--components--filter--focus-ring-color);
+      outline-offset: var(--c--components--filter--focus-ring-offset);
     }
 
     &--active {

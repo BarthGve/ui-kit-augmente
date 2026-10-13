@@ -170,7 +170,7 @@ const opened = (
 <div data-testid="underlay" style="position: fixed; inset: 0;" aria-hidden="true">
 </div>
 <div style="display: contents;">
-<div dir="ltr" style="…" class="c__dropdown-menu c__search-filter__popover" data-rac="" role="dialog" tabindex="-1" data-placement="bottom">
+<div dir="ltr" style="…" class="c__dropdown-menu c__search-filter__popover" data-rac="" aria-labelledby="ID" role="dialog" tabindex="-1" data-placement="bottom">
 ${DISMISS}
 ${reset}<div class="c__search-filter__search">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -234,7 +234,7 @@ ${ITEM_ROWS}
       opened(
         button(true),
         `${LIST} data-layout="stack" data-orientation="vertical">
-<div class="c__search-filter__loading" data-rac="" role="option" tabindex="-1" data-collection="react-aria-ID" data-key="__loading" data-react-aria-pressable="true" id="react-aria-ID-option-__loading">
+<div class="c__search-filter__loading" data-rac="" role="option" aria-label="Loading…" tabindex="-1" data-collection="react-aria-ID" data-key="__loading" data-react-aria-pressable="true" id="react-aria-ID-option-__loading">
 <div class="c__spinner sm">
 </div>
 </div>
@@ -279,6 +279,25 @@ ${ITEM_ROWS}
 </div>`,
       ),
     );
+  });
+});
+
+// s07 t04: what assistive technology is told about the popover and its rows.
+describe("SearchFilter announced states", () => {
+  it("names the popover dialog after its trigger", async () => {
+    renderSearchFilter({ initialSelected: ITEMS[1] });
+    await open();
+    expect(
+      screen.getByRole("dialog", { name: "Category : Banana" }),
+    ).toBeInTheDocument();
+  });
+
+  // React Aria's ListBox and ListBoxItem drop `aria-busy` and `role`, so the
+  // loading row is announced by its name only.
+  it("loading: the row is named from the locale", async () => {
+    renderSearchFilter({ isLoading: true });
+    await open();
+    expect(screen.getByRole("option", { name: "Loading…" })).toBeVisible();
   });
 });
 
