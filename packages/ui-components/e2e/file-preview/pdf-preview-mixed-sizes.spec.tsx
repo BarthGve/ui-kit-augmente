@@ -153,6 +153,14 @@ test.describe("PDF Preview — mixed page sizes", () => {
       await expect(getRenderedPage(page, target)).toBeVisible({
         timeout: 10000,
       });
+      // Pre-rendered pages are visible before the jump lands, and the jump is
+      // asynchronous. Wait for the target to scroll into view and the input
+      // to sync with it, so this jump's late current-page sync cannot
+      // overwrite the next fill() (seen in CI: size "2" from 13, not 5's "1").
+      await expect(getRenderedPage(page, target)).toBeInViewport({
+        timeout: 10000,
+      });
+      await expect(pageInput).toHaveValue(String(target), { timeout: 10000 });
     }
   });
 
