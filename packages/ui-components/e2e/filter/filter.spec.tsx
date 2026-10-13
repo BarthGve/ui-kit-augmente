@@ -1,6 +1,43 @@
 import { test, expect } from "@playwright/experimental-ct-react";
 import { TestFilter, TestResetFilter } from "../helpers/mount-filter";
 
+// The literals moved to `--c--components--filter--*` tokens (s07 t03): the
+// rendered trigger keeps the exact pre-token values. The chevron's own size is
+// not checked: `.material-icons` (24px) wins over it here.
+test.describe("Filter — computed styles from the filter tokens", () => {
+  test("trigger box, type and the active weight", async ({ mount, page }) => {
+    await mount(<TestResetFilter />);
+    const trigger = page.getByRole("button", { name: /Type/ });
+
+    const style = await trigger.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        height: s.height,
+        borderRadius: s.borderRadius,
+        borderWidth: s.borderTopWidth,
+        fontSize: s.fontSize,
+        fontWeight: s.fontWeight,
+        gap: s.columnGap,
+        padding: s.padding,
+      };
+    });
+    expect(style).toEqual({
+      height: "32px",
+      borderRadius: "4px",
+      borderWidth: "1px",
+      fontSize: "14px",
+      fontWeight: "400",
+      gap: "6px",
+      padding: "0px 6px 0px 8px",
+    });
+
+    await trigger.click();
+    await page.getByRole("option", { name: "File" }).click();
+    await expect(trigger).toHaveAccessibleName("Type : File");
+    await expect(trigger).toHaveCSS("font-weight", "500");
+  });
+});
+
 test.describe("Filter — keyboard only (plain options)", () => {
   test("opens, moves, selects and returns focus without a pointer", async ({
     mount,

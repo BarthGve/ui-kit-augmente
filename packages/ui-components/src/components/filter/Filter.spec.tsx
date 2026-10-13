@@ -1,8 +1,12 @@
+import { readFileSync } from "fs";
+import { resolve } from "path";
+import { defaultTokenRefs } from "@gouvfr-lasuite/ui-tokens";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { CunninghamProvider } from ":/components/provider/Provider";
 import { Filter, FilterProps } from "./Filter";
+import { tokens } from "./tokens";
 
 // Bounded input: three options, fixed labels, the en-US locale for "Reset".
 const OPTIONS = [
@@ -304,4 +308,78 @@ describe("Filter keyboard (AC4)", () => {
       expect(trigger()).toHaveAccessibleName("Type");
     },
   );
+});
+
+// --- Tokens (s07 t03) --------------------------------------------------------
+// Vitest stubs stylesheets, so the sources are read from disk.
+const read = (path: string) => readFileSync(resolve(__dirname, path), "utf8");
+
+// Theme blocks of the shipped `cunningham-tokens.css`: flat declarations only,
+// the first `}` closes the block.
+const THEMES = [
+  ":root ",
+  ".cunningham-theme--dark",
+  ".cunningham-theme--dsfr-light",
+  ".cunningham-theme--dsfr-dark",
+  ".cunningham-theme--anct-light",
+  ".cunningham-theme--anct-dark",
+];
+const themeBlock = (selector: string) =>
+  read("../../cunningham-tokens.css").split(`${selector}{`)[1]?.split("}")[0];
+
+// Comments stripped (they may quote a literal), whitespace collapsed.
+const stylesheet = () =>
+  read("index.scss")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "")
+    .replace(/\s+/g, " ");
+
+describe("Filter tokens (AC1)", () => {
+  it("holds the values of the stylesheet it replaced", () => {
+    expect(tokens(defaultTokenRefs)).toEqual({
+      "button-height": "32px",
+      "button-radius": "4px",
+      "button-border-width": "1px",
+      "button-font-size": "14px",
+      "button-font-weight": "400",
+      "button-active-font-weight": "500",
+      "button-gap": "6px",
+      "button-padding": "0 6px 0 8px",
+      "icon-size": "1.25rem",
+      "item-gap": "6px",
+      "popover-border-width": "1px",
+      "popover-radius": "4px",
+      "popover-padding": "8px",
+    });
+  });
+
+  it.each(THEMES)("are emitted in the %s theme block", (selector) => {
+    const block = themeBlock(selector);
+    expect(block).toBeDefined();
+    const missing = Object.keys(tokens(defaultTokenRefs)).filter(
+      (key) => !block!.includes(`--c--components--filter--${key}:`),
+    );
+    expect(missing).toEqual([]);
+  });
+});
+
+describe("Filter stylesheet (AC1)", () => {
+  it("holds no literal size, weight or colour, and no var() fallback", () => {
+    const scss = stylesheet();
+    expect(scss).not.toMatch(/var\(\s*--[\w-]+\s*,/);
+    // Custom property names may contain digits or `px`: drop them first.
+    const values = scss.replace(/--[\w-]+/g, "--");
+    expect(values).not.toMatch(/\d(px|r?em)\b/);
+    expect(values).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+    expect(values).not.toMatch(/\brgba?\(/);
+    expect(values).not.toMatch(/font-weight:\s*\d/);
+  });
+
+  it("reads every filter token", () => {
+    const scss = stylesheet();
+    const unused = Object.keys(tokens(defaultTokenRefs)).filter(
+      (key) => !scss.includes(`var(--c--components--filter--${key})`),
+    );
+    expect(unused).toEqual([]);
+  });
 });
