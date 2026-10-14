@@ -57,7 +57,7 @@ project_items_json() {
             pageInfo { hasNextPage endCursor }
             nodes {
               id
-              content { ... on Issue { title } ... on DraftIssue { title } }
+              content { ... on Issue { title } }
               fieldValueByName(name: $field) {
                 ... on ProjectV2ItemFieldSingleSelectValue { name }
               }
@@ -80,8 +80,13 @@ find_project_item() {
   local key="$1"
   project_items_json | node -e '
     const prefix = "[" + process.argv[1] + "]";
-    const hit = JSON.parse(require("fs").readFileSync(0, "utf8"))
-      .find((i) => i.title === prefix || i.title.startsWith(prefix + " "));
+    const hits = JSON.parse(require("fs").readFileSync(0, "utf8"))
+      .filter((i) => i.title === prefix || i.title.startsWith(prefix + " "));
+    if (hits.length > 1) {
+      console.error("dm-board: " + hits.length + " items match " + prefix + ", refusing to guess");
+      process.exit(3);
+    }
+    const hit = hits[0];
     if (!hit) process.exit(2);
     process.stdout.write(JSON.stringify(hit));
   ' "$key"
