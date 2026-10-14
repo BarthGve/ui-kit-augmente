@@ -1104,6 +1104,9 @@ test.describe("Gantt dependencies", () => {
     page,
   }) => {
     await mount(<TestGantt dependencies={[{ from: "t0", to: "t1" }]} />);
+    // `mount` resolves before React commits: read the tokens once the Gantt
+    // exists (seen on WebKit: querySelector returned null).
+    await expect(page.locator(".c__gantt")).toBeVisible();
     const tokens = await page.evaluate(() => {
       const style = getComputedStyle(document.querySelector(".c__gantt")!);
       const rem = parseFloat(
