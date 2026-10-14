@@ -1,61 +1,59 @@
 # La Suite numérique UI
 
-This repository is the canonical home of the La Suite numérique design system.
-It combines the former UI Kit and Cunningham repositories in a private Yarn 1
-and Turborepo workspace.
+Ce dépôt est la référence du design system de La Suite numérique. Il réunit les
+anciens dépôts UI Kit et Cunningham dans un espace de travail Yarn 1 et
+Turborepo privé.
 
-Browse the unified component documentation in the public
-[Storybook](https://suitenumerique.github.io/ui-kit/).
+Consultez la documentation unifiée des composants dans le
+[Storybook](https://suitenumerique.github.io/ui-kit/) public.
 
-The Cunningham sources are a history-free snapshot of commit
+Les sources de Cunningham sont un instantané sans historique du commit
 [`3c13c21`](https://github.com/suitenumerique/cunningham/tree/3c13c21726d632a2a6ca41d2e7a4bbe28334c90b),
-the React `4.3.1` release.
+version React `4.3.1`.
 
-## Packages
+## Paquets
 
-| Package                                               | Purpose                                                                                                      |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [`@barthgve/ui-components`](./packages/ui-components) | All React components, SVG icons, styles, fonts, tests and Storybook documentation from UI Kit and Cunningham |
-| [`@gouvfr-lasuite/ui-tokens`](./packages/ui-tokens)   | Cunningham token engine, CLI, default tokens, theming helpers and CSS/SCSS/JS/TS generators                  |
-| [`@gouvfr-lasuite/ui-codemod`](./packages/ui-codemod) | One-off npx migration CLI for the former package names and public subpaths                                   |
+| Paquet                                                | Rôle                                                                                                                     |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [`@barthgve/ui-components`](./packages/ui-components) | Tous les composants React, icônes SVG, styles, polices, tests et documentation Storybook issus d'UI Kit et de Cunningham |
+| [`@gouvfr-lasuite/ui-tokens`](./packages/ui-tokens)   | Moteur de tokens Cunningham, CLI, tokens par défaut, utilitaires de thème et générateurs CSS/SCSS/JS/TS                  |
+| [`@gouvfr-lasuite/ui-codemod`](./packages/ui-codemod) | CLI de migration à usage unique (npx) pour les anciens noms de paquets et de sous-chemins publics                        |
 
-`@barthgve/ui-components` is the fork of `@gouvfr-lasuite/ui-components`,
-installed under the upstream name once published
+`@barthgve/ui-components` est le fork de `@gouvfr-lasuite/ui-components`. Il
+s'installe sous le nom d'origine grâce à un alias
 (`yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version>`,
-available after the first publish; until then see
-[Install the fork](#install-the-fork)).
+voir [Installer le fork](#installer-le-fork)).
 
-The component package depends on the token package through its published semver
-range. Package versions are independent and managed by Changesets.
+Le paquet de composants dépend du paquet de tokens par sa plage semver
+publiée. Les versions des paquets sont indépendantes et gérées par Changesets.
 
-Run the migration CLI without adding it to an application dependency list:
+Lancez la CLI de migration sans l'ajouter aux dépendances d'une application :
 
 ```bash
 npx @gouvfr-lasuite/ui-codemod@1.0.0 migrate . --source all
 ```
 
-npx downloads the exact CLI version to the npm cache after confirmation and
-does not modify the target project's `package.json`, lockfile or `node_modules`.
+npx télécharge la version exacte de la CLI dans le cache npm après
+confirmation, et ne modifie ni le `package.json`, ni le fichier de verrouillage,
+ni le `node_modules` du projet cible.
 
-## Install the fork
+## Installer le fork
 
-`ui-components` is distributed by this fork on npm as `@barthgve/ui-components`,
-with versions `x.y.z-fork.N`: `x.y.z` is the upstream version it is based on,
-`N` the fork release (for example `1.4.0-fork.1`). Only `ui-components` is
-distributed by the fork: `@gouvfr-lasuite/ui-tokens` and
-`@gouvfr-lasuite/ui-codemod` remain the upstream packages. The repository is
-public and, once published, the built package is public on npm, with npm
-provenance (see [ADR 005](./docs/decisions/005-publish-the-fork-on-npm.md)).
+`ui-components` est distribué par ce fork sur npm sous le nom
+`@barthgve/ui-components`, avec des versions `x.y.z-fork.N` : `x.y.z` est la
+version amont dont il dérive, `N` le numéro de publication du fork (par exemple
+`1.4.0-fork.1`). Seul `ui-components` est distribué par le fork :
+`@gouvfr-lasuite/ui-tokens` et `@gouvfr-lasuite/ui-codemod` restent les paquets
+amont. Le dépôt est public et le paquet construit est public sur npm (voir
+l'[ADR 005](./docs/decisions/005-publish-the-fork-on-npm.md)). Les publications
+faites depuis le workflow GitHub portent la provenance npm ; la première
+version, `1.4.0-fork.1`, a été publiée à la main et n'en porte pas.
 
-> **Not published yet.** The first npm publish of `@barthgve/ui-components` is
-> pending. Until then the alias install below fails (the package does not exist
-> on npm): install from the archive instead.
+### Installation par alias
 
-### Alias install (available after the first publish)
-
-Install the fork under the upstream name, so the imports of your application
-stay `@gouvfr-lasuite/ui-components`. Replace `<version>` with a published fork
-version:
+Installez le fork sous le nom d'origine, pour que les imports de votre
+application restent `@gouvfr-lasuite/ui-components`. Remplacez `<version>` par
+une version publiée du fork (par exemple `1.4.0-fork.1`) :
 
 ```bash
 # Yarn
@@ -64,41 +62,48 @@ yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version> @ta
 npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version> @tanstack/react-query
 ```
 
-### Archive install (until the first publish)
+Pour suivre la dernière version du fork, utilisez `@latest` à la place de
+`<version>`. Les versions `-fork.N` sont des préversions semver : une plage
+comme `^1.4.0` ou `*` ne les sélectionne pas.
 
-From the root of this repository (dependencies installed, see
-[Development](#development)), build the packages and pack `ui-components` under
-the fork name. The base of the version must be the current version of
-`packages/ui-components/package.json`; the last line printed is the archive
-path:
+### Installation depuis une archive
+
+Utile pour tester une modification locale avant de la publier. Depuis la racine
+de ce dépôt (dépendances installées, voir [Développement](#développement)),
+construisez les paquets puis empaquetez `ui-components` sous le nom du fork. La
+base de la version doit être la version actuelle de
+`packages/ui-components/package.json` ; la dernière ligne affichée est le chemin
+de l'archive :
 
 ```bash
 yarn build
-yarn fork:stage 1.4.0-fork.1 --out /path/to/fork-archive
+yarn fork:stage 1.4.0-fork.1 --out /chemin/vers/fork-archive
 ```
 
-Then, in the application, install the archive under the upstream name:
+Puis, dans l'application, installez l'archive sous le nom d'origine :
 
 ```bash
 # Yarn
-yarn add "@gouvfr-lasuite/ui-components@file:/path/to/fork-archive/barthgve-ui-components-1.4.0-fork.1.tgz" @tanstack/react-query
+yarn add "@gouvfr-lasuite/ui-components@file:/chemin/vers/fork-archive/barthgve-ui-components-1.4.0-fork.1.tgz" @tanstack/react-query
 # npm
-npm install "@gouvfr-lasuite/ui-components@file:/path/to/fork-archive/barthgve-ui-components-1.4.0-fork.1.tgz" @tanstack/react-query
+npm install "@gouvfr-lasuite/ui-components@file:/chemin/vers/fork-archive/barthgve-ui-components-1.4.0-fork.1.tgz" @tanstack/react-query
 ```
 
-The application's `package.json` and lockfile then pin the archive path (Yarn
-writes it absolute, npm relative): keep the archive where the application can
-reach it, and switch to the alias install after the first publish.
+Le `package.json` et le fichier de verrouillage de l'application figent alors
+le chemin de l'archive (Yarn l'écrit en absolu, npm en relatif) : gardez
+l'archive à un endroit accessible à l'application, et repassez à l'installation
+par alias dès que la version est publiée.
 
-### Peers and styles
+### Dépendances de pairs et styles
 
-React 19, React DOM 19 and TanStack React Query 5 are peer dependencies;
-`ui-tokens` is installed transitively. Both package managers warn that
-`use-resize-observer`, a dependency, declares React up to 18 (npm:
-`ERESOLVE overriding peer dependency`; Yarn: `incorrect peer dependency`). The
-warning is not fatal and `--legacy-peer-deps` is not needed. Import the styles
-and fonts once from the application entry point, as described in the
-[package README](./packages/ui-components/README.md):
+React 19, React DOM 19 et TanStack React Query 5 sont des dépendances de pairs ;
+`ui-tokens` est installé de façon transitive. Les deux gestionnaires de paquets
+signalent que `use-resize-observer`, une dépendance, déclare React jusqu'à la
+version 18 (npm : `ERESOLVE overriding peer dependency` ; Yarn :
+`incorrect peer dependency`). L'avertissement n'est pas bloquant et
+`--legacy-peer-deps` n'est pas nécessaire. Importez les styles et les polices
+une seule fois depuis le point d'entrée de l'application, comme décrit dans le
+[README du paquet](./packages/ui-components/README.md) :
 
 ```tsx
 import "@gouvfr-lasuite/ui-components/style";
@@ -107,9 +112,9 @@ import "@gouvfr-lasuite/ui-components/fonts/marianne";
 import "@gouvfr-lasuite/ui-components/fonts/material-icons";
 ```
 
-## Development
+## Développement
 
-Node 24 (the version pinned in `.nvmrc`) and Yarn 1.22.22 are required.
+Node 24 (la version fixée dans `.nvmrc`) et Yarn 1.22.22 sont requis.
 
 ```bash
 yarn install --frozen-lockfile
@@ -120,9 +125,12 @@ yarn test:ct
 yarn build-storybook
 ```
 
-Run the unified documentation locally with `yarn storybook`. Add a release note
-with `yarn changeset`. Packages are versioned and published manually; follow
-[`RELEASING.md`](./docs/RELEASING.md) for the complete procedure.
+Lancez la documentation unifiée en local avec `yarn storybook`. Ajoutez une note
+de version avec `yarn changeset`. Les paquets amont sont versionnés et publiés
+manuellement : suivez [`RELEASING.md`](./docs/RELEASING.md) pour la procédure
+complète. Le fork, lui, est publié en posant un tag `fork@<version>` sur un
+commit de `main` (voir l'[ADR 005](./docs/decisions/005-publish-the-fork-on-npm.md)).
 
-See [`MIGRATION.md`](./docs/MIGRATION.md) for consumer migration instructions
-and [`CONTRIBUTING.md`](./docs/CONTRIBUTING.md) to contribute to the project.
+Consultez [`MIGRATION.md`](./docs/MIGRATION.md) pour les instructions de
+migration côté consommateurs, et [`CONTRIBUTING.md`](./docs/CONTRIBUTING.md)
+pour contribuer au projet.
