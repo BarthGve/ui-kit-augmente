@@ -89,13 +89,14 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24.x"
-          registry-url: https://registry.npmjs.org
       - name: Download the archive
         uses: actions/download-artifact@v4
         with:
           name: fork-package
           path: ${{ runner.temp }}/fork-package
       # Trusted publishing (ADR 006): npm authenticates the job through OIDC,
-      # no token or secret is involved.
+      # no token or secret is involved. setup-node is kept free of its registry
+      # option: it injects a placeholder auth token that npm would send
+      # instead of the OIDC credential.
       - name: Publish
         run: npm publish "$RUNNER_TEMP"/fork-package/*.tgz --provenance --access public --tag latest

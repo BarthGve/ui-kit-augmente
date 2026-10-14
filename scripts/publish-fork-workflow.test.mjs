@@ -74,7 +74,7 @@ test("the publish job checks the tag commit is an ancestor of main before publis
     ancestor < job.search(/npm publish/),
     "ancestor check after publish",
   );
-  assert.match(job, /registry-url: https:\/\/registry\.npmjs\.org/);
+  assert.doesNotMatch(job, /registry-url/);
 });
 
 test("npm publish carries provenance, public access and the latest tag", () => {
