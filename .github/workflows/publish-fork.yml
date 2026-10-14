@@ -95,7 +95,7 @@ jobs:
         with:
           name: fork-package
           path: ${{ runner.temp }}/fork-package
+      # Trusted publishing (ADR 006): npm authenticates the job through OIDC,
+      # no token or secret is involved.
       - name: Publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish "$RUNNER_TEMP"/fork-package/*.tgz --provenance --access public --tag latest

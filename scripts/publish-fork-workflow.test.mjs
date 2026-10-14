@@ -49,7 +49,7 @@ test("the publish job runs only on a fork@ tag ref", () => {
   assert.match(jobText(name), /^ {4}needs: verify$/m);
 });
 
-test("id-token and secrets appear only in the publish job", () => {
+test("id-token appears only in the publish job and no secret is used", () => {
   const name = publishJob();
   const outside = [
     header,
@@ -58,9 +58,11 @@ test("id-token and secrets appear only in the publish job", () => {
       .map(jobText),
   ].join("\n");
   assert.doesNotMatch(outside, /id-token/);
-  assert.doesNotMatch(outside, /secrets\./);
   assert.match(jobText(name), /id-token: write/);
-  assert.match(jobText(name), /secrets\.NPM_TOKEN/);
+  assert.doesNotMatch(
+    [header, ...Object.keys(jobs).map(jobText)].join("\n"),
+    /secrets\.|NODE_AUTH_TOKEN/,
+  );
 });
 
 test("the publish job checks the tag commit is an ancestor of main before publishing", () => {
