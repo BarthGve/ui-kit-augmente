@@ -23,3 +23,12 @@ ADR 005 publishes from the `fork@<version>` tag workflow with an `NPM_TOKEN` rep
 ## Consequences
 
 Easier: nothing to rotate or leak. Harder: the workflow file name and repository are part of the npm trust configuration; renaming either breaks publishing until the trusted publisher is updated. Not yet proven: the first tag publish after this change.
+
+## First publish (2026-10-14)
+
+The first tag publish (`fork@1.4.0-fork.6`) worked after the trusted publisher was recreated with `npm publish` allowed. Five earlier tags failed with `403 OIDC permission denied for this action` although the OIDC claims matched the form (repository, workflow file, no environment): the configuration held `stage publish` and `manageDistTags` but not `publish`. The token exchange succeeded, the `PUT` was refused.
+
+- Check the real permissions with `npm trust list @barthgve/ui-components` (npm 11.15 or later, 2FA). The website form is not proof.
+- A recreated configuration does not keep the earlier checkboxes: `npx npm@11.21.0 trust revoke --id <id> <package>` then `npm trust github <package> --file publish-fork.yml --repo BarthGve/ui-kit-augmente --allow-publish`.
+- Ruled out: the `registry-url` option of `setup-node` and the npm version (11.19 and 11.21 both fail with the wrong permissions).
+- `gh run rerun` replays the workflow of the tag commit: a workflow fix needs a new tag.
