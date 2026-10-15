@@ -53,18 +53,23 @@ version, `1.4.0-fork.1`, a été publiée à la main et n'en porte pas.
 
 Installez le fork sous le nom d'origine, pour que les imports de votre
 application restent `@gouvfr-lasuite/ui-components`. Remplacez `<version>` par
-une version publiée du fork (par exemple `1.4.0-fork.1`) :
+une version publiée du fork (par exemple `1.4.0-fork.6`), ou utilisez
+`latest` pour la plus récente :
 
 ```bash
 # Yarn
 yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version> @tanstack/react-query
 # npm
 npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version> @tanstack/react-query
+
+# Dernière version publiée
+yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @tanstack/react-query
+npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @tanstack/react-query
 ```
 
-Pour suivre la dernière version du fork, utilisez `@latest` à la place de
-`<version>`. Les versions `-fork.N` sont des préversions semver : une plage
-comme `^1.4.0` ou `*` ne les sélectionne pas.
+`@latest` installe la dernière version publiée du fork. Les versions
+`-fork.N` sont des préversions semver : une plage comme `^1.4.0` ou `*` ne les
+sélectionne pas.
 
 ### Installation depuis une archive
 
