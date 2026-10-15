@@ -45,6 +45,7 @@ The shipped baseline (docs/onboarding.md) is in scope by definition. To build:
 | Share update (#203) | 3 | Modal with invitations and access, already complex |
 | Waffle and user menu update (#278, #241) | 2 | Visual update, plus label translations |
 | Alert modal (owner request, 2026-10-09) | 2 | Modal with `alertdialog` semantics and `Alert` severities, built on `Modal` |
+| GitHub Release per fork publication (owner request, 2026-10-15) | 2 | Release created by the publish workflow: notes, checked archive, npm link; one extra job and one permission |
 
 Scale: 1 trivial CRUD · 2 form + persistence + list · 3 business logic / several states · 4 integrations, payments, roles · 5 real-time, migrations, external systems. A 5 is a graveyard candidate — keep it only if it IS the core value.
 
@@ -73,6 +74,11 @@ Strict respect of the existing product's constraints (tokens, RGAA accessibility
 - The Gantt is usable in editing mode (move, resize, dependencies) on a demonstration data set.
 
 ## Amendements
+
+### 2026-10-15 — v0.4.0 — fork-release
+**Entre dans le périmètre :** a GitHub Release created by the publish workflow for each `fork@<version>` tag, after the npm publication succeeds: release notes generated from the merged pull requests, the checked archive attached, a link to the npm page, marked as a prerelease. The documentation also states which version identifies the package (`x.y.z-fork.N`) and which is the product version (`0.3.0`). Architecture impact: a new authorization surface (a `contents: write` permission on one new job), so a new ADR (007) before planning. No new dependency, service, store or queue.
+**Sorti du cimetière ?** non — no graveyard item concerns releases or release notes; the Releases page is not a documentation site.
+**Stories :** s60.
 
 ### 2026-10-13 — v0.2.0 — ci-green
 **Entre dans le périmètre :** make the GitHub CI (re-enabled on 2026-10-13 after the first release) green on the fork: build order of `ui-tokens` before the unit tests (Turborepo), commit-message lint that does not reject squash and release commits on `main`, and the Playwright component tests on Firefox and WebKit (until now only chromium ran locally). The chromium failure of the PDF preview (upstream code) is classified, because the `e2e` job cannot pass without it. Architecture impact: none (no new runtime dependency, external service, store, authentication or queue).

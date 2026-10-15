@@ -1056,3 +1056,23 @@ s58-ci-green-basics (ordering of priority only: the `e2e` job does not depend on
 
 ### Agentic notes
 The agent cannot run WebKit and Firefox locally unless `yarn playwright install webkit firefox` has been run: do it once, outside the repository. Port from `bash .dm/lib/dm-port.sh`, throwaway config, no broad `pkill`. If the investigation finds more than three distinct root causes, split this story at planning. Touches the specs of Gantt, Timeline and Filter and possibly their stylesheets; a stylesheet change must keep the computed values on chromium (the earlier measurements are the reference). Exempt from the shared component rules unless a component changes: then one changeset (patch) and the artifact page.
+
+## Story s60-fork-release — GitHub Release for each fork publication
+**As a** developer who installs the fork **I want** a GitHub Release for each published version **so that** I see what changed, find the exact version, and can install the archive without going through npm.
+
+### Complexity
+2
+
+### Acceptance criteria
+- [ ] On a tag `fork@<version>`, once the `publish` job has succeeded, a separate `release` job creates a GitHub Release named `<version>` on that tag. It is marked as a prerelease, its notes are generated from the pull requests merged since the previous `fork@` tag, which is passed explicitly (`--notes-start-tag`) so the first Release does not depend on an earlier Release, it links to `https://www.npmjs.com/package/@barthgve/ui-components/v/<version>`, and the archive checked by the `verify` job is attached.
+- [ ] The `release` job is the only one with `contents: write`; `publish` keeps `contents: read` and `id-token: write`, and `release` has no `id-token`. The workflow test asserts both, and also that `release` needs `publish`, runs only on a `fork@` tag, uses `--prerelease` and generated notes, and guards against an existing Release.
+- [ ] Rerunning only the `release` job (`gh run rerun --job`; a whole-run rerun would replay `publish` on an already published version) creates the Release if it is missing and does not create a second one: the job checks `gh release view` first. The npm publication does not depend on `release`: nothing in `publish` needs it.
+- [ ] On pull requests (dry run) the `release` job does not run.
+- [ ] The root README, the package README and the Storybook installation page state that the package is identified by `x.y.z-fork.N` (on npm and, from the first version published after this story, in the Releases); that the product version of the repository (`VERSION`, `CHANGELOG.md`) is a different number, as are the `ui-components` version and the root `package.json`; and how to install from a Release archive. No product version is written in these texts, and nothing is announced that does not exist yet: the text is merged with, or after, the workflow change.
+- [ ] ADR 007 records the decisions (job separation, permission, trigger, failure handling, notes source); `docs/architecture.md` lists the job.
+
+### Dependencies
+s56 (publish workflow) and s57 (the three install texts, completed here, not replaced). Needs `/dm-architect` (ADR 007) before planning.
+
+### Agentic notes
+Files: `.github/workflows/publish-fork.yml`, `scripts/publish-fork-workflow.test.mjs`, the three install texts, `docs/architecture.md`, ADR 007. Use the `gh` CLI preinstalled on the runner with the job's `GITHUB_TOKEN`; no new action and no secret. The workflow test finds the publish job by the words `npm publish` and forbids `id-token` outside it, even in a comment: the `release` job must contain neither. Do not give `contents: write` to the `publish` job, and do not add a release step after `npm publish` in the same job. Tags are immutable: a workflow fix needs a new tag, and a tag publishes to npm, so the first end-to-end proof is the next real publication (list the unverified part in the PR). Out of scope on purpose: backfilling Releases for `fork@1.4.0-fork.1` to `.6`, GitHub Packages, product releases (`fork-v…` tags) and the wiki.
