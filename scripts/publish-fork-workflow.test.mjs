@@ -115,6 +115,62 @@ test("no run line interpolates the git ref", () => {
   }
 });
 
+// Job-level permissions: the 6-space keys under `    permissions:`.
+const permissionsOf = (name) =>
+  /^ {4}permissions:\n((?: {6}.*\n?)+)/m
+    .exec(jobText(name))?.[1]
+    .trim()
+    .split(/\n\s*/) ?? [];
+const conditionOf = (name) => /^ {4}if: (.*)$/m.exec(jobText(name))?.[1] ?? "";
+
+test("the release job runs after publish, on the same tag condition (ADR 007)", () => {
+  const job = jobText("release");
+  assert.ok(jobs.release, "no release job");
+  assert.match(job, /^ {4}needs: publish$/m);
+  assert.match(conditionOf("release"), /refs\/tags\/fork@/);
+  assert.doesNotMatch(conditionOf("release"), /\|\||pull_request/);
+  assert.equal(conditionOf("release"), conditionOf(publishJob()));
+});
+
+test("only release writes contents, publish keeps read and id-token", () => {
+  assert.deepEqual(permissionsOf("release"), ["contents: write"]);
+  assert.deepEqual(permissionsOf(publishJob()), [
+    "contents: read",
+    "id-token: write",
+  ]);
+  // Not even in a comment: publishJob() and the id-token test key on these.
+  assert.doesNotMatch(jobText("release"), /npm publish|id-token/);
+});
+
+test("the release job attaches the checked archive to an idempotent prerelease", () => {
+  const job = jobText("release");
+  assert.match(job, /actions\/download-artifact@v4/);
+  assert.match(job, /name: fork-package/);
+  assert.match(job, /GH_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.match(job, /\$GITHUB_REF_NAME/);
+  const create = job.search(/gh release create/);
+  assert.ok(create >= 0, "no gh release create");
+  const view = job.search(/gh release view/);
+  assert.ok(
+    view >= 0 && view < create,
+    "no gh release view guard before create",
+  );
+  assert.match(job, /gh release upload .*--clobber/);
+  for (const flag of [
+    "--prerelease",
+    "--latest=false",
+    "--verify-tag",
+    "--generate-notes",
+    "--notes-start-tag",
+    "https://www.npmjs.com/package/@barthgve/ui-components/v/",
+  ]) {
+    assert.ok(job.includes(flag), `release lacks ${flag}`);
+  }
+  // Notes start: the fork@ tag just before this one, from the tag list, sort -V.
+  assert.match(job, /gh api .*git\/matching-refs\/tags\/fork@/);
+  assert.match(job, /sort -V/);
+});
+
 test("changesets compares against the integration branch next", () => {
   const config = JSON.parse(
     readFileSync(repo(".changeset/config.json"), "utf8"),
