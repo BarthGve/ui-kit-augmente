@@ -55,14 +55,16 @@ export const Input = ({
   const classes = ["c__input"];
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [inputFocus, setInputFocus] = useState(false);
-  const [value, setValue] = useState(defaultValue || props.value || "");
+  const [value, setValue] = useState<string | number | readonly string[]>(
+    defaultValue ?? props.value ?? "",
+  );
   const [labelAsPlaceholder, setLabelAsPlaceholder] = useState(!value);
   const idToUse = useRef(id || randomString());
   const descriptionId = labelDescription
     ? `${idToUse.current}-description`
     : undefined;
   const rightTextToUse = charCounter
-    ? `${value.toString().length}/${charCounterMax}`
+    ? `${String(value).length}/${charCounterMax}`
     : props.rightText;
 
   useEffect(() => {
@@ -73,13 +75,19 @@ export const Input = ({
     setLabelAsPlaceholder(!value);
   }, [inputFocus, value]);
 
-  // If the input is used as a controlled component, we need to update the local value.
+  // Controlled: mirror props.value. Uncontrolled (react-hook-form register(), defaultValue):
+  // the DOM owns the value, so mirror it after each render to catch reset()/setValue(),
+  // which write to the element without firing onChange.
   useEffect(() => {
-    if (defaultValue !== undefined) {
+    if (props.value !== undefined) {
+      setValue(props.value);
       return;
     }
-    setValue(props.value || "");
-  }, [props.value]);
+    const domValue = inputRef.current?.value;
+    if (domValue !== undefined) {
+      setValue(domValue);
+    }
+  });
 
   const {
     compact,
@@ -104,7 +112,7 @@ export const Input = ({
       }
       placeholder={isStatic ? props.placeholder : undefined}
       id={idToUse.current}
-      value={value}
+      defaultValue={defaultValue}
       onFocus={(e) => {
         setInputFocus(true);
         props.onFocus?.(e);
