@@ -1,4 +1,12 @@
-import React, { CSSProperties, ReactNode, useMemo } from "react";
+import React, {
+  CSSProperties,
+  Fragment,
+  HTMLAttributes,
+  KeyboardEvent,
+  MouseEvent,
+  ReactNode,
+  useMemo,
+} from "react";
 import classNames from "classnames";
 import {
   flexRender,
@@ -53,6 +61,14 @@ export type Column<T extends Row = Row> = (
   size?: number;
 };
 
+/** Props the grid puts on a `<tr>`, handed to `renderRow` so it can be spread. */
+export type RowProps = HTMLAttributes<HTMLTableRowElement> & {
+  "data-testid": string;
+};
+
+const INTERACTIVE_SELECTOR =
+  'a,button,input,select,textarea,label,[role="button"],[role="checkbox"]';
+
 export type SortModel = { field: string; sort: "asc" | "desc" | null }[];
 
 export interface BaseProps<T extends Row = Row> {
@@ -67,6 +83,24 @@ export interface BaseProps<T extends Row = Row> {
   hideEmptyPlaceholderImage?: boolean;
   enableSorting?: boolean;
   className?: string;
+  /**
+   * Makes rows activable: click, Enter or Space on the row itself (not on a
+   * control inside it). Rows get `tabIndex=0` and `c__datagrid__row--activable`.
+   */
+  onRowActivate?: (row: T) => void;
+  /** Extra full-width row (`colSpan`) rendered after a row; nothing if falsy. */
+  renderRowDetail?: (row: T) => ReactNode;
+  /** Class name added on the row `<tr>`. */
+  getRowClassName?: (row: T) => string | undefined;
+  /**
+   * Replaces the row `<tr>`, e.g. to make it draggable. Spread `rowProps` on
+   * the `<tr>` you render and render `children` inside it.
+   */
+  renderRow?: (params: {
+    row: T;
+    rowProps: RowProps;
+    children: ReactNode;
+  }) => ReactNode;
 }
 
 export interface DataGridProps<T extends Row = Row> extends BaseProps<T> {
@@ -95,6 +129,10 @@ export const DataGrid = <T extends Row>({
   hideEmptyPlaceholderImage,
   displayHeader = true,
   enableSorting = true,
+  onRowActivate,
+  renderRowDetail,
+  getRowClassName,
+  renderRow,
 }: DataGridProps<T>) => {
   const { t } = useCunningham();
   const headlessColumns = useHeadlessColumns({ columns, enableRowSelection });
@@ -229,6 +267,19 @@ export const DataGrid = <T extends Row>({
                                         tabIndex: 0,
                                         onClick:
                                           header.column.getToggleSortingHandler(),
+                                        onKeyDown: (
+                                          e: KeyboardEvent<HTMLDivElement>,
+                                        ) => {
+                                          if (
+                                            e.key === "Enter" ||
+                                            e.key === " "
+                                          ) {
+                                            e.preventDefault();
+                                            header.column.getToggleSortingHandler()?.(
+                                              e,
+                                            );
+                                          }
+                                        },
                                       }
                                     : {})}
                                 >
@@ -272,44 +323,90 @@ export const DataGrid = <T extends Row>({
                     ))}
                 </thead>
                 <tbody>
-                  {table.getRowModel().rows.map((row) => (
-                    <tr key={row.id} data-testid={row.id}>
-                      {row.getVisibleCells().map((cell, i) => {
-                        let highlight = false;
-                        if (enableRowSelection && i > 0) {
-                          // Enabling selection adds a column at the beginning of the table.
-                          highlight = !!columns[i - 1].highlight;
-                        } else {
-                          highlight = !!columns[i].highlight;
-                        }
-                        const style: CSSProperties = {};
-                        if (displayHeader === false) {
-                          const column = columns[i];
-                          if (column && typeof column.size === "number") {
-                            style.width = `${column.size}px`;
+                  {table.getRowModel().rows.map((tableRow) => {
+                    const row = tableRow.original;
+                    const rowProps: RowProps = {
+                      "data-testid": tableRow.id,
+                      className:
+                        classNames(getRowClassName?.(row), {
+                          "c__datagrid__row--activable": !!onRowActivate,
+                        }) || undefined,
+                      ...(onRowActivate
+                        ? {
+                            tabIndex: 0,
+                            onClick: (e: MouseEvent<HTMLTableRowElement>) => {
+                              if (
+                                !(e.target as HTMLElement).closest(
+                                  INTERACTIVE_SELECTOR,
+                                )
+                              ) {
+                                onRowActivate(row);
+                              }
+                            },
+                            onKeyDown: (
+                              e: KeyboardEvent<HTMLTableRowElement>,
+                            ) => {
+                              if (
+                                e.target === e.currentTarget &&
+                                (e.key === "Enter" || e.key === " ")
+                              ) {
+                                e.preventDefault();
+                                onRowActivate(row);
+                              }
+                            },
                           }
+                        : {}),
+                    };
+                    const cells = tableRow.getVisibleCells().map((cell, i) => {
+                      let highlight = false;
+                      if (enableRowSelection && i > 0) {
+                        // Enabling selection adds a column at the beginning of the table.
+                        highlight = !!columns[i - 1].highlight;
+                      } else {
+                        highlight = !!columns[i].highlight;
+                      }
+                      const style: CSSProperties = {};
+                      if (displayHeader === false) {
+                        const column = columns[i];
+                        if (column && typeof column.size === "number") {
+                          style.width = `${column.size}px`;
                         }
-                        return (
-                          <td
-                            key={cell.id}
-                            className={classNames({
-                              "c__datagrid__row__cell--highlight": highlight,
-                              "c__datagrid__row__cell--actions":
-                                cell.column.id === "actions",
-                              "c__datagrid__row__cell--select":
-                                cell.column.id === "select",
-                            })}
-                            style={style}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
+                      }
+                      return (
+                        <td
+                          key={cell.id}
+                          className={classNames({
+                            "c__datagrid__row__cell--highlight": highlight,
+                            "c__datagrid__row__cell--actions":
+                              cell.column.id === "actions",
+                            "c__datagrid__row__cell--select":
+                              cell.column.id === "select",
+                          })}
+                          style={style}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      );
+                    });
+                    const detail = renderRowDetail?.(row);
+                    return (
+                      <Fragment key={tableRow.id}>
+                        {renderRow ? (
+                          renderRow({ row, rowProps, children: cells })
+                        ) : (
+                          <tr {...rowProps}>{cells}</tr>
+                        )}
+                        {detail && (
+                          <tr className="c__datagrid__row--detail">
+                            <td colSpan={cells.length}>{detail}</td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
