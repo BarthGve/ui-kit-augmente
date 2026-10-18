@@ -29,9 +29,9 @@ Tasks (test first):
 - **scope:** the three install texts (`README.md`, `packages/ui-components/README.md`, `packages/ui-components/src/docs/installation.mdx`) and `docs/architecture.md`. Docs only. Covers criterion 5 and the architecture part of criterion 6.
 
 Tasks:
-1. [ ] Add to each of the three texts, same wording (French in the root README, English in the other two): the package is identified by `x.y.z-fork.N` on npm and, from the first version published after this story, in the Releases; the product version of the repository (`VERSION`, `CHANGELOG.md`) is a different number, as are the `ui-components` version and the root `package.json`; how to install from a Release archive (`npm install` / `yarn add` of the asset URL, with `@tanstack/react-query`). No product version number is written.
-2. [ ] `docs/architecture.md`: replace the "Decided, not built yet (ADR 007…)" sentence by the real description of the `release` job.
-3. [ ] `npx prettier --check` on the four files; Storybook CI job compiles the MDX; a grep that none of the three texts contains `0.3.0` or `fork@1.4.0-fork.6` as the way to find a Release. The path "install from a Release archive" is tested with the dry-run archive as in s57 (record the command in the PR).
+1. [x] Add to each of the three texts, same wording (French in the root README, English in the other two): the package is identified by `x.y.z-fork.N` on npm and, from the first version published after this story, in the Releases; the product version of the repository (`VERSION`, `CHANGELOG.md`) is a different number, as are the `ui-components` version and the root `package.json`; how to install from a Release archive (`npm install` / `yarn add` of the asset URL, with `@tanstack/react-query`). No product version number is written.
+2. [x] `docs/architecture.md`: replace the "Decided, not built yet (ADR 007…)" sentence by the real description of the `release` job.
+3. [x] `npx prettier --check` on the four files; Storybook CI job compiles the MDX; a grep that none of the three texts contains `0.3.0` or `fork@1.4.0-fork.6` as the way to find a Release. The path "install from a Release archive" is tested with the dry-run archive as in s57 (record the command in the PR).
 
 ## US totals
 - **Person-days:** 2.0 (1.5 + 0.5)

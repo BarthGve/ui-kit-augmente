@@ -49,6 +49,15 @@ l'[ADR 005](./docs/decisions/005-publish-the-fork-on-npm.md)). Les publications
 faites depuis le workflow GitHub portent la provenance npm ; la première
 version, `1.4.0-fork.1`, a été publiée à la main et n'en porte pas.
 
+Le numéro `x.y.z-fork.N` identifie le paquet sur npm, le tag
+`fork@x.y.z-fork.N` du dépôt et, à partir de la première version publiée après
+la mise en place des Releases, la
+[Release GitHub](https://github.com/BarthGve/ui-kit-augmente/releases) du même
+nom ; les versions antérieures n'en ont pas. La version du produit (`VERSION`,
+`CHANGELOG.md`, tags `fork-v…`), la version de
+`packages/ui-components/package.json` et celle du `package.json` racine sont
+d'autres numéros : aucun ne désigne une version publiée du paquet.
+
 ### Installation par alias
 
 Installez le fork sous le nom d'origine, pour que les imports de votre
@@ -71,7 +80,24 @@ npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @ta
 `-fork.N` sont des préversions semver : une plage comme `^1.4.0` ou `*` ne les
 sélectionne pas.
 
-### Installation depuis une archive
+### Installation depuis une archive de Release
+
+Chaque Release porte en pièce jointe l'archive `.tgz` du paquet, celle que le
+workflow a vérifiée avant la publication. Copiez l'URL de cette pièce jointe
+depuis la page de la Release et installez-la sous le nom d'origine, sans passer
+par npm :
+
+```bash
+# Yarn
+yarn add "@gouvfr-lasuite/ui-components@<url-de-l-archive>" @tanstack/react-query
+# npm
+npm install "@gouvfr-lasuite/ui-components@<url-de-l-archive>" @tanstack/react-query
+```
+
+Le `package.json` et le fichier de verrouillage de l'application figent alors
+cette URL.
+
+### Installation depuis une archive locale
 
 Utile pour tester une modification locale avant de la publier. Depuis la racine
 de ce dépôt (dépendances installées, voir [Développement](#développement)),
