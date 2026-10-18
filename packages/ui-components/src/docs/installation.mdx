@@ -17,6 +17,15 @@ npm. Versions published by the GitHub workflow carry npm provenance; the first,
 `1.4.0-fork.1`, was published by hand and does not (see
 [ADR 005](https://github.com/BarthGve/ui-kit-augmente/blob/next/docs/decisions/005-publish-the-fork-on-npm.md)).
 
+The number `x.y.z-fork.N` identifies the package on npm, the repository tag
+`fork@x.y.z-fork.N` and, from the first version published after Releases were
+set up, the
+[GitHub Release](https://github.com/BarthGve/ui-kit-augmente/releases) of the
+same name; earlier versions have none. The product version (`VERSION`,
+`CHANGELOG.md`, `fork-v…` tags), the version in
+`packages/ui-components/package.json` and the one in the root `package.json`
+are other numbers: none of them names a published version of the package.
+
 ### Alias install
 
 Install the fork under the upstream name, so the imports of your application
@@ -39,7 +48,25 @@ npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @ta
 `latest` installs the newest published fork version. `-fork.N` versions are
 semver prereleases: a range such as `^1.4.0` or `*` does not select them.
 
-### Archive install (to test a local change)
+### Release archive install
+
+Each Release has the package's `.tgz` archive attached, the one the workflow
+checked before publishing. Copy the URL of that asset from the Release page and
+install it under the upstream name, without going through npm:
+
+<Source
+  language="bash"
+  dark
+  format={false}
+  code={`# Yarn
+yarn add "@gouvfr-lasuite/ui-components@<archive-url>" @tanstack/react-query
+# npm
+npm install "@gouvfr-lasuite/ui-components@<archive-url>" @tanstack/react-query`}
+/>
+
+The application's `package.json` and lockfile then pin that URL.
+
+### Local archive install (to test a local change)
 
 From the root of a checkout of
 [the repository](https://github.com/BarthGve/ui-kit-augmente) (dependencies
