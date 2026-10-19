@@ -325,6 +325,7 @@ export {
 
 export * from "./components/skeleton";
 export * from "./components/stepper";
+export * from "./components/move-modal";
 
 export {
   Card,

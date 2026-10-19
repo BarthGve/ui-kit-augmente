@@ -34,6 +34,8 @@ export type TreeViewProps<T> = {
   canDrag?: (node: TreeDataItem<T>) => boolean;
   beforeMove?: (result: TreeViewMoveResult, moveCallback: () => void) => void;
   afterMove?: (result: TreeViewMoveResult) => void;
+  /** Called when a node is activated: clicked, or Enter on the focused node. */
+  onActivate?: (node: NodeApi<TreeDataItem<T>>) => void;
   renderNode: (props: NodeRendererProps<TreeDataItem<T>>) => React.ReactNode;
   paddingTop?: number;
   paddingBottom?: number;
@@ -46,6 +48,7 @@ export const TreeView = <T,>({
   selectedNodeId,
   rootNodeId,
   renderNode,
+  onActivate,
   canDrop,
   canDrag,
   afterMove,
@@ -224,6 +227,7 @@ export const TreeView = <T,>({
         className="c__tree-view"
         idAccessor="key"
         onMove={onMove}
+        onActivate={onActivate}
         height={height}
         width={width}
         paddingTop={paddingTop}
