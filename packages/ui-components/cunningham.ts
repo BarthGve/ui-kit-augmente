@@ -28,6 +28,7 @@ import { tokens as skeletonTokens } from "./src/components/skeleton/tokens";
 import { tokens as stepperTokens } from "./src/components/stepper/tokens";
 import { tokens as selectorTokens } from "./src/components/selector/tokens";
 import { tokens as contactImportTokens } from "./src/components/contact-import/tokens";
+import { tokens as sliderTokens } from "./src/components/slider/tokens";
 import { tokens as timelineTokens } from "./src/components/timeline/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
 import { tokens as toolbarTokens } from "./src/components/toolbar/tokens";
@@ -62,6 +63,7 @@ const componentTokenDefaults = {
   stepper: stepperTokens(defaultTokenRefs),
   selector: selectorTokens(defaultTokenRefs),
   "contact-import": contactImportTokens(defaultTokenRefs),
+  slider: sliderTokens(defaultTokenRefs),
   timeline: timelineTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
   toolbar: toolbarTokens(defaultTokenRefs),
