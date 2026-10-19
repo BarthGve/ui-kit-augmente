@@ -244,6 +244,61 @@ export const ImportContacts = {
 };
 
 /**
+ * Several pending invitations with different roles.
+ */
+export const WithInvitations = {
+  render: () => (
+    <ShareModalExample
+      linkSettings={true}
+      invitations={[
+        {
+          id: "1",
+          surname: "Doe",
+          role: "administrator",
+          email: "admin.invited@example.com",
+          user: {
+            id: "1",
+            full_name: "Ada Admin",
+            email: "admin.invited@example.com",
+          },
+        },
+        {
+          id: "2",
+          surname: "Roe",
+          role: "editor",
+          email: "editor.invited@example.com",
+          user: {
+            id: "2",
+            full_name: "Eddie Editor",
+            email: "editor.invited@example.com",
+          },
+        },
+        {
+          id: "3",
+          surname: "Poe",
+          role: "reader",
+          email: "reader.invited@example.com",
+          user: {
+            id: "3",
+            full_name: "Rita Reader",
+            email: "reader.invited@example.com",
+          },
+        },
+      ]}
+    />
+  ),
+};
+
+/**
+ * No member and no pending invitation.
+ */
+export const Empty = {
+  render: () => (
+    <ShareModalExample linkSettings={true} invitations={[]} members={[]} />
+  ),
+};
+
+/**
  * Failing import: the mock server resolves `false` after a delay, so the
  * import modal stays open (non-closable while pending, import button showing
  * a spinner) and the consumer's `importErrorMessage` is displayed on the

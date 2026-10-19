@@ -31,6 +31,8 @@ type AccessType = AccessData<
 
 export const ShareModalExample = ({
   importFails,
+  invitations: initialInvitations,
+  members: initialMembers,
   isRestricted: initiallyRestricted = false,
   ...props
 }: {
@@ -41,6 +43,8 @@ export const ShareModalExample = ({
   isRestricted?: boolean;
   canRestrict?: boolean;
   importFails?: boolean;
+  invitations?: InvitationType[];
+  members?: AccessType[];
 }) => {
   const [userQuery, setUserQuery] = useState("");
   const [users, setUsers] = useState<UserType[]>([]);
@@ -48,6 +52,7 @@ export const ShareModalExample = ({
   const [isRestricted, setIsRestricted] = useState(initiallyRestricted);
 
   const [invitations, setInvitations] = useState<InvitationType[]>(() => {
+    if (initialInvitations) return initialInvitations;
     const ids = [1];
     return ids.map((id) => ({
       id: id.toString(),
@@ -62,6 +67,7 @@ export const ShareModalExample = ({
     }));
   });
   const [members, setMembers] = useState<AccessType[]>(() => {
+    if (initialMembers) return initialMembers;
     const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     return ids.map((id) => ({
       id: id.toString(),
