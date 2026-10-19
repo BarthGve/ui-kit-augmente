@@ -27,7 +27,7 @@ const expectSnapshot = (name: string) => {
   expect(markup()).toBe(readFileSync(file, "utf8"));
 };
 
-const renderModal = async (ui: JSX.Element) => {
+const renderModal = async (ui: ReactElement) => {
   render(<CunninghamProvider>{ui}</CunninghamProvider>);
   await waitFor(() => {
     if (!document.querySelector(".c__modal")) throw new Error("not open");
