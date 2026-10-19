@@ -6,6 +6,7 @@ import { Button } from ":/components/button";
 import { Modal, ModalSize } from ":/components/modal";
 import { FileUploader, FileUploaderProps } from "./FileUploader";
 import { UploadFile } from "./types";
+import { UploadModule } from "./UploadModule";
 
 const GB = 1000 * 1000 * 1000;
 const MB = 1000 * 1000;
@@ -429,6 +430,45 @@ export const InModal: Story = {
           </div>
         </Modal>
       </>
+    );
+  },
+};
+
+// Upload module: the caller provides the upload function, the module handles
+// validation, progress, cancel, retry and announcements.
+export const UploadModuleExample = {
+  render: () => {
+    const upload = (
+      file: File,
+      {
+        onProgress,
+        signal,
+      }: { onProgress: (p: number) => void; signal: AbortSignal },
+    ) =>
+      new Promise<void>((resolve, reject) => {
+        let progress = 0;
+        const timer = setInterval(() => {
+          progress += 20;
+          onProgress(progress);
+          if (progress >= 100) {
+            clearInterval(timer);
+            // Every file named "fail*" fails, to try the retry.
+            if (file.name.startsWith("fail")) {
+              reject(new Error("Server error"));
+            } else {
+              resolve();
+            }
+          }
+        }, 400);
+        signal.addEventListener("abort", () => clearInterval(timer));
+      });
+    return (
+      <UploadModule
+        multiple
+        upload={upload}
+        maxSize={5_000_000}
+        accept=".pdf,image/*"
+      />
     );
   },
 };

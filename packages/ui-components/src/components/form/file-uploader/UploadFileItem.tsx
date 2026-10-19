@@ -13,6 +13,7 @@ export type UploadFileItemProps = {
   labels: ResolvedUploadLabels;
   onRemove?: (file: UploadFile) => void;
   onCancel?: (file: UploadFile) => void;
+  onRetry?: (file: UploadFile) => void;
 };
 
 const clampProgress = (progress?: number) => {
@@ -31,14 +32,21 @@ export const UploadFileItem = ({
   labels,
   onRemove,
   onCancel,
+  onRetry,
 }: UploadFileItemProps) => {
   const status = file.status ?? "done";
   const progress = clampProgress(file.progress);
   const { name, size, type } = file.originalFile;
+  const canRetry = status === "error" && file.retryable !== false && !!onRetry;
+  // A failed file that cannot be retried can still be dismissed.
+  const canDismiss =
+    status === "error" && file.retryable === false && !!onRemove;
   const hasAction =
     status === "uploading"
       ? onCancel !== undefined
-      : status !== "error" && onRemove !== undefined;
+      : status === "error"
+        ? canRetry || canDismiss
+        : onRemove !== undefined;
 
   const renderStatus = () => {
     if (status === "uploading") {
@@ -129,7 +137,28 @@ export const UploadFileItem = ({
       );
     }
 
-    if (status !== "error" && status !== "uploading" && onRemove) {
+    if (canRetry) {
+      return (
+        <Button
+          type="button"
+          variant="tertiary"
+          color="neutral"
+          size="nano"
+          className="c__file-uploader__item__action c__file-uploader__item__retry"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRetry?.(file);
+          }}
+        >
+          {labels.retry}
+        </Button>
+      );
+    }
+
+    if (
+      (status !== "error" && status !== "uploading" && onRemove) ||
+      canDismiss
+    ) {
       return (
         <Button
           type="button"
@@ -140,7 +169,7 @@ export const UploadFileItem = ({
           aria-label={`${labels.remove} ${name}`}
           onClick={(e) => {
             e.stopPropagation();
-            onRemove(file);
+            onRemove?.(file);
           }}
           icon={<XMark size={16} aria-hidden="true" />}
         />

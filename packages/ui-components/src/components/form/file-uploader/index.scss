@@ -34,7 +34,9 @@
     box-shadow: inset 0 0 0 0 transparent;
     text-align: center;
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease,
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease,
       box-shadow 0.15s ease;
 
     &__inner {
@@ -148,7 +150,10 @@
       height: 48px;
       flex-shrink: 0;
       // Inherited by the error icon strokes/fills through currentColor.
-      color: var(--c--contextuals--content--semantic--neutral--secondary, #555e74);
+      color: var(
+        --c--contextuals--content--semantic--neutral--secondary,
+        #555e74
+      );
 
       > img {
         display: block;

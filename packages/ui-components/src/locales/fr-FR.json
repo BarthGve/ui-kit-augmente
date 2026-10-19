@@ -136,7 +136,15 @@
       "uploading": "Téléversement",
       "cancel": "Annuler le téléversement",
       "remove": "Supprimer",
-      "genericError": "Une erreur est survenue"
+      "genericError": "Une erreur est survenue",
+      "retry": "Réessayer",
+      "too_large": "Le fichier dépasse {size}",
+      "type_not_accepted": "Type de fichier refusé",
+      "announce_uploading": "Envoi de {name}",
+      "announce_done": "{name} envoyé",
+      "announce_failed": "{name} : échec de l'envoi",
+      "announce_rejected": "{name} refusé : {reason}",
+      "announce_cancelled": "Envoi de {name} annulé"
     },
     "treeView": {
       "viewMore": "Charger plus d'éléments"

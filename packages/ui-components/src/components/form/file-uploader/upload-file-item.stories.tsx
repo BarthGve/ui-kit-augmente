@@ -19,6 +19,7 @@ const labels: ResolvedUploadLabels = {
   uploading: "Uploading",
   cancel: "Cancel",
   remove: "Delete",
+  retry: "Retry",
   genericError: "An error occured",
 };
 

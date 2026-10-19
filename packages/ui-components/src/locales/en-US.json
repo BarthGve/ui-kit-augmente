@@ -136,7 +136,15 @@
       "uploading": "Uploading",
       "cancel": "Cancel upload",
       "remove": "Delete",
-      "genericError": "An error occurred"
+      "genericError": "An error occurred",
+      "retry": "Retry",
+      "too_large": "File exceeds {size}",
+      "type_not_accepted": "File type not accepted",
+      "announce_uploading": "Uploading {name}",
+      "announce_done": "{name} uploaded",
+      "announce_failed": "{name}: upload failed",
+      "announce_rejected": "{name} rejected: {reason}",
+      "announce_cancelled": "Upload of {name} cancelled"
     },
     "treeView": {
       "viewMore": "Load more elements"
