@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import {
+  CSSProperties,
   PropsWithChildren,
   ReactNode,
   useEffect,
@@ -26,6 +27,10 @@ export type SheetProps = PropsWithChildren<{
   footer?: ReactNode;
   /** Close on a click on the backdrop. Default `true`. */
   closeOnClickOutside?: boolean;
+  /** Decoration above the header, such as the drag handle of a `Drawer`. */
+  handle?: ReactNode;
+  /** Inline style of the panel, for a `Drawer` height or drag offset. */
+  style?: CSSProperties;
   className?: string;
 }>;
 
@@ -47,6 +52,8 @@ const SheetInner = ({
   side = "right",
   footer,
   closeOnClickOutside = true,
+  handle,
+  style,
   className,
   children,
 }: SheetProps) => {
@@ -70,7 +77,9 @@ const SheetInner = ({
       shouldCloseOnEsc
       role="dialog"
       aria={{ labelledby: titleId }}
+      style={{ content: style ?? {} }}
     >
+      {handle}
       <div className="c__sheet__header">
         <div className="c__sheet__title" id={titleId}>
           {title}
