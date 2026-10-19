@@ -1,0 +1,13 @@
+.c__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--c--components--toolbar--gap);
+  padding: var(--c--components--toolbar--padding-block)
+    var(--c--components--toolbar--padding-inline);
+
+  .c__separator--vertical {
+    min-height: var(--c--components--toolbar--separator-min-height);
+    margin-inline: var(--c--components--toolbar--separator-margin-inline);
+  }
+}
