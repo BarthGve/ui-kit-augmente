@@ -323,6 +323,8 @@ export {
   Badge,
 } from "./components/badge";
 
+export * from "./components/breadcrumb";
+
 export * from "./components/skeleton";
 export * from "./components/stepper";
 export * from "./components/move-modal";
