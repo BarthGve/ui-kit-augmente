@@ -392,6 +392,26 @@
       "toggle_aria": "Opties tonen",
       "loading": "Laden…",
       "no_results": "Geen resultaten"
+    },
+    "contactImport": {
+      "table_label": "Te importeren contacten",
+      "column_email": "E-mail",
+      "column_name": "Naam",
+      "column_status": "Status",
+      "column_actions": "Acties",
+      "status_valid": "Geldig",
+      "status_invalid": "Ongeldig e-mailadres",
+      "status_duplicate": "Dubbel",
+      "summary": "{valid} geldig, {fix} te herstellen",
+      "import_none": "Importeren",
+      "import_one": "1 contact importeren",
+      "import_many": "{count} contacten importeren",
+      "email_aria": "E-mail van rij {row}",
+      "remove_aria": "{email} verwijderen",
+      "error_type": "Alleen .csv- en .xlsx-bestanden worden geaccepteerd",
+      "error_empty": "Het bestand bevat geen contacten",
+      "error_unreadable": "Het bestand kon niet worden gelezen",
+      "error_too_many": "Het bestand bevat meer dan {max} contacten"
     }
   }
 }

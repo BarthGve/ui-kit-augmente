@@ -1,0 +1,46 @@
+.c__contact-import {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--c--components--contact-import--gap);
+
+  .c__datagrid {
+    align-self: stretch;
+  }
+
+  &__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--c--components--contact-import--input-padding);
+    border: 1px solid var(--c--components--contact-import--input-border-color);
+    border-radius: var(--c--components--contact-import--input-border-radius);
+    background: transparent;
+    color: var(--c--components--contact-import--input-color);
+    font: inherit;
+    font-size: var(--c--components--contact-import--input-font-size);
+
+    &[aria-invalid="true"] {
+      border-color: var(
+        --c--components--contact-import--input-border-color--invalid
+      );
+    }
+  }
+
+  &__status {
+    font-weight: 600;
+
+    &--valid {
+      color: var(--c--components--contact-import--valid-color);
+    }
+
+    &--invalid,
+    &--duplicate {
+      color: var(--c--components--contact-import--invalid-color);
+    }
+  }
+
+  &__summary {
+    color: var(--c--components--contact-import--summary-color);
+    font-size: var(--c--components--contact-import--summary-font-size);
+  }
+}

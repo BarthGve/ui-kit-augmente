@@ -67,6 +67,8 @@ export interface BaseProps<T extends Row = Row> {
   hideEmptyPlaceholderImage?: boolean;
   enableSorting?: boolean;
   className?: string;
+  /** Accessible name of the table. */
+  "aria-label"?: string;
 }
 
 export interface DataGridProps<T extends Row = Row> extends BaseProps<T> {
@@ -95,6 +97,7 @@ export const DataGrid = <T extends Row>({
   hideEmptyPlaceholderImage,
   displayHeader = true,
   enableSorting = true,
+  "aria-label": ariaLabel,
 }: DataGridProps<T>) => {
   const { t } = useCunningham();
   const headlessColumns = useHeadlessColumns({ columns, enableRowSelection });
@@ -192,7 +195,7 @@ export const DataGrid = <T extends Row>({
         {!isEmpty && (
           <>
             <div className="c__datagrid__table__container">
-              <table>
+              <table aria-label={ariaLabel}>
                 <thead>
                   {displayHeader &&
                     table.getHeaderGroups().map((headerGroup) => (
@@ -208,6 +211,7 @@ export const DataGrid = <T extends Row>({
                             <th
                               key={header.id}
                               colSpan={header.colSpan}
+                              scope="col"
                               className={classNames({
                                 "c__datagrid__header--select":
                                   header.id === HEADER_ID_SELECT,
