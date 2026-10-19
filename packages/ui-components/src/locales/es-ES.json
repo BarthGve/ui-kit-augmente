@@ -379,6 +379,11 @@
       "title": "Mover a",
       "move": "Mover",
       "cancel": "Cancelar"
+    },
+    "combobox": {
+      "toggle_aria": "Mostrar opciones",
+      "loading": "Cargando…",
+      "no_results": "Sin resultados"
     }
   }
 }

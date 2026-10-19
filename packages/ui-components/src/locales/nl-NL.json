@@ -379,6 +379,11 @@
       "title": "Verplaatsen naar",
       "move": "Verplaatsen",
       "cancel": "Annuleren"
+    },
+    "combobox": {
+      "toggle_aria": "Opties tonen",
+      "loading": "Laden…",
+      "no_results": "Geen resultaten"
     }
   }
 }

@@ -379,6 +379,11 @@
       "title": "Déplacer vers",
       "move": "Déplacer",
       "cancel": "Annuler"
+    },
+    "combobox": {
+      "toggle_aria": "Afficher les options",
+      "loading": "Chargement…",
+      "no_results": "Aucun résultat"
     }
   }
 }

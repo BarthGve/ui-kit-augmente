@@ -379,6 +379,11 @@
       "title": "Move to",
       "move": "Move",
       "cancel": "Cancel"
+    },
+    "combobox": {
+      "toggle_aria": "Show options",
+      "loading": "Loading…",
+      "no_results": "No results"
     }
   }
 }
