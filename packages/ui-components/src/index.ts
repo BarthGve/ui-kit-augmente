@@ -323,6 +323,8 @@ export {
   Badge,
 } from "./components/badge";
 
+export * from "./components/sheet";
+
 export * from "./components/slider";
 
 export * from "./components/contact-import";

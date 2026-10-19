@@ -412,6 +412,9 @@
       "error_empty": "Le fichier ne contient aucun contact",
       "error_unreadable": "Le fichier est illisible",
       "error_too_many": "Le fichier contient plus de {max} contacts"
+    },
+    "sheet": {
+      "close": "Fermer"
     }
   }
 }
