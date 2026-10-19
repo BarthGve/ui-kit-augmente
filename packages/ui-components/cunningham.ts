@@ -15,6 +15,7 @@ import { tokens as datePickerTokens } from "./src/components/forms/date-picker/t
 import { tokens as comboboxTokens } from "./src/components/forms/combobox/tokens";
 import { tokens as fieldTokens } from "./src/components/forms/field/tokens";
 import { tokens as inputOtpTokens } from "./src/components/forms/input-otp/tokens";
+import { tokens as inputGroupTokens } from "./src/components/forms/input-group/tokens";
 import { tokens as inputTokens } from "./src/components/forms/input/tokens";
 import { tokens as labelledBoxTokens } from "./src/components/forms/labelled-box/tokens";
 import { tokens as radioTokens } from "./src/components/forms/radio/tokens";
@@ -55,6 +56,7 @@ const componentTokenDefaults = {
   "forms-field": fieldTokens(defaultTokenRefs),
   "forms-input": inputTokens(defaultTokenRefs),
   "input-otp": inputOtpTokens(defaultTokenRefs),
+  "input-group": inputGroupTokens(defaultTokenRefs),
   "forms-labelledbox": labelledBoxTokens(defaultTokenRefs),
   "forms-radio": radioTokens(),
   "forms-select": selectTokens(defaultTokenRefs),
