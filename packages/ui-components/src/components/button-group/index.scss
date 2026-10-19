@@ -1,0 +1,75 @@
+.c__button-group {
+  display: inline-flex;
+  gap: var(--c--components--button-group--gap);
+
+  // Square by default; the outer edges are rounded below, which comes later
+  // so it wins at equal specificity. The wrapper of a split button's trigger
+  // is a box of its own.
+  > *,
+  .c__button {
+    border-radius: 0;
+  }
+
+  &--horizontal {
+    flex-direction: row;
+
+    > :not(:first-child) {
+      margin-inline-start: calc(
+        -1 * var(--c--components--button-group--border-width)
+      );
+    }
+
+    > :first-child,
+    > :first-child .c__button {
+      border-start-start-radius: var(
+        --c--components--button-group--border-radius
+      );
+      border-end-start-radius: var(
+        --c--components--button-group--border-radius
+      );
+    }
+
+    > :last-child,
+    > :last-child .c__button {
+      border-start-end-radius: var(
+        --c--components--button-group--border-radius
+      );
+      border-end-end-radius: var(--c--components--button-group--border-radius);
+    }
+  }
+
+  &--vertical {
+    flex-direction: column;
+
+    > :not(:first-child) {
+      margin-block-start: calc(
+        -1 * var(--c--components--button-group--border-width)
+      );
+    }
+
+    > :first-child,
+    > :first-child .c__button {
+      border-start-start-radius: var(
+        --c--components--button-group--border-radius
+      );
+      border-start-end-radius: var(
+        --c--components--button-group--border-radius
+      );
+    }
+
+    > :last-child,
+    > :last-child .c__button {
+      border-end-start-radius: var(
+        --c--components--button-group--border-radius
+      );
+      border-end-end-radius: var(--c--components--button-group--border-radius);
+    }
+  }
+
+  // Keep the hovered or focused button's border and focus ring above its neighbours.
+  > :hover,
+  > :focus-within {
+    position: relative;
+    z-index: 1;
+  }
+}
