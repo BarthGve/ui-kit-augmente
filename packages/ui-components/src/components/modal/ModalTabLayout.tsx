@@ -146,6 +146,9 @@ export const ModalTabLayout = ({
           {currentTab?.subtitle && (
             <div className="c__modal__subtitle">{currentTab.subtitle}</div>
           )}
+          {props.stepper && (
+            <div className="c__modal__stepper">{props.stepper}</div>
+          )}
         </div>
         <div className="c__modal__content" role="tabpanel" ref={contentRef}>
           {currentTab?.content}

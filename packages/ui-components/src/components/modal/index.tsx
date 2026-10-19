@@ -70,6 +70,8 @@ type ModalBaseProps = {
   subtitle?: ReactNode;
   titleIcon?: React.ReactNode;
   stickyFooter?: boolean;
+  /** Progress of a multi-step flow, shown in the header (see `Stepper`). */
+  stepper?: ReactNode;
   hideCloseButton?: boolean;
   closeOnClickOutside?: boolean;
   closeOnEsc?: boolean;

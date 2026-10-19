@@ -367,6 +367,10 @@
         "current": "Huidig",
         "upcoming": "Gepland"
       }
+    },
+    "stepper": {
+      "completed": "voltooid",
+      "upcoming": "komend"
     }
   }
 }

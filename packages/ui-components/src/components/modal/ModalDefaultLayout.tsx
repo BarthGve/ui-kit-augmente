@@ -67,6 +67,9 @@ export const ModalDefaultLayout = ({
             )}
           </>
         )}
+        {props.stepper && (
+          <div className="c__modal__stepper">{props.stepper}</div>
+        )}
 
         <div className="c__modal__content">{props.children}</div>
         {!props.stickyFooter && <ModalFooter {...props} />}

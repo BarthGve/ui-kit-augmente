@@ -1,0 +1,48 @@
+.c__stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--c--components--stepper--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--c--components--stepper--font-size);
+  color: var(--c--components--stepper--color);
+
+  &__step {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--c--components--stepper--marker-gap);
+  }
+
+  &__marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--c--components--stepper--marker-size);
+    height: var(--c--components--stepper--marker-size);
+    border-radius: 50%;
+    background-color: var(--c--components--stepper--marker-background-color);
+    color: var(--c--components--stepper--marker-color);
+    font-size: var(--c--components--stepper--marker-font-size);
+    font-weight: 600;
+  }
+
+  &__step--done &__marker {
+    background-color: var(
+      --c--components--stepper--done-marker-background-color
+    );
+    color: var(--c--components--stepper--done-marker-color);
+  }
+
+  &__step--current {
+    color: var(--c--components--stepper--current-color);
+    font-weight: 600;
+  }
+
+  &__step--current &__marker {
+    background-color: var(
+      --c--components--stepper--current-marker-background-color
+    );
+    color: var(--c--components--stepper--current-marker-color);
+  }
+}

@@ -324,6 +324,7 @@ export {
 } from "./components/badge";
 
 export * from "./components/skeleton";
+export * from "./components/stepper";
 
 export {
   Card,
