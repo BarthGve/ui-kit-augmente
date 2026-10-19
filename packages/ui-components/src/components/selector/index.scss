@@ -1,0 +1,91 @@
+.c__selector {
+  --c--components--selector--current-font-size: var(
+    --c--components--selector--font-size
+  );
+  --c--components--selector--current-padding-block: var(
+    --c--components--selector--padding-block
+  );
+  --c--components--selector--current-padding-inline: var(
+    --c--components--selector--padding-inline
+  );
+
+  display: inline-flex;
+  gap: var(--c--components--selector--gap);
+  padding: var(--c--components--selector--padding);
+  border-radius: var(--c--components--selector--border-radius);
+  background-color: var(--c--components--selector--background-color);
+
+  &--small {
+    --c--components--selector--current-font-size: var(
+      --c--components--selector--small-font-size
+    );
+    --c--components--selector--current-padding-block: var(
+      --c--components--selector--small-padding-block
+    );
+    --c--components--selector--current-padding-inline: var(
+      --c--components--selector--small-padding-inline
+    );
+  }
+
+  &__option {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+  }
+
+  // Visually hidden but still focusable and announced.
+  &__input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--c--components--selector--gap);
+    padding: var(--c--components--selector--current-padding-block)
+      var(--c--components--selector--current-padding-inline);
+    border-radius: var(--c--components--selector--option-border-radius);
+    color: var(--c--components--selector--color);
+    font-size: var(--c--components--selector--current-font-size);
+    font-weight: var(--c--components--selector--font-weight);
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  &__option:hover &__input:not(:checked):not(:disabled) + &__label {
+    background-color: var(--c--components--selector--hover-background-color);
+  }
+
+  &__input:checked + &__label {
+    background-color: var(--c--components--selector--selected-background-color);
+    color: var(--c--components--selector--selected-color);
+  }
+
+  &__input:focus-visible + &__label {
+    outline: var(--c--components--selector--focus-ring-width) solid
+      var(--c--components--selector--focus-ring-color);
+    outline-offset: var(--c--components--selector--focus-ring-offset);
+  }
+
+  &__input:disabled {
+    cursor: not-allowed;
+  }
+
+  &__input:disabled + &__label {
+    color: var(--c--components--selector--disabled-color);
+  }
+
+  @media (forced-colors: active) {
+    &__input:checked + &__label {
+      outline: var(--c--components--selector--focus-ring-width) solid Highlight;
+    }
+
+    &__input:focus-visible + &__label {
+      outline-color: Highlight;
+    }
+  }
+}
