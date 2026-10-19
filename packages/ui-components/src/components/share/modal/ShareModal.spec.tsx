@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import { render, waitFor } from "@testing-library/react";
