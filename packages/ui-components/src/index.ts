@@ -323,6 +323,8 @@ export {
   Badge,
 } from "./components/badge";
 
+export * from "./components/skeleton";
+
 export {
   Card,
 } from "./components/card";
