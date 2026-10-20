@@ -444,6 +444,9 @@
     },
     "messageScroller": {
       "jump": "Ir al último mensaje"
+    },
+    "resizable": {
+      "handle": "Redimensionar"
     }
   }
 }

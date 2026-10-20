@@ -323,6 +323,8 @@ export {
   Badge,
 } from "./components/badge";
 
+export * from "./components/resizable";
+
 export * from "./components/direction";
 
 export * from "./components/bubble";
