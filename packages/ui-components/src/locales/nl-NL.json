@@ -456,6 +456,11 @@
       "skip": "Overslaan",
       "submit": "Verzenden",
       "required": "Beantwoord deze vraag"
+    },
+    "chart": {
+      "view_table": "Gegevens als tabel bekijken",
+      "view_chart": "Terug naar de grafiek",
+      "explore": "Gebruik de pijltjestoetsen om de waarden te verkennen"
     }
   }
 }

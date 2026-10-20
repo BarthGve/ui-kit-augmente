@@ -456,6 +456,11 @@
       "skip": "Omitir",
       "submit": "Enviar",
       "required": "Responda a esta pregunta"
+    },
+    "chart": {
+      "view_table": "Ver los datos como tabla",
+      "view_chart": "Volver al gráfico",
+      "explore": "Use las flechas para recorrer los valores"
     }
   }
 }
