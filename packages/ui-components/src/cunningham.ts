@@ -13,6 +13,7 @@ export * from "./components/forms/input";
 export * from "./components/forms/input/InputPassword";
 export * from "./components/forms/input-otp";
 export * from "./components/forms/input-group";
+export * from "./components/forms/native-select";
 export * from "./components/forms/labelled-box";
 export * from "./components/forms/radio";
 export * from "./components/forms/select";

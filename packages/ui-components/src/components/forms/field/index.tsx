@@ -21,12 +21,17 @@ export type FieldProps = {
   labelWidth?: string | undefined;
 };
 
-type Props = FieldProps & PropsWithChildren;
+type Props = FieldProps &
+  PropsWithChildren & {
+    /** Id given to the text, so the control can reference it with `aria-describedby`. */
+    textId?: string;
+  };
 
 export const Field = ({
   children,
   state = "default",
   text,
+  textId,
   textItems,
   rightText,
   fullWidth,
@@ -55,7 +60,9 @@ export const Field = ({
         <div className="c__field__footer">
           {(text || rightText) && (
             <div className="c__field__footer__top">
-              <span className="c__field__text">{text}</span>
+              <span className="c__field__text" id={textId}>
+                {text}
+              </span>
               <span className="c__field__text__right">{rightText}</span>
             </div>
           )}

@@ -16,6 +16,7 @@ import { tokens as comboboxTokens } from "./src/components/forms/combobox/tokens
 import { tokens as fieldTokens } from "./src/components/forms/field/tokens";
 import { tokens as inputOtpTokens } from "./src/components/forms/input-otp/tokens";
 import { tokens as inputGroupTokens } from "./src/components/forms/input-group/tokens";
+import { tokens as nativeSelectTokens } from "./src/components/forms/native-select/tokens";
 import { tokens as inputTokens } from "./src/components/forms/input/tokens";
 import { tokens as labelledBoxTokens } from "./src/components/forms/labelled-box/tokens";
 import { tokens as radioTokens } from "./src/components/forms/radio/tokens";
@@ -65,6 +66,7 @@ const componentTokenDefaults = {
   "forms-input": inputTokens(defaultTokenRefs),
   "input-otp": inputOtpTokens(defaultTokenRefs),
   "input-group": inputGroupTokens(defaultTokenRefs),
+  "native-select": nativeSelectTokens(defaultTokenRefs),
   "forms-labelledbox": labelledBoxTokens(defaultTokenRefs),
   "forms-radio": radioTokens(),
   "forms-select": selectTokens(defaultTokenRefs),
