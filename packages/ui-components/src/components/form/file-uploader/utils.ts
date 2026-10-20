@@ -15,3 +15,27 @@ export const formatBytes = (bytes: number, decimals = 0): string => {
   const rounded = exponent === 0 ? value : Number(value.toFixed(decimals));
   return `${rounded} ${units[exponent]}`;
 };
+
+/**
+ * Whether a file matches an `accept` attribute value: extensions (`.pdf`),
+ * MIME types (`image/png`) and wildcards (`image/*`), comma separated. No
+ * restriction when `accept` is empty.
+ */
+export const isAccepted = (file: File, accept?: string) => {
+  const rules = (accept ?? "")
+    .split(",")
+    .map((rule) => rule.trim().toLowerCase())
+    .filter(Boolean);
+  if (rules.length === 0) {
+    return true;
+  }
+  const name = file.name.toLowerCase();
+  const type = file.type.toLowerCase();
+  return rules.some((rule) =>
+    rule.startsWith(".")
+      ? name.endsWith(rule)
+      : rule.endsWith("/*")
+        ? type.startsWith(rule.slice(0, -1))
+        : type === rule,
+  );
+};

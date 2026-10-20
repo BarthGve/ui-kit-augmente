@@ -136,7 +136,15 @@
       "uploading": "Subiendo",
       "cancel": "Cancelar subida",
       "remove": "Eliminar",
-      "genericError": "Se ha producido un error"
+      "genericError": "Se ha producido un error",
+      "retry": "Reintentar",
+      "too_large": "El archivo supera {size}",
+      "type_not_accepted": "Tipo de archivo no aceptado",
+      "announce_uploading": "Subiendo {name}",
+      "announce_done": "{name} subido",
+      "announce_failed": "{name}: error al subir",
+      "announce_rejected": "{name} rechazado: {reason}",
+      "announce_cancelled": "Subida de {name} cancelada"
     },
     "treeView": {
       "viewMore": "Cargar más elementos"

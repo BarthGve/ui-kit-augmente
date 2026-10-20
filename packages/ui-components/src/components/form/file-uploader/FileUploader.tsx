@@ -32,6 +32,8 @@ export type FileUploaderProps = {
   onRemoveFile?: (file: UploadFile) => void;
   /** Called when an uploading file's cancel control is activated. */
   onCancelFile?: (file: UploadFile) => void;
+  /** Called when the retry control of a failed file is activated. */
+  onRetryFile?: (file: UploadFile) => void;
   /** Override any of the default (translated) labels. */
   labels?: UploadFileLabels;
   className?: string;
@@ -60,6 +62,7 @@ export const FileUploader = ({
   onAddFiles,
   onRemoveFile,
   onCancelFile,
+  onRetryFile,
   labels,
   className,
   description,
@@ -78,6 +81,7 @@ export const FileUploader = ({
     uploading: labels?.uploading ?? t("components.upload.uploading"),
     cancel: labels?.cancel ?? t("components.upload.cancel"),
     remove: labels?.remove ?? t("components.upload.remove"),
+    retry: labels?.retry ?? t("components.upload.retry"),
     genericError: labels?.genericError ?? t("components.upload.genericError"),
     maxSize:
       labels?.maxSize ??
@@ -253,6 +257,7 @@ export const FileUploader = ({
               labels={l}
               onRemove={onRemoveFile}
               onCancel={onCancelFile}
+              onRetry={onRetryFile}
             />
           ))}
         </ul>

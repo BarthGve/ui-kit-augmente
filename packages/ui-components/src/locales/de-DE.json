@@ -136,7 +136,15 @@
       "uploading": "Wird hochgeladen",
       "cancel": "Hochladen abbrechen",
       "remove": "Löschen",
-      "genericError": "Ein Fehler ist aufgetreten"
+      "genericError": "Ein Fehler ist aufgetreten",
+      "retry": "Erneut versuchen",
+      "too_large": "Datei überschreitet {size}",
+      "type_not_accepted": "Dateityp nicht zulässig",
+      "announce_uploading": "{name} wird hochgeladen",
+      "announce_done": "{name} hochgeladen",
+      "announce_failed": "{name}: Upload fehlgeschlagen",
+      "announce_rejected": "{name} abgelehnt: {reason}",
+      "announce_cancelled": "Upload von {name} abgebrochen"
     },
     "treeView": {
       "viewMore": "Weitere Elemente laden"

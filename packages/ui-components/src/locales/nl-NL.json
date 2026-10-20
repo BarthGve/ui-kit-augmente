@@ -136,7 +136,15 @@
       "uploading": "Uploaden",
       "cancel": "Uploaden annuleren",
       "remove": "Verwijderen",
-      "genericError": "Er is een fout opgetreden"
+      "genericError": "Er is een fout opgetreden",
+      "retry": "Opnieuw proberen",
+      "too_large": "Bestand overschrijdt {size}",
+      "type_not_accepted": "Bestandstype niet toegestaan",
+      "announce_uploading": "{name} wordt geüpload",
+      "announce_done": "{name} geüpload",
+      "announce_failed": "{name}: upload mislukt",
+      "announce_rejected": "{name} geweigerd: {reason}",
+      "announce_cancelled": "Upload van {name} geannuleerd"
     },
     "treeView": {
       "viewMore": "Meer elementen laden"
