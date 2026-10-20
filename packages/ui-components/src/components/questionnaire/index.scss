@@ -1,0 +1,75 @@
+.c__questionnaire {
+  display: flex;
+  flex-direction: column;
+  gap: var(--c--components--questionnaire--gap);
+
+  &__progress {
+    height: var(--c--components--questionnaire--progress-height);
+    border-radius: var(--c--components--questionnaire--progress-border-radius);
+    background-color: var(--c--components--questionnaire--progress-track-color);
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    height: 100%;
+    background-color: var(--c--components--questionnaire--progress-fill-color);
+    transition: width 0.2s ease-out;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--c--components--questionnaire--item-gap);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  &__legend {
+    padding: 0;
+    margin-bottom: var(--c--components--questionnaire--item-gap);
+    font-size: var(--c--components--questionnaire--legend-font-size);
+    font-weight: var(--c--components--questionnaire--legend-font-weight);
+    outline: none;
+
+    &:focus-visible {
+      outline: var(--c--components--questionnaire--focus-ring-width) solid
+        var(--c--components--questionnaire--focus-ring-color);
+    }
+  }
+
+  &__text {
+    box-sizing: border-box;
+    width: 100%;
+    padding: var(--c--components--questionnaire--text-padding);
+    border: var(--c--components--questionnaire--text-border-width) solid
+      var(--c--components--questionnaire--text-border-color);
+    border-radius: var(--c--components--questionnaire--text-border-radius);
+    font: inherit;
+    font-size: var(--c--components--questionnaire--text-font-size);
+
+    &[aria-invalid="true"] {
+      border-color: var(--c--components--questionnaire--error-border-color);
+    }
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--c--components--questionnaire--error-color);
+    font-weight: 600;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--c--components--questionnaire--actions-gap);
+  }
+}
