@@ -1,0 +1,49 @@
+.c__scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: var(--c--components--scroll-area--thumb-color)
+    var(--c--components--scroll-area--track-color);
+
+  // Appears only where the content overflows.
+  &--vertical {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  &--horizontal {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  &--both {
+    overflow: auto;
+  }
+
+  &::-webkit-scrollbar {
+    width: var(--c--components--scroll-area--size);
+    height: var(--c--components--scroll-area--size);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--c--components--scroll-area--track-color);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: var(--c--components--scroll-area--thumb-border-radius);
+    background-color: var(--c--components--scroll-area--thumb-color);
+
+    &:hover {
+      background-color: var(--c--components--scroll-area--thumb-hover-color);
+    }
+  }
+
+  &:focus-visible {
+    outline: var(--c--components--scroll-area--focus-ring-width) solid
+      var(--c--components--scroll-area--focus-ring-color);
+  }
+
+  // Forced colors: the system scrollbar, untouched.
+  @media (forced-colors: active) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+}
