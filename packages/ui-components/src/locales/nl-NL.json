@@ -412,6 +412,9 @@
       "error_empty": "Het bestand bevat geen contacten",
       "error_unreadable": "Het bestand kon niet worden gelezen",
       "error_too_many": "Het bestand bevat meer dan {max} contacten"
+    },
+    "sheet": {
+      "close": "Sluiten"
     }
   }
 }
