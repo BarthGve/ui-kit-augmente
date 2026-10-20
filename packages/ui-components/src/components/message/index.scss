@@ -1,0 +1,77 @@
+.c__message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--c--components--message--gap);
+
+  &--own {
+    flex-direction: row-reverse;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--c--components--message--meta-gap);
+    min-width: 0;
+  }
+
+  &--own &__meta {
+    justify-content: flex-end;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--c--components--message--meta-gap);
+    font-size: var(--c--components--message--font-size);
+  }
+
+  &__author {
+    font-weight: var(--c--components--message--author-font-weight);
+  }
+
+  &__time {
+    color: var(--c--components--message--time-color);
+  }
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: var(--c--components--message--actions-gap);
+  }
+
+  &--own &__content {
+    flex-direction: row-reverse;
+  }
+
+  // Hidden until the row is hovered or something in it has the focus: the
+  // controls stay in the tab order, so focusing one reveals them.
+  &__actions {
+    display: flex;
+    gap: var(--c--components--message--actions-gap);
+    opacity: 0;
+    transition: opacity var(--c--components--message--transition-duration);
+  }
+
+  &:hover &__actions,
+  &:focus-within &__actions {
+    opacity: 1;
+  }
+
+  // No hover on touch screens: the actions stay visible.
+  @media (hover: none) {
+    &__actions {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__actions {
+      transition: none;
+    }
+  }
+}

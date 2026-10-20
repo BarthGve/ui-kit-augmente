@@ -48,6 +48,7 @@ import { tokens as typographyTokens } from "./src/components/typography/tokens";
 import { tokens as scrollAreaTokens } from "./src/components/scroll-area/tokens";
 import { tokens as itemTokens } from "./src/components/item/tokens";
 import { tokens as bubbleTokens } from "./src/components/bubble/tokens";
+import { tokens as messageTokens } from "./src/components/message/tokens";
 import { tokens as timelineTokens } from "./src/components/timeline/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
 import { tokens as toolbarTokens } from "./src/components/toolbar/tokens";
@@ -102,6 +103,7 @@ const componentTokenDefaults = {
   "scroll-area": scrollAreaTokens(defaultTokenRefs),
   item: itemTokens(defaultTokenRefs),
   bubble: bubbleTokens(defaultTokenRefs),
+  message: messageTokens(defaultTokenRefs),
   timeline: timelineTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
   toolbar: toolbarTokens(defaultTokenRefs),

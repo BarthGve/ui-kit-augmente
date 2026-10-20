@@ -438,6 +438,9 @@
     "bubble": {
       "error": "Error al enviar",
       "reactions": "Reacciones"
+    },
+    "message": {
+      "you": "Usted"
     }
   }
 }
