@@ -1,0 +1,83 @@
+.c__slider {
+  display: flex;
+  flex-direction: column;
+  gap: var(--c--components--slider--track-height);
+  width: 100%;
+  font-size: var(--c--components--slider--font-size);
+  color: var(--c--components--slider--label-color);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &__track {
+    position: relative;
+    height: var(--c--components--slider--thumb-size);
+    cursor: pointer;
+
+    // The rail the thumbs slide on.
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      height: var(--c--components--slider--track-height);
+      transform: translateY(-50%);
+      border-radius: var(--c--components--slider--track-border-radius);
+      background-color: var(--c--components--slider--track-color);
+    }
+  }
+
+  &__fill {
+    position: absolute;
+    top: 50%;
+    height: var(--c--components--slider--track-height);
+    transform: translateY(-50%);
+    border-radius: var(--c--components--slider--track-border-radius);
+    background-color: var(--c--components--slider--fill-color);
+  }
+
+  &__thumb {
+    top: 50%;
+    box-sizing: border-box;
+    width: var(--c--components--slider--thumb-size);
+    height: var(--c--components--slider--thumb-size);
+    border-radius: 50%;
+    border: var(--c--components--slider--thumb-border-width) solid
+      var(--c--components--slider--thumb-border-color);
+    background-color: var(--c--components--slider--thumb-color);
+    box-shadow: var(--c--components--slider--thumb-shadow);
+    cursor: grab;
+    outline: none;
+
+    &[data-dragging] {
+      cursor: grabbing;
+    }
+
+    &[data-focus-visible] {
+      outline: var(--c--components--slider--focus-ring-width) solid
+        var(--c--components--slider--focus-ring-color);
+      outline-offset: var(--c--components--slider--focus-ring-offset);
+    }
+  }
+
+  &[data-disabled] {
+    color: var(--c--components--slider--disabled-color);
+
+    .c__slider__fill {
+      background-color: var(--c--components--slider--disabled-color);
+    }
+
+    .c__slider__thumb {
+      border-color: var(--c--components--slider--disabled-color);
+      cursor: default;
+    }
+  }
+
+  @media (forced-colors: active) {
+    &__thumb[data-focus-visible] {
+      outline-color: Highlight;
+    }
+  }
+}
