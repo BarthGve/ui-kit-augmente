@@ -1,5 +1,6 @@
 import { CunninghamProvider } from "../src/components/provider/Provider";
 import { Locales } from "../src/components/provider/Locales";
+import { DirectionProvider } from "../src/components/direction";
 import "./../src/index.scss";
 import "./../src/styles/fonts.scss";
 import "./../src/style-stories.scss";
@@ -55,10 +56,23 @@ const preview: Preview = {
         ],
       },
     },
+    direction: {
+      description: "Reading direction",
+      toolbar: {
+        title: "Direction",
+        icon: "transfer",
+        dynamicTitle: true,
+        items: [
+          { value: "ltr", title: "Left to right" },
+          { value: "rtl", title: "Right to left" },
+        ],
+      },
+    },
   },
   initialGlobals: {
     theme: DEFAULT_THEME,
     locale: Locales.enUS,
+    direction: "ltr",
   },
   decorators: [
     (Story, context) => (
@@ -67,9 +81,11 @@ const preview: Preview = {
         theme={getThemeFromGlobals(context.globals)}
       >
         <I18nProvider locale={context.globals.locale ?? Locales.enUS}>
-          <div>
-            <Story />
-          </div>
+          <DirectionProvider direction={context.globals.direction ?? "ltr"}>
+            <div>
+              <Story />
+            </div>
+          </DirectionProvider>
         </I18nProvider>
       </CunninghamProvider>
     ),
