@@ -1,0 +1,43 @@
+import { DefaultTokens } from "@gouvfr-lasuite/ui-tokens";
+
+export const tokens = (defaults: DefaultTokens) => ({
+  color: defaults.contextuals.content.semantic.neutral.primary,
+  "muted-color": defaults.contextuals.content.semantic.neutral.tertiary,
+  "font-family": "inherit",
+  "line-height": "1.5",
+  "heading-line-height": "1.25",
+  "h1-font-size": defaults.globals.font.sizes.h1,
+  "h1-font-weight": defaults.globals.font.weights.bold,
+  "h2-font-size": defaults.globals.font.sizes.h2,
+  "h2-font-weight": defaults.globals.font.weights.bold,
+  "h3-font-size": defaults.globals.font.sizes.h3,
+  "h3-font-weight": defaults.globals.font.weights.bold,
+  "h4-font-size": defaults.globals.font.sizes.h4,
+  "h4-font-weight": defaults.globals.font.weights.bold,
+  "lead-font-size": defaults.globals.font.sizes.xl,
+  "lead-font-weight": defaults.globals.font.weights.regular,
+  "large-font-size": defaults.globals.font.sizes.lg,
+  "large-font-weight": defaults.globals.font.weights.bold,
+  "small-font-size": defaults.globals.font.sizes.sm,
+  "small-font-weight": defaults.globals.font.weights.medium,
+  "muted-font-size": defaults.globals.font.sizes.sm,
+  "muted-font-weight": defaults.globals.font.weights.regular,
+  "blockquote-font-size": defaults.globals.font.sizes.md,
+  "blockquote-font-weight": defaults.globals.font.weights.regular,
+  "code-font-size": defaults.globals.font.sizes.sm,
+  "code-font-weight": defaults.globals.font.weights.medium,
+  "list-font-size": defaults.globals.font.sizes.md,
+  "list-font-weight": defaults.globals.font.weights.regular,
+  "blockquote-border-color":
+    defaults.contextuals.border.semantic.neutral.tertiary,
+  "blockquote-border-width": "4px",
+  "blockquote-padding": defaults.globals.spacings.base,
+  "code-background-color":
+    defaults.contextuals.background.semantic.neutral.tertiary,
+  "code-font-family":
+    "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+  "code-padding-inline": defaults.globals.spacings["3xs"],
+  "code-border-radius": defaults.globals.spacings["3xs"],
+  "list-padding-inline-start": defaults.globals.spacings.lg,
+  "block-margin": defaults.globals.spacings.base,
+});
