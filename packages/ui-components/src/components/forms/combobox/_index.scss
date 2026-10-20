@@ -38,7 +38,8 @@
 
   &__option,
   &__empty {
-    padding: var(--c--components--combobox--option-padding);
+    padding: var(--c--components--combobox--option-padding-block)
+      var(--c--components--combobox--option-padding-inline);
     border-radius: var(--c--components--combobox--option-border-radius);
     color: var(--c--components--forms-select--item-color);
     font-size: var(--c--components--forms-select--item-font-size);

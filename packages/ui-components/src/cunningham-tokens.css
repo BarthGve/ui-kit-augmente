@@ -658,7 +658,8 @@
 	--c--components--combobox--popover-border-radius: var(--c--globals--spacings--xs);
 	--c--components--combobox--popover-shadow: 0 6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--combobox--list-padding: var(--c--globals--spacings--3xs);
-	--c--components--combobox--option-padding: var(--c--globals--spacings--xs) ref(globals--spacings--sm);
+	--c--components--combobox--option-padding-block: var(--c--globals--spacings--xs);
+	--c--components--combobox--option-padding-inline: var(--c--globals--spacings--sm);
 	--c--components--combobox--option-border-radius: var(--c--globals--spacings--3xs);
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
@@ -1664,7 +1665,8 @@
 	--c--components--combobox--popover-border-radius: var(--c--globals--spacings--xs);
 	--c--components--combobox--popover-shadow: 0 6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--combobox--list-padding: var(--c--globals--spacings--3xs);
-	--c--components--combobox--option-padding: var(--c--globals--spacings--xs) ref(globals--spacings--sm);
+	--c--components--combobox--option-padding-block: var(--c--globals--spacings--xs);
+	--c--components--combobox--option-padding-inline: var(--c--globals--spacings--sm);
 	--c--components--combobox--option-border-radius: var(--c--globals--spacings--3xs);
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
@@ -2645,7 +2647,8 @@
 	--c--components--combobox--popover-border-radius: var(--c--globals--spacings--xs);
 	--c--components--combobox--popover-shadow: 0 6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--combobox--list-padding: var(--c--globals--spacings--3xs);
-	--c--components--combobox--option-padding: var(--c--globals--spacings--xs) ref(globals--spacings--sm);
+	--c--components--combobox--option-padding-block: var(--c--globals--spacings--xs);
+	--c--components--combobox--option-padding-inline: var(--c--globals--spacings--sm);
 	--c--components--combobox--option-border-radius: var(--c--globals--spacings--3xs);
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
@@ -3626,7 +3629,8 @@
 	--c--components--combobox--popover-border-radius: var(--c--globals--spacings--xs);
 	--c--components--combobox--popover-shadow: 0 6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--combobox--list-padding: var(--c--globals--spacings--3xs);
-	--c--components--combobox--option-padding: var(--c--globals--spacings--xs) ref(globals--spacings--sm);
+	--c--components--combobox--option-padding-block: var(--c--globals--spacings--xs);
+	--c--components--combobox--option-padding-inline: var(--c--globals--spacings--sm);
 	--c--components--combobox--option-border-radius: var(--c--globals--spacings--3xs);
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
@@ -4610,7 +4614,8 @@
 	--c--components--combobox--popover-border-radius: var(--c--globals--spacings--xs);
 	--c--components--combobox--popover-shadow: 0 6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--combobox--list-padding: var(--c--globals--spacings--3xs);
-	--c--components--combobox--option-padding: var(--c--globals--spacings--xs) ref(globals--spacings--sm);
+	--c--components--combobox--option-padding-block: var(--c--globals--spacings--xs);
+	--c--components--combobox--option-padding-inline: var(--c--globals--spacings--sm);
 	--c--components--combobox--option-border-radius: var(--c--globals--spacings--3xs);
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
@@ -5594,7 +5599,8 @@
 	--c--components--combobox--popover-border-radius: var(--c--globals--spacings--xs);
 	--c--components--combobox--popover-shadow: 0 6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--combobox--list-padding: var(--c--globals--spacings--3xs);
-	--c--components--combobox--option-padding: var(--c--globals--spacings--xs) ref(globals--spacings--sm);
+	--c--components--combobox--option-padding-block: var(--c--globals--spacings--xs);
+	--c--components--combobox--option-padding-inline: var(--c--globals--spacings--sm);
 	--c--components--combobox--option-border-radius: var(--c--globals--spacings--3xs);
 	--c--components--forms-checkbox--background-color--hover: var(--c--contextuals--background--semantic--neutral--tertiary-hover);
 	--c--components--forms-checkbox--background-color: var(--c--contextuals--background--surface--primary);
