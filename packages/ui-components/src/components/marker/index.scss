@@ -1,0 +1,29 @@
+.c__marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--c--components--marker--gap);
+  padding-block: var(--c--components--marker--padding-block);
+  color: var(--c--components--marker--color);
+  font-size: var(--c--components--marker--font-size);
+
+  &__icon {
+    display: inline-flex;
+  }
+
+  &--border {
+    align-self: center;
+    width: fit-content;
+    margin-inline: auto;
+    padding-inline: var(--c--components--marker--padding-inline);
+    border: var(--c--components--marker--border-width) solid
+      var(--c--components--marker--border-color);
+    border-radius: var(--c--components--marker--border-radius);
+  }
+
+  &__rule {
+    flex: 1;
+    height: var(--c--components--marker--rule-width);
+    background-color: var(--c--components--marker--rule-color);
+  }
+}
