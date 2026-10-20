@@ -427,6 +427,9 @@
       "go_to": "Go to slide {current}",
       "pause": "Pause automatic slide show",
       "play": "Start automatic slide show"
+    },
+    "navigationMenu": {
+      "toggle": "Menu"
     }
   }
 }

@@ -427,6 +427,9 @@
       "go_to": "Zu Folie {current}",
       "pause": "Automatische Wiedergabe anhalten",
       "play": "Automatische Wiedergabe starten"
+    },
+    "navigationMenu": {
+      "toggle": "Menü"
     }
   }
 }

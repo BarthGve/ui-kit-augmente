@@ -323,6 +323,8 @@ export {
   Badge,
 } from "./components/badge";
 
+export * from "./components/navigation-menu";
+
 export * from "./components/aspect-ratio";
 
 export * from "./components/carousel";
