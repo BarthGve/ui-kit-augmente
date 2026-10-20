@@ -1013,6 +1013,8 @@ $themes: (
         'content-font-size': 0.875rem,
         'content-font-weight': 400,
         'content-color': #25252F,
+        'padding': 1.5rem,
+        'close-button-size': 28px,
         'width-small': 342px,
         'width-medium': 600px,
         'width-large': 800px,
@@ -1024,8 +1026,8 @@ $themes: (
         'tab-item-font-size': 0.875rem,
         'tab-item-font-weight': 500,
         'tab-item-font-weight--active': 600,
-        'tab-item-active-background-color': #{rgba(24, 27, 36, 0.05)},
-        'tab-item-hover-background-color': #{rgba(24, 27, 36, 0.03)}
+        'tab-item-active-background-color': #1B1B231A,
+        'tab-item-hover-background-color': #1B1B230D
       ),
       'search-filter': (
         'popover-min-width': 240px,
@@ -1036,6 +1038,27 @@ $themes: (
         'item-font-weight': 500,
         'message-padding': 8px,
         'user-row-gap': 16px
+      ),
+      'share-modal': (
+        'border-width': 1px,
+        'member-item--border-radius': 10px,
+        'search-field--icon-width': 24px,
+        'search-field--icon-min-height': 32px,
+        'search-field--icon-padding-top': 7px,
+        'search-field--content-min-height': 40px,
+        'search-field--main-space-min-width': 130px,
+        'search-field--input-line-height': 22px,
+        'search-field--actions-min-height': 40px,
+        'link-settings--gap': 0.5rem,
+        'link-settings--description-font-size': 12px,
+        'link-settings--select-height': 40px,
+        'link-settings--role-font-size': 13px,
+        'cannot-view--max-width': 320px,
+        'restricted--padding-block': 0.5rem,
+        'confirmation--width': 350px,
+        'confirmation--line-height': 18px,
+        'user-item--min-height': 24px,
+        'user-item--line-height': 16px
       ),
       'timeline': (
         'color': #25252F,
@@ -2141,6 +2164,8 @@ $themes: (
         'content-font-size': 0.875rem,
         'content-font-weight': 400,
         'content-color': #25252F,
+        'padding': 1.5rem,
+        'close-button-size': 28px,
         'width-small': 342px,
         'width-medium': 600px,
         'width-large': 800px,
@@ -2152,8 +2177,8 @@ $themes: (
         'tab-item-font-size': 0.875rem,
         'tab-item-font-weight': 500,
         'tab-item-font-weight--active': 600,
-        'tab-item-active-background-color': #{rgba(24, 27, 36, 0.05)},
-        'tab-item-hover-background-color': #{rgba(24, 27, 36, 0.03)}
+        'tab-item-active-background-color': #1B1B231A,
+        'tab-item-hover-background-color': #1B1B230D
       ),
       'search-filter': (
         'popover-min-width': 240px,
@@ -2164,6 +2189,27 @@ $themes: (
         'item-font-weight': 500,
         'message-padding': 8px,
         'user-row-gap': 16px
+      ),
+      'share-modal': (
+        'border-width': 1px,
+        'member-item--border-radius': 10px,
+        'search-field--icon-width': 24px,
+        'search-field--icon-min-height': 32px,
+        'search-field--icon-padding-top': 7px,
+        'search-field--content-min-height': 40px,
+        'search-field--main-space-min-width': 130px,
+        'search-field--input-line-height': 22px,
+        'search-field--actions-min-height': 40px,
+        'link-settings--gap': 0.5rem,
+        'link-settings--description-font-size': 12px,
+        'link-settings--select-height': 40px,
+        'link-settings--role-font-size': 13px,
+        'cannot-view--max-width': 320px,
+        'restricted--padding-block': 0.5rem,
+        'confirmation--width': 350px,
+        'confirmation--line-height': 18px,
+        'user-item--min-height': 24px,
+        'user-item--line-height': 16px
       ),
       'timeline': (
         'color': #25252F,
@@ -3242,6 +3288,8 @@ $themes: (
         'content-font-size': 0.875rem,
         'content-font-weight': 400,
         'content-color': #25252F,
+        'padding': 1.5rem,
+        'close-button-size': 28px,
         'width-small': 342px,
         'width-medium': 600px,
         'width-large': 800px,
@@ -3253,8 +3301,8 @@ $themes: (
         'tab-item-font-size': 0.875rem,
         'tab-item-font-weight': 500,
         'tab-item-font-weight--active': 600,
-        'tab-item-active-background-color': #{rgba(24, 27, 36, 0.05)},
-        'tab-item-hover-background-color': #{rgba(24, 27, 36, 0.03)}
+        'tab-item-active-background-color': #1B1B231A,
+        'tab-item-hover-background-color': #1B1B230D
       ),
       'search-filter': (
         'popover-min-width': 240px,
@@ -3265,6 +3313,27 @@ $themes: (
         'item-font-weight': 500,
         'message-padding': 8px,
         'user-row-gap': 16px
+      ),
+      'share-modal': (
+        'border-width': 1px,
+        'member-item--border-radius': 10px,
+        'search-field--icon-width': 24px,
+        'search-field--icon-min-height': 32px,
+        'search-field--icon-padding-top': 7px,
+        'search-field--content-min-height': 40px,
+        'search-field--main-space-min-width': 130px,
+        'search-field--input-line-height': 22px,
+        'search-field--actions-min-height': 40px,
+        'link-settings--gap': 0.5rem,
+        'link-settings--description-font-size': 12px,
+        'link-settings--select-height': 40px,
+        'link-settings--role-font-size': 13px,
+        'cannot-view--max-width': 320px,
+        'restricted--padding-block': 0.5rem,
+        'confirmation--width': 350px,
+        'confirmation--line-height': 18px,
+        'user-item--min-height': 24px,
+        'user-item--line-height': 16px
       ),
       'timeline': (
         'color': #25252F,
@@ -4343,6 +4412,8 @@ $themes: (
         'content-font-size': 0.875rem,
         'content-font-weight': 400,
         'content-color': #25252F,
+        'padding': 1.5rem,
+        'close-button-size': 28px,
         'width-small': 342px,
         'width-medium': 600px,
         'width-large': 800px,
@@ -4354,8 +4425,8 @@ $themes: (
         'tab-item-font-size': 0.875rem,
         'tab-item-font-weight': 500,
         'tab-item-font-weight--active': 600,
-        'tab-item-active-background-color': #{rgba(24, 27, 36, 0.05)},
-        'tab-item-hover-background-color': #{rgba(24, 27, 36, 0.03)}
+        'tab-item-active-background-color': #1B1B231A,
+        'tab-item-hover-background-color': #1B1B230D
       ),
       'search-filter': (
         'popover-min-width': 240px,
@@ -4366,6 +4437,27 @@ $themes: (
         'item-font-weight': 500,
         'message-padding': 8px,
         'user-row-gap': 16px
+      ),
+      'share-modal': (
+        'border-width': 1px,
+        'member-item--border-radius': 10px,
+        'search-field--icon-width': 24px,
+        'search-field--icon-min-height': 32px,
+        'search-field--icon-padding-top': 7px,
+        'search-field--content-min-height': 40px,
+        'search-field--main-space-min-width': 130px,
+        'search-field--input-line-height': 22px,
+        'search-field--actions-min-height': 40px,
+        'link-settings--gap': 0.5rem,
+        'link-settings--description-font-size': 12px,
+        'link-settings--select-height': 40px,
+        'link-settings--role-font-size': 13px,
+        'cannot-view--max-width': 320px,
+        'restricted--padding-block': 0.5rem,
+        'confirmation--width': 350px,
+        'confirmation--line-height': 18px,
+        'user-item--min-height': 24px,
+        'user-item--line-height': 16px
       ),
       'timeline': (
         'color': #25252F,
@@ -5447,6 +5539,8 @@ $themes: (
         'content-font-size': 0.875rem,
         'content-font-weight': 400,
         'content-color': #25252F,
+        'padding': 1.5rem,
+        'close-button-size': 28px,
         'width-small': 342px,
         'width-medium': 600px,
         'width-large': 800px,
@@ -5458,8 +5552,8 @@ $themes: (
         'tab-item-font-size': 0.875rem,
         'tab-item-font-weight': 500,
         'tab-item-font-weight--active': 600,
-        'tab-item-active-background-color': #{rgba(24, 27, 36, 0.05)},
-        'tab-item-hover-background-color': #{rgba(24, 27, 36, 0.03)}
+        'tab-item-active-background-color': #1B1B231A,
+        'tab-item-hover-background-color': #1B1B230D
       ),
       'search-filter': (
         'popover-min-width': 240px,
@@ -5470,6 +5564,27 @@ $themes: (
         'item-font-weight': 500,
         'message-padding': 8px,
         'user-row-gap': 16px
+      ),
+      'share-modal': (
+        'border-width': 1px,
+        'member-item--border-radius': 10px,
+        'search-field--icon-width': 24px,
+        'search-field--icon-min-height': 32px,
+        'search-field--icon-padding-top': 7px,
+        'search-field--content-min-height': 40px,
+        'search-field--main-space-min-width': 130px,
+        'search-field--input-line-height': 22px,
+        'search-field--actions-min-height': 40px,
+        'link-settings--gap': 0.5rem,
+        'link-settings--description-font-size': 12px,
+        'link-settings--select-height': 40px,
+        'link-settings--role-font-size': 13px,
+        'cannot-view--max-width': 320px,
+        'restricted--padding-block': 0.5rem,
+        'confirmation--width': 350px,
+        'confirmation--line-height': 18px,
+        'user-item--min-height': 24px,
+        'user-item--line-height': 16px
       ),
       'timeline': (
         'color': #25252F,
@@ -6551,6 +6666,8 @@ $themes: (
         'content-font-size': 0.875rem,
         'content-font-weight': 400,
         'content-color': #25252F,
+        'padding': 1.5rem,
+        'close-button-size': 28px,
         'width-small': 342px,
         'width-medium': 600px,
         'width-large': 800px,
@@ -6562,8 +6679,8 @@ $themes: (
         'tab-item-font-size': 0.875rem,
         'tab-item-font-weight': 500,
         'tab-item-font-weight--active': 600,
-        'tab-item-active-background-color': #{rgba(24, 27, 36, 0.05)},
-        'tab-item-hover-background-color': #{rgba(24, 27, 36, 0.03)}
+        'tab-item-active-background-color': #1B1B231A,
+        'tab-item-hover-background-color': #1B1B230D
       ),
       'search-filter': (
         'popover-min-width': 240px,
@@ -6574,6 +6691,27 @@ $themes: (
         'item-font-weight': 500,
         'message-padding': 8px,
         'user-row-gap': 16px
+      ),
+      'share-modal': (
+        'border-width': 1px,
+        'member-item--border-radius': 10px,
+        'search-field--icon-width': 24px,
+        'search-field--icon-min-height': 32px,
+        'search-field--icon-padding-top': 7px,
+        'search-field--content-min-height': 40px,
+        'search-field--main-space-min-width': 130px,
+        'search-field--input-line-height': 22px,
+        'search-field--actions-min-height': 40px,
+        'link-settings--gap': 0.5rem,
+        'link-settings--description-font-size': 12px,
+        'link-settings--select-height': 40px,
+        'link-settings--role-font-size': 13px,
+        'cannot-view--max-width': 320px,
+        'restricted--padding-block': 0.5rem,
+        'confirmation--width': 350px,
+        'confirmation--line-height': 18px,
+        'user-item--min-height': 24px,
+        'user-item--line-height': 16px
       ),
       'timeline': (
         'color': #25252F,
