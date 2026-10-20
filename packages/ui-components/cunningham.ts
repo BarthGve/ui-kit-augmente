@@ -43,6 +43,7 @@ import { tokens as carouselTokens } from "./src/components/carousel/tokens";
 import { tokens as menubarTokens } from "./src/components/menubar/tokens";
 import { tokens as navigationMenuTokens } from "./src/components/navigation-menu/tokens";
 import { tokens as sidebarTokens } from "./src/components/sidebar/tokens";
+import { tokens as markerTokens } from "./src/components/marker/tokens";
 import { tokens as timelineTokens } from "./src/components/timeline/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
 import { tokens as toolbarTokens } from "./src/components/toolbar/tokens";
@@ -92,6 +93,7 @@ const componentTokenDefaults = {
   menubar: menubarTokens(defaultTokenRefs),
   "navigation-menu": navigationMenuTokens(defaultTokenRefs),
   sidebar: sidebarTokens(defaultTokenRefs),
+  marker: markerTokens(defaultTokenRefs),
   timeline: timelineTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
   toolbar: toolbarTokens(defaultTokenRefs),
