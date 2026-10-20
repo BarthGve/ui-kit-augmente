@@ -415,6 +415,9 @@
     },
     "sheet": {
       "close": "Schließen"
+    },
+    "kbd": {
+      "command": "Befehl"
     }
   }
 }
