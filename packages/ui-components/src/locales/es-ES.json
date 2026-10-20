@@ -392,6 +392,26 @@
       "toggle_aria": "Mostrar opciones",
       "loading": "Cargando…",
       "no_results": "Sin resultados"
+    },
+    "contactImport": {
+      "table_label": "Contactos que importar",
+      "column_email": "Correo electrónico",
+      "column_name": "Nombre",
+      "column_status": "Estado",
+      "column_actions": "Acciones",
+      "status_valid": "Válido",
+      "status_invalid": "Dirección de correo no válida",
+      "status_duplicate": "Duplicado",
+      "summary": "{valid} válidos, {fix} por corregir",
+      "import_none": "Importar",
+      "import_one": "Importar 1 contacto",
+      "import_many": "Importar {count} contactos",
+      "email_aria": "Correo de la fila {row}",
+      "remove_aria": "Quitar {email}",
+      "error_type": "Solo se aceptan archivos .csv y .xlsx",
+      "error_empty": "El archivo no contiene contactos",
+      "error_unreadable": "No se pudo leer el archivo",
+      "error_too_many": "El archivo tiene más de {max} contactos"
     }
   }
 }
