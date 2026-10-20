@@ -434,6 +434,10 @@
     "sidebar": {
       "collapse": "Contraer la barra lateral",
       "expand": "Expandir la barra lateral"
+    },
+    "bubble": {
+      "error": "Error al enviar",
+      "reactions": "Reacciones"
     }
   }
 }

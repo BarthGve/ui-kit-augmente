@@ -434,6 +434,10 @@
     "sidebar": {
       "collapse": "Réduire la barre latérale",
       "expand": "Déplier la barre latérale"
+    },
+    "bubble": {
+      "error": "Échec de l'envoi",
+      "reactions": "Réactions"
     }
   }
 }

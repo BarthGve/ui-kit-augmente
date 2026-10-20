@@ -1,0 +1,116 @@
+.c__bubble {
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: var(--c--components--bubble--max-width);
+  padding: var(--c--components--bubble--padding-block)
+    var(--c--components--bubble--padding-inline);
+  border-radius: var(--c--components--bubble--border-radius);
+  font-size: var(--c--components--bubble--font-size);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+  outline: none;
+
+  &--start {
+    align-self: flex-start;
+  }
+
+  &--end {
+    align-self: flex-end;
+  }
+
+  &--default {
+    background-color: var(--c--components--bubble--default-background-color);
+    color: var(--c--components--bubble--default-color);
+  }
+
+  &--secondary {
+    background-color: var(--c--components--bubble--secondary-background-color);
+    color: var(--c--components--bubble--secondary-color);
+  }
+
+  &--muted {
+    background-color: var(--c--components--bubble--muted-background-color);
+    color: var(--c--components--bubble--muted-color);
+  }
+
+  &--tinted {
+    background-color: var(--c--components--bubble--tinted-background-color);
+    color: var(--c--components--bubble--tinted-color);
+  }
+
+  &--destructive {
+    background-color: var(
+      --c--components--bubble--destructive-background-color
+    );
+    color: var(--c--components--bubble--destructive-color);
+  }
+
+  &--outline {
+    border: var(--c--components--bubble--outline-border-width) solid
+      var(--c--components--bubble--outline-border-color);
+  }
+
+  &--ghost {
+    color: var(--c--components--bubble--ghost-color);
+  }
+
+  &--interactive {
+    cursor: pointer;
+
+    &:focus-visible,
+    &[data-focus-visible] {
+      outline: var(--c--components--bubble--focus-ring-width) solid
+        var(--c--components--bubble--focus-ring-color);
+    }
+  }
+}
+
+.c__bubble-error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--c--components--bubble--gap);
+
+  &--start {
+    align-items: flex-start;
+  }
+
+  &--end {
+    align-items: flex-end;
+  }
+
+  &__text {
+    color: var(--c--components--bubble--error-color);
+    font-size: var(--c--components--bubble--error-font-size);
+    font-weight: 600;
+  }
+}
+
+.c__bubble-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--c--components--bubble--group-gap);
+
+  &--start {
+    align-items: flex-start;
+  }
+
+  &--end {
+    align-items: flex-end;
+  }
+}
+
+.c__bubble-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--c--components--bubble--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    padding-inline: var(--c--components--bubble--reaction-padding-inline);
+    border-radius: var(--c--components--bubble--reaction-border-radius);
+    background-color: var(--c--components--bubble--reaction-background-color);
+    font-size: var(--c--components--bubble--reaction-font-size);
+  }
+}

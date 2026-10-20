@@ -434,6 +434,10 @@
     "sidebar": {
       "collapse": "Zijbalk invouwen",
       "expand": "Zijbalk uitvouwen"
+    },
+    "bubble": {
+      "error": "Verzenden mislukt",
+      "reactions": "Reacties"
     }
   }
 }
