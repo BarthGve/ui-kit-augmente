@@ -1,5 +1,8 @@
 {
   "components": {
+    "breadcrumb": {
+      "expand_aria": "Afficher le chemin complet"
+    },
     "menu": {
       "newWindowLabelSuffix": " (nouvelle fenêtre)"
     },

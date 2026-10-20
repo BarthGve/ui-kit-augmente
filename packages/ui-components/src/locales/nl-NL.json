@@ -1,5 +1,8 @@
 {
   "components": {
+    "breadcrumb": {
+      "expand_aria": "Volledig pad tonen"
+    },
     "menu": {
       "newWindowLabelSuffix": " (nieuw venster)"
     },
