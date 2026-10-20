@@ -1,0 +1,65 @@
+.c__collapsible {
+  color: var(--c--components--collapsible--color);
+  font-size: var(--c--components--collapsible--font-size);
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--c--components--collapsible--gap);
+    width: 100%;
+    padding: var(--c--components--collapsible--trigger-padding);
+    border: none;
+    border-radius: var(--c--components--collapsible--trigger-border-radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    outline: none;
+
+    &[data-hovered] {
+      background-color: var(
+        --c--components--collapsible--hover-background-color
+      );
+    }
+
+    &[data-focus-visible] {
+      outline: var(--c--components--collapsible--focus-ring-width) solid
+        var(--c--components--collapsible--focus-ring-color);
+      outline-offset: var(--c--components--collapsible--focus-ring-offset);
+    }
+
+    &[data-disabled] {
+      color: var(--c--components--collapsible--disabled-color);
+      cursor: default;
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    font-size: var(--c--components--collapsible--icon-size);
+    transition: transform var(--c--components--collapsible--duration) ease-out;
+  }
+
+  &__trigger[aria-expanded="true"] &__icon {
+    transform: rotate(180deg);
+  }
+
+  &__panel {
+    height: var(--disclosure-panel-height);
+    overflow: clip;
+    transition: height var(--c--components--collapsible--duration) ease-out;
+  }
+
+  &__content {
+    padding: var(--c--components--collapsible--trigger-padding);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__icon,
+    &__panel {
+      transition: none;
+    }
+  }
+}
