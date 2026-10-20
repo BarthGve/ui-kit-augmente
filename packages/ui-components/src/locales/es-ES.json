@@ -447,6 +447,15 @@
     },
     "resizable": {
       "handle": "Redimensionar"
+    },
+    "questionnaire": {
+      "progress": "Progreso",
+      "progress_text": "Pregunta {current} de {total}",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "skip": "Omitir",
+      "submit": "Enviar",
+      "required": "Responda a esta pregunta"
     }
   }
 }

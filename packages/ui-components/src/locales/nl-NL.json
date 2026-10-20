@@ -447,6 +447,15 @@
     },
     "resizable": {
       "handle": "Formaat wijzigen"
+    },
+    "questionnaire": {
+      "progress": "Voortgang",
+      "progress_text": "Vraag {current} van {total}",
+      "previous": "Vorige",
+      "next": "Volgende",
+      "skip": "Overslaan",
+      "submit": "Verzenden",
+      "required": "Beantwoord deze vraag"
     }
   }
 }
