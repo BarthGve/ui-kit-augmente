@@ -32,6 +32,7 @@ import { tokens as contactImportTokens } from "./src/components/contact-import/t
 import { tokens as sliderTokens } from "./src/components/slider/tokens";
 import { tokens as sheetTokens } from "./src/components/sheet/tokens";
 import { tokens as drawerTokens } from "./src/components/drawer/tokens";
+import { tokens as buttonGroupTokens } from "./src/components/button-group/tokens";
 import { tokens as timelineTokens } from "./src/components/timeline/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
 import { tokens as toolbarTokens } from "./src/components/toolbar/tokens";
@@ -70,6 +71,7 @@ const componentTokenDefaults = {
   slider: sliderTokens(defaultTokenRefs),
   sheet: sheetTokens(defaultTokenRefs),
   drawer: drawerTokens(defaultTokenRefs),
+  "button-group": buttonGroupTokens(defaultTokenRefs),
   timeline: timelineTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
   toolbar: toolbarTokens(defaultTokenRefs),

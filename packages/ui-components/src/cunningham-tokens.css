@@ -997,6 +997,9 @@
 	--c--components--drawer--handle-padding: var(--c--globals--spacings--sm);
 	--c--components--drawer--box-shadow: 0 -6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--drawer--duration: 0.2s;
+	--c--components--button-group--gap: 0;
+	--c--components--button-group--border-radius: var(--c--globals--spacings--xs);
+	--c--components--button-group--border-width: 1px;
 	--c--components--timeline--color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--timeline--color--muted: var(--c--contextuals--content--semantic--neutral--secondary);
 	--c--components--timeline--color--current: var(--c--contextuals--content--semantic--brand--primary);
@@ -2064,6 +2067,9 @@
 	--c--components--drawer--handle-padding: var(--c--globals--spacings--sm);
 	--c--components--drawer--box-shadow: 0 -6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--drawer--duration: 0.2s;
+	--c--components--button-group--gap: 0;
+	--c--components--button-group--border-radius: var(--c--globals--spacings--xs);
+	--c--components--button-group--border-width: 1px;
 	--c--components--timeline--color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--timeline--color--muted: var(--c--contextuals--content--semantic--neutral--secondary);
 	--c--components--timeline--color--current: var(--c--contextuals--content--semantic--brand--primary);
@@ -3106,6 +3112,9 @@
 	--c--components--drawer--handle-padding: var(--c--globals--spacings--sm);
 	--c--components--drawer--box-shadow: 0 -6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--drawer--duration: 0.2s;
+	--c--components--button-group--gap: 0;
+	--c--components--button-group--border-radius: var(--c--globals--spacings--xs);
+	--c--components--button-group--border-width: 1px;
 	--c--components--timeline--color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--timeline--color--muted: var(--c--contextuals--content--semantic--neutral--secondary);
 	--c--components--timeline--color--current: var(--c--contextuals--content--semantic--brand--primary);
@@ -4148,6 +4157,9 @@
 	--c--components--drawer--handle-padding: var(--c--globals--spacings--sm);
 	--c--components--drawer--box-shadow: 0 -6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--drawer--duration: 0.2s;
+	--c--components--button-group--gap: 0;
+	--c--components--button-group--border-radius: var(--c--globals--spacings--xs);
+	--c--components--button-group--border-width: 1px;
 	--c--components--timeline--color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--timeline--color--muted: var(--c--contextuals--content--semantic--neutral--secondary);
 	--c--components--timeline--color--current: var(--c--contextuals--content--semantic--brand--primary);
@@ -5193,6 +5205,9 @@
 	--c--components--drawer--handle-padding: var(--c--globals--spacings--sm);
 	--c--components--drawer--box-shadow: 0 -6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--drawer--duration: 0.2s;
+	--c--components--button-group--gap: 0;
+	--c--components--button-group--border-radius: var(--c--globals--spacings--xs);
+	--c--components--button-group--border-width: 1px;
 	--c--components--timeline--color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--timeline--color--muted: var(--c--contextuals--content--semantic--neutral--secondary);
 	--c--components--timeline--color--current: var(--c--contextuals--content--semantic--brand--primary);
@@ -6238,6 +6253,9 @@
 	--c--components--drawer--handle-padding: var(--c--globals--spacings--sm);
 	--c--components--drawer--box-shadow: 0 -6px 20px 0 rgba(0, 0, 18, 0.1);
 	--c--components--drawer--duration: 0.2s;
+	--c--components--button-group--gap: 0;
+	--c--components--button-group--border-radius: var(--c--globals--spacings--xs);
+	--c--components--button-group--border-width: 1px;
 	--c--components--timeline--color: var(--c--contextuals--content--semantic--neutral--primary);
 	--c--components--timeline--color--muted: var(--c--contextuals--content--semantic--neutral--secondary);
 	--c--components--timeline--color--current: var(--c--contextuals--content--semantic--brand--primary);
