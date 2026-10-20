@@ -441,6 +441,9 @@
     },
     "message": {
       "you": "Vous"
+    },
+    "messageScroller": {
+      "jump": "Aller au dernier message"
     }
   }
 }
