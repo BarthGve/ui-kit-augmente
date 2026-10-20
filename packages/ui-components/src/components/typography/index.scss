@@ -1,0 +1,80 @@
+.c__typography {
+  margin: 0;
+  color: var(--c--components--typography--color);
+  font-family: var(--c--components--typography--font-family);
+  line-height: var(--c--components--typography--line-height);
+
+  &--h1 {
+    font-size: var(--c--components--typography--h1-font-size);
+    font-weight: var(--c--components--typography--h1-font-weight);
+    line-height: var(--c--components--typography--heading-line-height);
+  }
+
+  &--h2 {
+    font-size: var(--c--components--typography--h2-font-size);
+    font-weight: var(--c--components--typography--h2-font-weight);
+    line-height: var(--c--components--typography--heading-line-height);
+  }
+
+  &--h3 {
+    font-size: var(--c--components--typography--h3-font-size);
+    font-weight: var(--c--components--typography--h3-font-weight);
+    line-height: var(--c--components--typography--heading-line-height);
+  }
+
+  &--h4 {
+    font-size: var(--c--components--typography--h4-font-size);
+    font-weight: var(--c--components--typography--h4-font-weight);
+    line-height: var(--c--components--typography--heading-line-height);
+  }
+
+  &--lead {
+    font-size: var(--c--components--typography--lead-font-size);
+    font-weight: var(--c--components--typography--lead-font-weight);
+    color: var(--c--components--typography--muted-color);
+  }
+
+  &--large {
+    font-size: var(--c--components--typography--large-font-size);
+    font-weight: var(--c--components--typography--large-font-weight);
+  }
+
+  &--small {
+    font-size: var(--c--components--typography--small-font-size);
+    font-weight: var(--c--components--typography--small-font-weight);
+  }
+
+  &--muted {
+    font-size: var(--c--components--typography--muted-font-size);
+    font-weight: var(--c--components--typography--muted-font-weight);
+    color: var(--c--components--typography--muted-color);
+  }
+
+  &--blockquote {
+    padding-inline-start: var(--c--components--typography--blockquote-padding);
+    border-inline-start: var(
+        --c--components--typography--blockquote-border-width
+      )
+      solid var(--c--components--typography--blockquote-border-color);
+    font-size: var(--c--components--typography--blockquote-font-size);
+    font-weight: var(--c--components--typography--blockquote-font-weight);
+    font-style: italic;
+  }
+
+  &--code {
+    padding-inline: var(--c--components--typography--code-padding-inline);
+    border-radius: var(--c--components--typography--code-border-radius);
+    background-color: var(--c--components--typography--code-background-color);
+    font-family: var(--c--components--typography--code-font-family);
+    font-size: var(--c--components--typography--code-font-size);
+    font-weight: var(--c--components--typography--code-font-weight);
+  }
+
+  &--list {
+    padding-inline-start: var(
+      --c--components--typography--list-padding-inline-start
+    );
+    font-size: var(--c--components--typography--list-font-size);
+    font-weight: var(--c--components--typography--list-font-weight);
+  }
+}

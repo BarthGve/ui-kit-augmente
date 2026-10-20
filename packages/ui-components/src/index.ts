@@ -323,6 +323,8 @@ export {
   Badge,
 } from "./components/badge";
 
+export * from "./components/typography";
+
 export * from "./components/marker";
 
 export * from "./components/navigation-menu";
