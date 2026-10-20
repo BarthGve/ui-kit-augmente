@@ -323,6 +323,8 @@ export {
   Badge,
 } from "./components/badge";
 
+export * from "./components/item";
+
 export * from "./components/scroll-area";
 
 export * from "./components/typography";
