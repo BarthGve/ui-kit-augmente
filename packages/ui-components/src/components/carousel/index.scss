@@ -1,0 +1,70 @@
+.c__carousel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--c--components--carousel--gap);
+
+  &__viewport {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__slide {
+    flex: 0 0 100%;
+    box-sizing: border-box;
+    scroll-snap-align: start;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--c--components--carousel--controls-gap);
+
+    .c__button {
+      min-width: var(--c--components--carousel--control-size);
+      min-height: var(--c--components--carousel--control-size);
+    }
+  }
+
+  &__indicators {
+    display: flex;
+    align-items: center;
+    gap: var(--c--components--carousel--controls-gap);
+  }
+
+  &__indicator {
+    width: var(--c--components--carousel--indicator-size);
+    height: var(--c--components--carousel--indicator-size);
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--c--components--carousel--indicator-color);
+    cursor: pointer;
+    outline: none;
+
+    &[aria-current="true"] {
+      background-color: var(
+        --c--components--carousel--indicator-color--current
+      );
+    }
+
+    &:focus-visible {
+      outline: var(--c--components--carousel--focus-ring-width) solid
+        var(--c--components--carousel--focus-ring-color);
+      outline-offset: var(--c--components--carousel--focus-ring-offset);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__viewport {
+      scroll-behavior: auto;
+    }
+  }
+}

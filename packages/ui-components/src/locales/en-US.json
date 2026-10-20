@@ -418,6 +418,15 @@
     },
     "kbd": {
       "command": "Command"
+    },
+    "carousel": {
+      "previous": "Previous slide",
+      "next": "Next slide",
+      "slides": "Slides",
+      "slide_label": "{current} of {total}",
+      "go_to": "Go to slide {current}",
+      "pause": "Pause automatic slide show",
+      "play": "Start automatic slide show"
     }
   }
 }
