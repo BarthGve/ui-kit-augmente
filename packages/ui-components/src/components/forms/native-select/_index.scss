@@ -1,0 +1,59 @@
+.c__native-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  &__control {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--c--components--native-select--min-height);
+    padding-block: 0;
+    padding-inline: var(--c--components--native-select--padding-inline)
+      calc(
+        var(--c--components--native-select--icon-size) +
+          var(--c--components--native-select--padding-inline)
+      );
+    border-width: var(--c--components--forms-input--border-width);
+    border-style: var(--c--components--forms-input--border-style);
+    border-color: var(--c--components--forms-input--border-color);
+    border-radius: var(--c--components--forms-input--border-radius);
+    background-color: var(--c--components--forms-input--background-color);
+    color: var(--c--components--forms-input--value-color);
+    font: inherit;
+    font-size: var(--c--components--forms-input--font-size);
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+
+    &:hover:not(:disabled) {
+      border-color: var(--c--components--forms-input--border-color--hover);
+    }
+
+    &:focus-visible {
+      border-color: var(--c--components--forms-input--border-color--focus);
+      box-shadow: 0 0 0 var(--c--components--forms-input--border-width--focus)
+        var(--c--components--forms-input--border-color--focus);
+      border-radius: var(--c--components--forms-input--border-radius--focus);
+    }
+
+    &:disabled {
+      color: var(--c--components--forms-input--value-color--disabled);
+      cursor: default;
+    }
+  }
+
+  &__icon {
+    position: absolute;
+    inset-inline-end: var(--c--components--native-select--padding-inline);
+    font-size: var(--c--components--native-select--icon-size);
+    pointer-events: none;
+  }
+
+  &--error &__control {
+    border-color: var(--c--contextuals--border--semantic--error--primary);
+  }
+
+  &--success &__control {
+    border-color: var(--c--contextuals--border--semantic--success--primary);
+  }
+}
