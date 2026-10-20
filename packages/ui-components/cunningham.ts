@@ -12,6 +12,7 @@ import { tokens as emptyTokens } from "./src/components/empty/tokens";
 import { tokens as filterTokens } from "./src/components/filter/tokens";
 import { tokens as checkboxTokens } from "./src/components/forms/checkbox/tokens";
 import { tokens as datePickerTokens } from "./src/components/forms/date-picker/tokens";
+import { tokens as comboboxTokens } from "./src/components/forms/combobox/tokens";
 import { tokens as fieldTokens } from "./src/components/forms/field/tokens";
 import { tokens as inputTokens } from "./src/components/forms/input/tokens";
 import { tokens as labelledBoxTokens } from "./src/components/forms/labelled-box/tokens";
@@ -42,6 +43,7 @@ const componentTokenDefaults = {
   card: cardTokens(defaultTokenRefs),
   empty: emptyTokens(defaultTokenRefs),
   filter: filterTokens(defaultTokenRefs),
+  combobox: comboboxTokens(defaultTokenRefs),
   "forms-checkbox": checkboxTokens(defaultTokenRefs),
   "forms-datepicker": datePickerTokens(defaultTokenRefs),
   "forms-field": fieldTokens(defaultTokenRefs),

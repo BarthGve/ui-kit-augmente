@@ -379,6 +379,11 @@
       "title": "Verschieben nach",
       "move": "Verschieben",
       "cancel": "Abbrechen"
+    },
+    "combobox": {
+      "toggle_aria": "Optionen anzeigen",
+      "loading": "Wird geladen…",
+      "no_results": "Keine Ergebnisse"
     }
   }
 }
