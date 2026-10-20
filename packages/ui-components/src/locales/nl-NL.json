@@ -430,6 +430,10 @@
     },
     "navigationMenu": {
       "toggle": "Menu"
+    },
+    "sidebar": {
+      "collapse": "Zijbalk invouwen",
+      "expand": "Zijbalk uitvouwen"
     }
   }
 }
