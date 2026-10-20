@@ -430,6 +430,10 @@
     },
     "navigationMenu": {
       "toggle": "Menü"
+    },
+    "sidebar": {
+      "collapse": "Seitenleiste einklappen",
+      "expand": "Seitenleiste ausklappen"
     }
   }
 }

@@ -1,0 +1,99 @@
+.c__sidebar {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: var(--c--components--sidebar--width);
+  max-width: 100%;
+  height: 100%;
+  padding: var(--c--components--sidebar--padding);
+  gap: var(--c--components--sidebar--gap);
+  border-right: var(--c--components--sidebar--border-width) solid
+    var(--c--components--sidebar--border-color);
+  background-color: var(--c--components--sidebar--background-color);
+  color: var(--c--components--sidebar--color);
+  font-size: var(--c--components--sidebar--font-size);
+  transition: width var(--c--components--sidebar--duration) ease-out;
+
+  &--collapsed {
+    width: var(--c--components--sidebar--width--collapsed);
+  }
+
+  &__header,
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--c--components--sidebar--item-gap);
+  }
+
+  &__groups {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--c--components--sidebar--gap);
+    overflow: auto;
+  }
+
+  &__group-label {
+    padding-inline: var(--c--components--sidebar--item-padding-inline);
+    color: var(--c--components--sidebar--group-label-color);
+    font-weight: 600;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--c--components--sidebar--item-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__link,
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--c--components--sidebar--item-gap);
+    padding: var(--c--components--sidebar--item-padding-block)
+      var(--c--components--sidebar--item-padding-inline);
+    border: none;
+    border-radius: var(--c--components--sidebar--item-border-radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    outline: none;
+
+    &:hover {
+      background-color: var(
+        --c--components--sidebar--item-hover-background-color
+      );
+    }
+
+    &:focus-visible {
+      outline: var(--c--components--sidebar--focus-ring-width) solid
+        var(--c--components--sidebar--focus-ring-color);
+    }
+
+    &[aria-current="page"] {
+      background-color: var(--c--components--sidebar--current-background-color);
+      color: var(--c--components--sidebar--current-color);
+      font-weight: 600;
+    }
+  }
+
+  &__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    font-size: var(--c--components--sidebar--icon-size);
+  }
+
+  &--collapsed &__link {
+    justify-content: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}

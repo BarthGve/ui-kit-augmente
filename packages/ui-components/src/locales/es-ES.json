@@ -430,6 +430,10 @@
     },
     "navigationMenu": {
       "toggle": "Menú"
+    },
+    "sidebar": {
+      "collapse": "Contraer la barra lateral",
+      "expand": "Expandir la barra lateral"
     }
   }
 }
