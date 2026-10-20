@@ -323,6 +323,8 @@ export {
   Badge,
 } from "./components/badge";
 
+export * from "./components/carousel";
+
 export * from "./components/collapsible";
 
 export * from "./components/hover-card";

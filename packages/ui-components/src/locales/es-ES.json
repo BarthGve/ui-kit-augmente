@@ -418,6 +418,15 @@
     },
     "kbd": {
       "command": "Comando"
+    },
+    "carousel": {
+      "previous": "Diapositiva anterior",
+      "next": "Diapositiva siguiente",
+      "slides": "Diapositivas",
+      "slide_label": "{current} de {total}",
+      "go_to": "Ir a la diapositiva {current}",
+      "pause": "Pausar la presentación automática",
+      "play": "Iniciar la presentación automática"
     }
   }
 }

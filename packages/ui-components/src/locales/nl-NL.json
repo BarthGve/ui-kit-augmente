@@ -418,6 +418,15 @@
     },
     "kbd": {
       "command": "Command"
+    },
+    "carousel": {
+      "previous": "Vorige dia",
+      "next": "Volgende dia",
+      "slides": "Dia's",
+      "slide_label": "{current} van {total}",
+      "go_to": "Ga naar dia {current}",
+      "pause": "Automatische diavoorstelling pauzeren",
+      "play": "Automatische diavoorstelling starten"
     }
   }
 }
