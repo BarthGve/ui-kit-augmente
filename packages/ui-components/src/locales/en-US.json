@@ -441,6 +441,9 @@
     },
     "message": {
       "you": "You"
+    },
+    "messageScroller": {
+      "jump": "Jump to latest"
     }
   }
 }
