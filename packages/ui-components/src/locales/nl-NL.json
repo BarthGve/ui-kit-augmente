@@ -444,6 +444,9 @@
     },
     "messageScroller": {
       "jump": "Naar het laatste bericht"
+    },
+    "resizable": {
+      "handle": "Formaat wijzigen"
     }
   }
 }

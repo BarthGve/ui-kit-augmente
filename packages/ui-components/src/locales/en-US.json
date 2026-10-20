@@ -444,6 +444,9 @@
     },
     "messageScroller": {
       "jump": "Jump to latest"
+    },
+    "resizable": {
+      "handle": "Resize"
     }
   }
 }
