@@ -1,0 +1,75 @@
+.c__input-otp {
+  position: relative;
+  display: inline-block;
+  cursor: text;
+
+  // The real field covers the slots: it takes focus, paste and autofill, and
+  // stays invisible.
+  &__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    opacity: 0;
+    cursor: inherit;
+    caret-color: transparent;
+  }
+
+  &__slots {
+    display: flex;
+    align-items: center;
+    gap: var(--c--components--input-otp--slot-gap);
+    pointer-events: none;
+  }
+
+  &__group {
+    display: flex;
+    align-items: center;
+    gap: var(--c--components--input-otp--slot-gap);
+  }
+
+  &__separator {
+    color: var(--c--components--input-otp--separator-color);
+  }
+
+  &__slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--c--components--input-otp--slot-size);
+    height: var(--c--components--input-otp--slot-size);
+    border: var(--c--components--input-otp--slot-border-width) solid
+      var(--c--components--input-otp--slot-border-color);
+    border-radius: var(--c--components--input-otp--slot-border-radius);
+    background-color: var(--c--components--input-otp--slot-background-color);
+    color: var(--c--components--input-otp--slot-color);
+    font-size: var(--c--components--input-otp--slot-font-size);
+
+    &--active {
+      border-color: var(--c--components--input-otp--focus-border-color);
+      box-shadow: 0 0 0 var(--c--components--input-otp--focus-ring-width)
+        var(--c--components--input-otp--focus-border-color);
+    }
+  }
+
+  &--error &__slot {
+    border-color: var(--c--components--input-otp--error-border-color);
+  }
+
+  &--success &__slot {
+    border-color: var(--c--components--input-otp--success-border-color);
+  }
+
+  &--disabled {
+    cursor: default;
+    color: var(--c--components--input-otp--disabled-color);
+
+    .c__input-otp__slot {
+      color: var(--c--components--input-otp--disabled-color);
+    }
+  }
+}

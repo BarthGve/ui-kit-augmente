@@ -11,6 +11,7 @@ export * from "./components/forms/date-picker";
 export * from "./components/forms/field";
 export * from "./components/forms/input";
 export * from "./components/forms/input/InputPassword";
+export * from "./components/forms/input-otp";
 export * from "./components/forms/labelled-box";
 export * from "./components/forms/radio";
 export * from "./components/forms/select";
