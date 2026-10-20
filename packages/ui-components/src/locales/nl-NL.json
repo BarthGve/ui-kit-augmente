@@ -371,6 +371,11 @@
     "stepper": {
       "completed": "voltooid",
       "upcoming": "komend"
+    },
+    "moveModal": {
+      "title": "Verplaatsen naar",
+      "move": "Verplaatsen",
+      "cancel": "Annuleren"
     }
   }
 }

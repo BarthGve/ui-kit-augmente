@@ -371,6 +371,11 @@
     "stepper": {
       "completed": "abgeschlossen",
       "upcoming": "bevorstehend"
+    },
+    "moveModal": {
+      "title": "Verschieben nach",
+      "move": "Verschieben",
+      "cancel": "Abbrechen"
     }
   }
 }
