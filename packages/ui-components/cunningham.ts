@@ -23,6 +23,7 @@ import { tokens as modalTokens } from "./src/components/modal/tokens";
 import { tokens as searchFilterTokens } from "./src/components/search-filter/tokens";
 import { tokens as shareModalTokens } from "./src/components/share/modal/tokens";
 import { tokens as skeletonTokens } from "./src/components/skeleton/tokens";
+import { tokens as stepperTokens } from "./src/components/stepper/tokens";
 import { tokens as timelineTokens } from "./src/components/timeline/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
 import { tokens as tooltipTokens } from "./src/components/tooltip/tokens";
@@ -51,6 +52,7 @@ const componentTokenDefaults = {
   "search-filter": searchFilterTokens(defaultTokenRefs),
   "share-modal": shareModalTokens(defaultTokenRefs),
   skeleton: skeletonTokens(defaultTokenRefs),
+  stepper: stepperTokens(defaultTokenRefs),
   timeline: timelineTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
   tooltip: tooltipTokens(defaultTokenRefs),

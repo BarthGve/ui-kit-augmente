@@ -367,6 +367,10 @@
         "current": "En cours",
         "upcoming": "À venir"
       }
+    },
+    "stepper": {
+      "completed": "terminée",
+      "upcoming": "à venir"
     }
   }
 }

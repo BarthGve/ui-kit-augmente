@@ -110,6 +110,10 @@
     line-height: 1.125rem;
   }
 
+  &__stepper {
+    margin-bottom: var(--c--globals--spacings--sm);
+  }
+
   &__title-icon {
     display: flex;
     align-items: center;
