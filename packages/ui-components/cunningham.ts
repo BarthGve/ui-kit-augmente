@@ -28,6 +28,7 @@ import { tokens as stepperTokens } from "./src/components/stepper/tokens";
 import { tokens as selectorTokens } from "./src/components/selector/tokens";
 import { tokens as timelineTokens } from "./src/components/timeline/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
+import { tokens as toolbarTokens } from "./src/components/toolbar/tokens";
 import { tokens as tooltipTokens } from "./src/components/tooltip/tokens";
 import { tokens as userMenuTokens } from "./src/components/users/menu/tokens";
 import { deepMerge } from "./src/utils/objects";
@@ -59,6 +60,7 @@ const componentTokenDefaults = {
   selector: selectorTokens(defaultTokenRefs),
   timeline: timelineTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
+  toolbar: toolbarTokens(defaultTokenRefs),
   tooltip: tooltipTokens(defaultTokenRefs),
   "user-menu": userMenuTokens(defaultTokenRefs),
 };
