@@ -39,6 +39,7 @@ import { tokens as kbdTokens } from "./src/components/kbd/tokens";
 import { tokens as hoverCardTokens } from "./src/components/hover-card/tokens";
 import { tokens as collapsibleTokens } from "./src/components/collapsible/tokens";
 import { tokens as carouselTokens } from "./src/components/carousel/tokens";
+import { tokens as menubarTokens } from "./src/components/menubar/tokens";
 import { tokens as timelineTokens } from "./src/components/timeline/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
 import { tokens as toolbarTokens } from "./src/components/toolbar/tokens";
@@ -84,6 +85,7 @@ const componentTokenDefaults = {
   "hover-card": hoverCardTokens(defaultTokenRefs),
   collapsible: collapsibleTokens(defaultTokenRefs),
   carousel: carouselTokens(defaultTokenRefs),
+  menubar: menubarTokens(defaultTokenRefs),
   timeline: timelineTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
   toolbar: toolbarTokens(defaultTokenRefs),
