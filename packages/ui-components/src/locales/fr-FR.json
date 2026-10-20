@@ -427,6 +427,9 @@
       "go_to": "Aller à la diapositive {current}",
       "pause": "Mettre en pause le défilement automatique",
       "play": "Lancer le défilement automatique"
+    },
+    "navigationMenu": {
+      "toggle": "Menu"
     }
   }
 }

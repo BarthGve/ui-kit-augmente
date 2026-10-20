@@ -427,6 +427,9 @@
       "go_to": "Ga naar dia {current}",
       "pause": "Automatische diavoorstelling pauzeren",
       "play": "Automatische diavoorstelling starten"
+    },
+    "navigationMenu": {
+      "toggle": "Menu"
     }
   }
 }
