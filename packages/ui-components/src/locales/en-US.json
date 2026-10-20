@@ -456,6 +456,11 @@
       "skip": "Skip",
       "submit": "Submit",
       "required": "Please answer this question"
+    },
+    "chart": {
+      "view_table": "View data as a table",
+      "view_chart": "Back to the chart",
+      "explore": "Use the arrow keys to explore the values"
     }
   }
 }

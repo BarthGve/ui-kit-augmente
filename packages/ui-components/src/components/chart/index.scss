@@ -1,0 +1,125 @@
+.c__chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--c--components--chart--gap);
+  margin: 0;
+
+  &__defs {
+    position: absolute;
+  }
+
+  &__title {
+    font-size: var(--c--components--chart--title-font-size);
+    font-weight: var(--c--components--chart--title-font-weight);
+  }
+
+  &__summary {
+    margin: 0;
+    color: var(--c--components--chart--summary-color);
+  }
+
+  &__series--1 {
+    color: var(--c--components--chart--series-1-color);
+  }
+
+  &__series--2 {
+    color: var(--c--components--chart--series-2-color);
+  }
+
+  &__series--3 {
+    color: var(--c--components--chart--series-3-color);
+  }
+
+  &__series--4 {
+    color: var(--c--components--chart--series-4-color);
+  }
+
+  &__series--5 {
+    color: var(--c--components--chart--series-5-color);
+  }
+
+  &__series--6 {
+    color: var(--c--components--chart--series-6-color);
+  }
+
+  &__plot {
+    position: relative;
+    outline: none;
+
+    &:focus-visible {
+      outline: var(--c--components--chart--focus-ring-width) solid
+        var(--c--components--chart--focus-ring-color);
+    }
+  }
+
+  &__svg {
+    display: block;
+    overflow: visible;
+  }
+
+  &__grid {
+    stroke: var(--c--components--chart--grid-color);
+  }
+
+  &__label {
+    fill: var(--c--components--chart--label-color);
+    font-size: var(--c--components--chart--label-font-size);
+  }
+
+  &__cursor {
+    fill: var(--c--components--chart--cursor-color);
+    opacity: 0.5;
+  }
+
+  &__live {
+    min-height: 0;
+  }
+
+  &__tooltip {
+    position: absolute;
+    top: 0;
+    inset-inline-end: 0;
+    display: flex;
+    flex-direction: column;
+    padding: var(--c--components--chart--tooltip-padding);
+    border: var(--c--components--chart--tooltip-border-width) solid
+      var(--c--components--chart--tooltip-border-color);
+    border-radius: var(--c--components--chart--tooltip-border-radius);
+    background-color: var(--c--components--chart--tooltip-background-color);
+    box-shadow: var(--c--components--chart--tooltip-box-shadow);
+    font-size: var(--c--components--chart--tooltip-font-size);
+    pointer-events: none;
+    transition: opacity 0.15s;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  &__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--c--components--chart--legend-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--c--components--chart--gap);
+  }
+
+  &__table {
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: var(--c--components--chart--table-cell-padding);
+      border: var(--c--components--chart--tooltip-border-width) solid
+        var(--c--components--chart--table-border-color);
+      text-align: start;
+    }
+  }
+}
