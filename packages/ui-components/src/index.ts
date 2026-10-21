@@ -323,6 +323,58 @@ export {
   Badge,
 } from "./components/badge";
 
+export * from "./components/gauge";
+
+export * from "./components/chart";
+
+export * from "./components/questionnaire";
+
+export * from "./components/resizable";
+
+export * from "./components/direction";
+
+export * from "./components/bubble";
+
+export * from "./components/item";
+
+export * from "./components/scroll-area";
+
+export * from "./components/typography";
+
+export * from "./components/marker";
+
+export * from "./components/navigation-menu";
+
+export * from "./components/aspect-ratio";
+
+export * from "./components/carousel";
+
+export * from "./components/collapsible";
+
+export * from "./components/hover-card";
+
+export * from "./components/kbd";
+
+export * from "./components/toggle";
+
+export * from "./components/button-group";
+
+export * from "./components/sheet";
+
+export * from "./components/slider";
+
+export * from "./components/contact-import";
+
+export * from "./components/toolbar";
+
+export * from "./components/selector";
+
+export * from "./components/breadcrumb";
+
+export * from "./components/skeleton";
+export * from "./components/stepper";
+export * from "./components/move-modal";
+
 export {
   Card,
 } from "./components/card";

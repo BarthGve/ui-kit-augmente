@@ -2,10 +2,10 @@ import { test, expect } from "@playwright/experimental-ct-react";
 import type { Page } from "@playwright/test";
 import { TestStorageGaugeBar } from "../helpers/mount-storage-gauge";
 
-const fillOf = (page: Page) => page.locator(".c__storage-gauge__bar__fill");
+const fillOf = (page: Page) => page.locator(".c__gauge__fill");
 
-const WARNING = /c__storage-gauge__bar__fill--warning/;
-const ERROR = /c__storage-gauge__bar__fill--error/;
+const WARNING = /c__gauge__fill--warning/;
+const ERROR = /c__gauge__fill--error/;
 
 test.describe("StorageGaugeBar", () => {
   test("fills proportionally to usage below the warning threshold", async ({

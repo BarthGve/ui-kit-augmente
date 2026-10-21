@@ -33,30 +33,6 @@
 
   &__bar {
     flex: 1 0 0;
-    height: 5px;
-    min-width: 1px;
-    border-radius: 15px;
-    background: var(
-      --c--contextuals--background--semantic--neutral--secondary,
-      #dfe2ea
-    );
-    overflow: hidden;
-
-    &__fill {
-      height: 100%;
-      border-radius: 15px;
-      background: var(--c--contextuals--content--semantic--neutral--secondary);
-
-      &--warning {
-        background: var(
-          --c--contextuals--content--semantic--warning--secondary
-        );
-      }
-
-      &--error {
-        background: var(--c--contextuals--content--semantic--error--secondary);
-      }
-    }
   }
 
   &__label {

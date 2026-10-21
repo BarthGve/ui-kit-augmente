@@ -1,0 +1,84 @@
+.c__toggle {
+  --c--components--toggle--current-padding-inline: var(
+    --c--components--toggle--padding-inline
+  );
+  --c--components--toggle--current-padding-block: var(
+    --c--components--toggle--padding-block
+  );
+  --c--components--toggle--current-font-size: var(
+    --c--components--toggle--font-size
+  );
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--c--components--toggle--gap);
+  padding: var(--c--components--toggle--current-padding-block)
+    var(--c--components--toggle--current-padding-inline);
+  border: var(--c--components--toggle--border-width) solid transparent;
+  border-radius: var(--c--components--toggle--border-radius);
+  background: transparent;
+  color: var(--c--components--toggle--color);
+  font: inherit;
+  font-size: var(--c--components--toggle--current-font-size);
+  cursor: pointer;
+  outline: none;
+
+  &--small {
+    --c--components--toggle--current-padding-inline: var(
+      --c--components--toggle--small-padding-inline
+    );
+    --c--components--toggle--current-padding-block: var(
+      --c--components--toggle--small-padding-block
+    );
+  }
+
+  &--nano {
+    --c--components--toggle--current-padding-inline: var(
+      --c--components--toggle--nano-padding-inline
+    );
+    --c--components--toggle--current-padding-block: var(
+      --c--components--toggle--nano-padding-block
+    );
+    --c--components--toggle--current-font-size: var(
+      --c--components--toggle--nano-font-size
+    );
+  }
+
+  &--outlined {
+    border-color: var(--c--components--toggle--border-color);
+  }
+
+  &[data-hovered] {
+    background-color: var(--c--components--toggle--hover-background-color);
+  }
+
+  // Pressed: a bar under the label and a heavier weight, on top of the colour.
+  &[aria-pressed="true"] {
+    background-color: var(--c--components--toggle--pressed-background-color);
+    color: var(--c--components--toggle--pressed-color);
+    font-weight: 600;
+    box-shadow: inset 0
+      calc(-1 * var(--c--components--toggle--pressed-indicator-width)) 0
+      var(--c--components--toggle--pressed-indicator-color);
+  }
+
+  &[data-focus-visible] {
+    outline: var(--c--components--toggle--focus-ring-width) solid
+      var(--c--components--toggle--focus-ring-color);
+    outline-offset: var(--c--components--toggle--focus-ring-offset);
+  }
+
+  &[data-disabled] {
+    color: var(--c--components--toggle--disabled-color);
+    cursor: default;
+    box-shadow: none;
+  }
+
+  @media (forced-colors: active) {
+    &[aria-pressed="true"] {
+      outline: var(--c--components--toggle--pressed-indicator-width) solid
+        Highlight;
+    }
+  }
+}

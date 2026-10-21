@@ -196,6 +196,8 @@ export const HelpMenu = ({
             icon={<QuestionMark />}
             onClick={() => setIsOpen(!isOpen)}
             aria-label={t("components.helpMenu.ariaLabel")}
+            aria-haspopup="menu"
+            aria-expanded={isOpen}
           />
         </div>
       </DropdownMenu>

@@ -83,6 +83,8 @@ export interface BaseProps<T extends Row = Row> {
   hideEmptyPlaceholderImage?: boolean;
   enableSorting?: boolean;
   className?: string;
+  /** Accessible name of the table. */
+  "aria-label"?: string;
   /**
    * Makes rows activable: click, Enter or Space on the row itself (not on a
    * control inside it). Rows get `tabIndex=0` and `c__datagrid__row--activable`.
@@ -129,6 +131,7 @@ export const DataGrid = <T extends Row>({
   hideEmptyPlaceholderImage,
   displayHeader = true,
   enableSorting = true,
+  "aria-label": ariaLabel,
   onRowActivate,
   renderRowDetail,
   getRowClassName,
@@ -230,7 +233,7 @@ export const DataGrid = <T extends Row>({
         {!isEmpty && (
           <>
             <div className="c__datagrid__table__container">
-              <table>
+              <table aria-label={ariaLabel}>
                 <thead>
                   {displayHeader &&
                     table.getHeaderGroups().map((headerGroup) => (
@@ -246,6 +249,7 @@ export const DataGrid = <T extends Row>({
                             <th
                               key={header.id}
                               colSpan={header.colSpan}
+                              scope="col"
                               className={classNames({
                                 "c__datagrid__header--select":
                                   header.id === HEADER_ID_SELECT,

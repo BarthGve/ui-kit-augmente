@@ -147,7 +147,7 @@ const OPEN = `<div aria-hidden="true">
 <div class="user-menu__actions">
 <div class="user-menu__actions__left">
 <div class="c__dropdown-menu-trigger" id="ID">
-<button class="c__button c__button--neutral c__button--neutral--tertiary c__button--nano c__language-picker c__button--with-icon--right" aria-label="Language: EN">
+<button class="c__button c__button--neutral c__button--neutral--tertiary c__button--nano c__language-picker c__button--with-icon--right" aria-label="Language: EN" aria-haspopup="menu" aria-expanded="false">
 <span class="c__language-picker__label">EN</span>
 <span class="c__button__icon">
 <span class="material-icons icon--filled">arrow_drop_down</span>

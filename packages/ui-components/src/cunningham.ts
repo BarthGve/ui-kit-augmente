@@ -11,9 +11,13 @@ export * from "./components/forms/date-picker";
 export * from "./components/forms/field";
 export * from "./components/forms/input";
 export * from "./components/forms/input/InputPassword";
+export * from "./components/forms/input-otp";
+export * from "./components/forms/input-group";
+export * from "./components/forms/native-select";
 export * from "./components/forms/labelled-box";
 export * from "./components/forms/radio";
 export * from "./components/forms/select";
+export * from "./components/forms/combobox";
 export * from "./components/forms/switch";
 export * from "./components/forms/text-area";
 export type {

@@ -1,0 +1,51 @@
+.c__skeleton {
+  display: block;
+  max-width: 100%;
+  background-color: var(--c--components--skeleton--background-color);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    var(--c--components--skeleton--highlight-color),
+    transparent
+  );
+  background-repeat: no-repeat;
+  background-size: 50% 100%;
+  animation: c__skeleton-shimmer var(--c--components--skeleton--duration)
+    ease-in-out infinite;
+  pointer-events: none;
+  user-select: none;
+
+  &--line {
+    width: 100%;
+    height: var(--c--components--skeleton--line-height);
+    border-radius: var(--c--components--skeleton--border-radius);
+  }
+
+  &--block {
+    width: 100%;
+    height: var(--c--components--skeleton--block-height);
+    border-radius: var(--c--components--skeleton--border-radius);
+  }
+
+  &--circle {
+    width: var(--c--components--skeleton--block-height);
+    height: var(--c--components--skeleton--block-height);
+    border-radius: 50%;
+  }
+}
+
+@keyframes c__skeleton-shimmer {
+  from {
+    background-position: -100% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c__skeleton {
+    animation: none;
+    background-image: none;
+  }
+}

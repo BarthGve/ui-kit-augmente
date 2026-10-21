@@ -1,0 +1,66 @@
+.c__breadcrumb {
+  font-size: var(--c--components--breadcrumb--font-size);
+  color: var(--c--components--breadcrumb--color);
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--c--components--breadcrumb--gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__entry {
+    display: inline-flex;
+  }
+
+  &__separator {
+    color: var(--c--components--breadcrumb--separator-color);
+    user-select: none;
+  }
+
+  &__item {
+    color: var(--c--components--breadcrumb--link-color);
+    border-radius: var(--c--components--breadcrumb--border-radius);
+    text-decoration: none;
+
+    &[aria-current="page"] {
+      color: var(--c--components--breadcrumb--current-color);
+      font-weight: 600;
+    }
+  }
+
+  a.c__breadcrumb__item:hover {
+    text-decoration: underline;
+  }
+
+  &__expand {
+    padding: 0 var(--c--components--breadcrumb--gap);
+    border: none;
+    border-radius: var(--c--components--breadcrumb--border-radius);
+    background: transparent;
+    color: var(--c--components--breadcrumb--link-color);
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__item:focus-visible,
+  &__expand:focus-visible {
+    outline: var(--c--components--breadcrumb--focus-ring-width) solid
+      var(--c--components--breadcrumb--focus-ring-color);
+    outline-offset: var(--c--components--breadcrumb--focus-ring-offset);
+  }
+
+  @media (forced-colors: active) {
+    &__item:focus-visible,
+    &__expand:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}

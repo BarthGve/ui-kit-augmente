@@ -1,5 +1,8 @@
 {
   "components": {
+    "breadcrumb": {
+      "expand_aria": "Vollständigen Pfad anzeigen"
+    },
     "menu": {
       "newWindowLabelSuffix": " (neues Fenster)"
     },
@@ -133,7 +136,15 @@
       "uploading": "Wird hochgeladen",
       "cancel": "Hochladen abbrechen",
       "remove": "Löschen",
-      "genericError": "Ein Fehler ist aufgetreten"
+      "genericError": "Ein Fehler ist aufgetreten",
+      "retry": "Erneut versuchen",
+      "too_large": "Datei überschreitet {size}",
+      "type_not_accepted": "Dateityp nicht zulässig",
+      "announce_uploading": "{name} wird hochgeladen",
+      "announce_done": "{name} hochgeladen",
+      "announce_failed": "{name}: Upload fehlgeschlagen",
+      "announce_rejected": "{name} abgelehnt: {reason}",
+      "announce_cancelled": "Upload von {name} abgebrochen"
     },
     "treeView": {
       "viewMore": "Weitere Elemente laden"
@@ -367,6 +378,89 @@
         "current": "Aktuell",
         "upcoming": "Bevorstehend"
       }
+    },
+    "stepper": {
+      "completed": "abgeschlossen",
+      "upcoming": "bevorstehend"
+    },
+    "moveModal": {
+      "title": "Verschieben nach",
+      "move": "Verschieben",
+      "cancel": "Abbrechen"
+    },
+    "combobox": {
+      "toggle_aria": "Optionen anzeigen",
+      "loading": "Wird geladen…",
+      "no_results": "Keine Ergebnisse"
+    },
+    "contactImport": {
+      "table_label": "Zu importierende Kontakte",
+      "column_email": "E-Mail",
+      "column_name": "Name",
+      "column_status": "Status",
+      "column_actions": "Aktionen",
+      "status_valid": "Gültig",
+      "status_invalid": "Ungültige E-Mail-Adresse",
+      "status_duplicate": "Duplikat",
+      "summary": "{valid} gültig, {fix} zu korrigieren",
+      "import_none": "Importieren",
+      "import_one": "1 Kontakt importieren",
+      "import_many": "{count} Kontakte importieren",
+      "email_aria": "E-Mail der Zeile {row}",
+      "remove_aria": "{email} entfernen",
+      "error_type": "Nur .csv- und .xlsx-Dateien werden akzeptiert",
+      "error_empty": "Die Datei enthält keinen Kontakt",
+      "error_unreadable": "Die Datei konnte nicht gelesen werden",
+      "error_too_many": "Die Datei enthält mehr als {max} Kontakte"
+    },
+    "sheet": {
+      "close": "Schließen"
+    },
+    "kbd": {
+      "command": "Befehl"
+    },
+    "carousel": {
+      "previous": "Vorherige Folie",
+      "next": "Nächste Folie",
+      "slides": "Folien",
+      "slide_label": "{current} von {total}",
+      "go_to": "Zu Folie {current}",
+      "pause": "Automatische Wiedergabe anhalten",
+      "play": "Automatische Wiedergabe starten"
+    },
+    "navigationMenu": {
+      "toggle": "Menü"
+    },
+    "sidebar": {
+      "collapse": "Seitenleiste einklappen",
+      "expand": "Seitenleiste ausklappen"
+    },
+    "bubble": {
+      "error": "Senden fehlgeschlagen",
+      "reactions": "Reaktionen"
+    },
+    "message": {
+      "you": "Sie"
+    },
+    "messageScroller": {
+      "jump": "Zur neuesten Nachricht"
+    },
+    "resizable": {
+      "handle": "Größe ändern"
+    },
+    "questionnaire": {
+      "progress": "Fortschritt",
+      "progress_text": "Frage {current} von {total}",
+      "previous": "Zurück",
+      "next": "Weiter",
+      "skip": "Überspringen",
+      "submit": "Absenden",
+      "required": "Bitte beantworten Sie diese Frage"
+    },
+    "chart": {
+      "view_table": "Daten als Tabelle anzeigen",
+      "view_chart": "Zurück zum Diagramm",
+      "explore": "Mit den Pfeiltasten durch die Werte gehen"
     }
   }
 }

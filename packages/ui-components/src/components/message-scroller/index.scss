@@ -1,0 +1,38 @@
+.c__message-scroller {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  // Fills the box its parent gives it, so the viewport is the one that scrolls.
+  height: 100%;
+  min-height: 0;
+
+  &__viewport {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    // The page does not scroll along when the end is reached.
+    overscroll-behavior: contain;
+    // Native anchoring where supported; the component also anchors itself.
+    overflow-anchor: auto;
+
+    &:focus-visible {
+      outline: var(--c--components--message-scroller--focus-ring-width) solid
+        var(--c--components--message-scroller--focus-ring-color);
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--c--components--message-scroller--gap);
+    padding: var(--c--components--message-scroller--padding);
+  }
+
+  &__jump {
+    position: absolute;
+    bottom: var(--c--components--message-scroller--jump-offset);
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: var(--c--components--message-scroller--jump-box-shadow);
+  }
+}

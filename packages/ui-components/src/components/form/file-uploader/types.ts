@@ -13,6 +13,8 @@ export type UploadFile = {
   error?: string;
   /** Optional detailed error message shown when hovering or focusing the error icon. */
   errorDetails?: string;
+  /** Set to `false` for an error that a retry cannot fix (a refused file). */
+  retryable?: boolean;
 };
 
 export type UploadFileLabels = Partial<{
@@ -23,6 +25,7 @@ export type UploadFileLabels = Partial<{
   uploading: string;
   cancel: string;
   remove: string;
+  retry: string;
   genericError: string;
   /** When set, overrides the computed "Max …" hint. */
   maxSize: string;
@@ -36,6 +39,7 @@ export type ResolvedUploadLabels = {
   uploading: string;
   cancel: string;
   remove: string;
+  retry: string;
   genericError: string;
   maxSize?: string;
 };

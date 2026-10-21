@@ -4,7 +4,7 @@
   padding: var(--c--globals--spacings--sm);
   background-color: var(--c--contextuals--background--surface--tertiary);
   border-radius: var(--c--globals--spacings--3xs);
-  border: 1px solid var(--c--contextuals--border--surface--primary);
+  border: var(--c--components--share-modal--border-width) solid var(--c--contextuals--border--surface--primary);
   gap: var(--c--globals--spacings--3xs);
 
   &__items {
@@ -28,12 +28,12 @@
   justify-content: center;
   gap: var(--c--globals--spacings--4xs);
   border-radius: var(--c--globals--spacings--3xs);
-  min-height: 24px;
-  padding-left: var(--c--globals--spacings--xxs, 6px);
+  min-height: var(--c--components--share-modal--user-item--min-height);
+  padding-left: var(--c--globals--spacings--xxs);
   background-color: var(--c--contextuals--background--semantic--overlay--primary);
   color: var(--c--contextuals--content--semantic--neutral--primary);
   font-size: var(--c--globals--font--sizes--xs);
-  line-height: 16px;
+  line-height: var(--c--components--share-modal--user-item--line-height);
 
   &--selected {
     background-color: var(--c--contextuals--background--semantic--brand--primary);

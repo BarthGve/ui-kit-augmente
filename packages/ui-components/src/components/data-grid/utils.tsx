@@ -6,10 +6,15 @@ import {
   PaginationState,
   SortingState,
 } from "@tanstack/react-table";
-import React from "react";
+import React, { useMemo } from "react";
 import { Checkbox } from ":/components/forms/checkbox";
 import { PaginationProps } from ":/components/pagination";
-import { BaseProps, Column, Row, SortModel } from ":/components/data-grid/index";
+import {
+  BaseProps,
+  Column,
+  Row,
+  SortModel,
+} from ":/components/data-grid/index";
 import { useCunningham } from ":/components/provider";
 
 export const HEADER_ID_SELECT = "cunningham-select";
@@ -25,48 +30,53 @@ export const useHeadlessColumns = <T extends Row>({
   enableRowSelection?: BaseProps<T>["enableRowSelection"];
 }): ColumnDef<T, unknown>[] => {
   const { t } = useCunningham();
-  const columnHelper = createColumnHelper<T>();
-  let headlessColumns: ColumnDef<T, unknown>[] = columns.map((column) => {
-    // Based on types we can assume that at least one of both is defined.
-    const id = (column.id ?? column.field) as string;
-    const opts = {
-      id,
-      enableSorting:
-        column.enableSorting === undefined ? true : column.enableSorting,
-      header: column.headerName,
-      size: column.size,
-      cell: (info: CellContext<T, unknown>) => {
-        if (column.renderCell) {
-          return column.renderCell({ row: info.row.original });
-        }
-        return info.cell.getValue();
-      },
-    };
-    if (column.field) {
-      return columnHelper.accessor(column.field as DeepKeys<T>, opts);
+  // Memoised so that the cell renderers keep their identity between renders:
+  // a new function each time would remount every cell, and a field being typed
+  // in would lose focus.
+  return useMemo(() => {
+    const columnHelper = createColumnHelper<T>();
+    let headlessColumns: ColumnDef<T, unknown>[] = columns.map((column) => {
+      // Based on types we can assume that at least one of both is defined.
+      const id = (column.id ?? column.field) as string;
+      const opts = {
+        id,
+        enableSorting:
+          column.enableSorting === undefined ? true : column.enableSorting,
+        header: column.headerName,
+        size: column.size,
+        cell: (info: CellContext<T, unknown>) => {
+          if (column.renderCell) {
+            return column.renderCell({ row: info.row.original });
+          }
+          return info.cell.getValue();
+        },
+      };
+      if (column.field) {
+        return columnHelper.accessor(column.field as DeepKeys<T>, opts);
+      }
+      return columnHelper.display(opts);
+    }) as ColumnDef<T, unknown>[];
+    if (enableRowSelection) {
+      headlessColumns = [
+        columnHelper.display({
+          id: HEADER_ID_SELECT,
+          size: 34,
+          header: () => null,
+          cell: ({ row }) => (
+            <Checkbox
+              checked={row.getIsSelected()}
+              disabled={!row.getCanSelect}
+              indeterminate={row.getIsSomeSelected()}
+              onChange={row.getToggleSelectedHandler()}
+              aria-label={t("components.datagrid.row_selection_aria")}
+            />
+          ),
+        }),
+        ...headlessColumns,
+      ];
     }
-    return columnHelper.display(opts);
-  }) as ColumnDef<T, unknown>[];
-  if (enableRowSelection) {
-    headlessColumns = [
-      columnHelper.display({
-        id: HEADER_ID_SELECT,
-        size: 34,
-        header: () => null,
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            disabled={!row.getCanSelect}
-            indeterminate={row.getIsSomeSelected()}
-            onChange={row.getToggleSelectedHandler()}
-            aria-label={t("components.datagrid.row_selection_aria")}
-          />
-        ),
-      }),
-      ...headlessColumns,
-    ];
-  }
-  return headlessColumns;
+    return headlessColumns;
+  }, [columns, enableRowSelection, t]);
 };
 
 export const sortModelToSortingState = (sortModel?: SortModel) => {

@@ -1,0 +1,21 @@
+.c__gauge {
+  height: var(--c--components--gauge--height);
+  min-width: var(--c--components--gauge--min-width);
+  border-radius: var(--c--components--gauge--border-radius);
+  background: var(--c--components--gauge--track-color);
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    border-radius: var(--c--components--gauge--border-radius);
+    background: var(--c--components--gauge--fill-color);
+
+    &--warning {
+      background: var(--c--components--gauge--warning-color);
+    }
+
+    &--error {
+      background: var(--c--components--gauge--error-color);
+    }
+  }
+}

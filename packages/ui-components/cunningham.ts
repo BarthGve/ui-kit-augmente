@@ -4,6 +4,7 @@ import {
 } from "@gouvfr-lasuite/ui-tokens";
 import { tokens as accordionTokens } from "./src/components/accordion/tokens";
 import { tokens as alertTokens } from "./src/components/alert/tokens";
+import { tokens as breadcrumbTokens } from "./src/components/breadcrumb/tokens";
 import { tokens as buttonTokens } from "./src/components/button/tokens";
 import { tokens as calendarTokens } from "./src/components/calendar/tokens";
 import { tokens as cardTokens } from "./src/components/card/tokens";
@@ -11,7 +12,11 @@ import { tokens as emptyTokens } from "./src/components/empty/tokens";
 import { tokens as filterTokens } from "./src/components/filter/tokens";
 import { tokens as checkboxTokens } from "./src/components/forms/checkbox/tokens";
 import { tokens as datePickerTokens } from "./src/components/forms/date-picker/tokens";
+import { tokens as comboboxTokens } from "./src/components/forms/combobox/tokens";
 import { tokens as fieldTokens } from "./src/components/forms/field/tokens";
+import { tokens as inputOtpTokens } from "./src/components/forms/input-otp/tokens";
+import { tokens as inputGroupTokens } from "./src/components/forms/input-group/tokens";
+import { tokens as nativeSelectTokens } from "./src/components/forms/native-select/tokens";
 import { tokens as inputTokens } from "./src/components/forms/input/tokens";
 import { tokens as labelledBoxTokens } from "./src/components/forms/labelled-box/tokens";
 import { tokens as radioTokens } from "./src/components/forms/radio/tokens";
@@ -21,8 +26,36 @@ import { tokens as textAreaTokens } from "./src/components/forms/text-area/token
 import { tokens as ganttTokens } from "./src/components/gantt/tokens";
 import { tokens as modalTokens } from "./src/components/modal/tokens";
 import { tokens as searchFilterTokens } from "./src/components/search-filter/tokens";
+import { tokens as shareModalTokens } from "./src/components/share/modal/tokens";
+import { tokens as skeletonTokens } from "./src/components/skeleton/tokens";
+import { tokens as stepperTokens } from "./src/components/stepper/tokens";
+import { tokens as selectorTokens } from "./src/components/selector/tokens";
+import { tokens as contactImportTokens } from "./src/components/contact-import/tokens";
+import { tokens as sliderTokens } from "./src/components/slider/tokens";
+import { tokens as sheetTokens } from "./src/components/sheet/tokens";
+import { tokens as drawerTokens } from "./src/components/drawer/tokens";
+import { tokens as buttonGroupTokens } from "./src/components/button-group/tokens";
+import { tokens as toggleTokens } from "./src/components/toggle/tokens";
+import { tokens as kbdTokens } from "./src/components/kbd/tokens";
+import { tokens as hoverCardTokens } from "./src/components/hover-card/tokens";
+import { tokens as collapsibleTokens } from "./src/components/collapsible/tokens";
+import { tokens as carouselTokens } from "./src/components/carousel/tokens";
+import { tokens as menubarTokens } from "./src/components/menubar/tokens";
+import { tokens as navigationMenuTokens } from "./src/components/navigation-menu/tokens";
+import { tokens as sidebarTokens } from "./src/components/sidebar/tokens";
+import { tokens as markerTokens } from "./src/components/marker/tokens";
+import { tokens as typographyTokens } from "./src/components/typography/tokens";
+import { tokens as scrollAreaTokens } from "./src/components/scroll-area/tokens";
+import { tokens as itemTokens } from "./src/components/item/tokens";
+import { tokens as bubbleTokens } from "./src/components/bubble/tokens";
+import { tokens as messageTokens } from "./src/components/message/tokens";
+import { tokens as messageScrollerTokens } from "./src/components/message-scroller/tokens";
+import { tokens as questionnaireTokens } from "./src/components/questionnaire/tokens";
+import { tokens as chartTokens } from "./src/components/chart/tokens";
+import { tokens as gaugeTokens } from "./src/components/gauge/tokens";
 import { tokens as timelineTokens } from "./src/components/timeline/tokens";
 import { tokens as toastTokens } from "./src/components/toast/tokens";
+import { tokens as toolbarTokens } from "./src/components/toolbar/tokens";
 import { tokens as tooltipTokens } from "./src/components/tooltip/tokens";
 import { tokens as userMenuTokens } from "./src/components/users/menu/tokens";
 import { deepMerge } from "./src/utils/objects";
@@ -30,15 +63,20 @@ import { deepMerge } from "./src/utils/objects";
 const componentTokenDefaults = {
   accordion: accordionTokens(defaultTokenRefs),
   alert: alertTokens(defaultTokenRefs),
+  breadcrumb: breadcrumbTokens(defaultTokenRefs),
   button: buttonTokens(defaultTokenRefs),
   calendar: calendarTokens(defaultTokenRefs),
   card: cardTokens(defaultTokenRefs),
   empty: emptyTokens(defaultTokenRefs),
   filter: filterTokens(defaultTokenRefs),
+  combobox: comboboxTokens(defaultTokenRefs),
   "forms-checkbox": checkboxTokens(defaultTokenRefs),
   "forms-datepicker": datePickerTokens(defaultTokenRefs),
   "forms-field": fieldTokens(defaultTokenRefs),
   "forms-input": inputTokens(defaultTokenRefs),
+  "input-otp": inputOtpTokens(defaultTokenRefs),
+  "input-group": inputGroupTokens(defaultTokenRefs),
+  "native-select": nativeSelectTokens(defaultTokenRefs),
   "forms-labelledbox": labelledBoxTokens(defaultTokenRefs),
   "forms-radio": radioTokens(),
   "forms-select": selectTokens(defaultTokenRefs),
@@ -47,8 +85,36 @@ const componentTokenDefaults = {
   gantt: ganttTokens(defaultTokenRefs),
   modal: modalTokens(defaultTokenRefs),
   "search-filter": searchFilterTokens(defaultTokenRefs),
+  "share-modal": shareModalTokens(defaultTokenRefs),
+  skeleton: skeletonTokens(defaultTokenRefs),
+  stepper: stepperTokens(defaultTokenRefs),
+  selector: selectorTokens(defaultTokenRefs),
+  "contact-import": contactImportTokens(defaultTokenRefs),
+  slider: sliderTokens(defaultTokenRefs),
+  sheet: sheetTokens(defaultTokenRefs),
+  drawer: drawerTokens(defaultTokenRefs),
+  "button-group": buttonGroupTokens(defaultTokenRefs),
+  toggle: toggleTokens(defaultTokenRefs),
+  kbd: kbdTokens(defaultTokenRefs),
+  "hover-card": hoverCardTokens(defaultTokenRefs),
+  collapsible: collapsibleTokens(defaultTokenRefs),
+  carousel: carouselTokens(defaultTokenRefs),
+  menubar: menubarTokens(defaultTokenRefs),
+  "navigation-menu": navigationMenuTokens(defaultTokenRefs),
+  sidebar: sidebarTokens(defaultTokenRefs),
+  marker: markerTokens(defaultTokenRefs),
+  typography: typographyTokens(defaultTokenRefs),
+  "scroll-area": scrollAreaTokens(defaultTokenRefs),
+  item: itemTokens(defaultTokenRefs),
+  bubble: bubbleTokens(defaultTokenRefs),
+  message: messageTokens(defaultTokenRefs),
+  "message-scroller": messageScrollerTokens(defaultTokenRefs),
+  questionnaire: questionnaireTokens(defaultTokenRefs),
+  chart: chartTokens(defaultTokenRefs),
+  gauge: gaugeTokens(defaultTokenRefs),
   timeline: timelineTokens(defaultTokenRefs),
   toast: toastTokens(defaultTokenRefs),
+  toolbar: toolbarTokens(defaultTokenRefs),
   tooltip: tooltipTokens(defaultTokenRefs),
   "user-menu": userMenuTokens(defaultTokenRefs),
 };

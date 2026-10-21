@@ -540,3 +540,55 @@ export const WithTopBottomMessage: Story = {
     );
   },
 };
+
+const FRENCH_SHARE_LABELS: DropdownMenuItem[] = [
+  {
+    label:
+      "Les personnes disposant du lien peuvent consulter ce document sans se connecter",
+    value: "public",
+  },
+  {
+    label: "Seules les personnes invitées peuvent y accéder",
+    value: "restricted",
+  },
+  { label: "Organisation", value: "org" },
+];
+
+/**
+ * French share-link labels (suitenumerique/docs#2618). A label longer than the
+ * menu wraps onto several lines inside it (the menu width follows the longest
+ * label up to 300px) and never hides the next option; the focused row shows a
+ * visible ring.
+ */
+export const LongLabels: Story = {
+  args: { options: FRENCH_SHARE_LABELS },
+  render: (args) => {
+    const [isOpen, setIsOpen] = useState(true);
+    return (
+      <DropdownMenu
+        {...args}
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+        selectedValues={["restricted"]}
+      >
+        <Button onClick={() => setIsOpen(!isOpen)}>Link settings</Button>
+      </DropdownMenu>
+    );
+  },
+};
+
+/**
+ * In the `tiny` variant the row is a fixed 16px: a longer label is cut with
+ * an ellipsis, and its full text stays in the accessible name.
+ */
+export const TinyLongLabels: Story = {
+  args: { options: FRENCH_SHARE_LABELS, variant: "tiny" },
+  render: (args) => {
+    const [isOpen, setIsOpen] = useState(true);
+    return (
+      <DropdownMenu {...args} isOpen={isOpen} onOpenChange={setIsOpen}>
+        <Button onClick={() => setIsOpen(!isOpen)}>Link settings</Button>
+      </DropdownMenu>
+    );
+  },
+};

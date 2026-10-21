@@ -10,8 +10,11 @@ import { MenuItemAction, MenuItemSeparator } from "../menu/types";
 import { MenuItemBody } from "../menu/MenuItemBody";
 import { DropdownMenuItem } from "./types";
 import {
+  Children,
+  cloneElement,
   ComponentProps,
   Fragment,
+  isValidElement,
   PropsWithChildren,
   ReactNode,
   useId,
@@ -195,6 +198,21 @@ export const DropdownMenu = ({
       );
     });
 
+  // The interactive trigger is the child, not the wrapper below: give it the
+  // menu state unless it already sets it (a trigger nested in a wrapper sets
+  // the attributes itself).
+  const onlyChild = Children.count(children) === 1 ? children : undefined;
+  const trigger =
+    isValidElement<Record<string, unknown>>(onlyChild) &&
+    (typeof onlyChild.type !== "string" ||
+      onlyChild.type === "button" ||
+      onlyChild.type === "a")
+      ? cloneElement(onlyChild, {
+          "aria-haspopup": onlyChild.props["aria-haspopup"] ?? "menu",
+          "aria-expanded": onlyChild.props["aria-expanded"] ?? isOpen,
+        })
+      : children;
+
   return (
     <>
       <div
@@ -206,7 +224,7 @@ export const DropdownMenu = ({
           e.preventDefault();
         }}
       >
-        {children}
+        {trigger}
       </div>
 
       <Popover

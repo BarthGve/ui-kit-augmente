@@ -46,7 +46,7 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
 }
 
 .c__share-modal__copy-link-footer {
-  border-top: 1px solid var(--c--contextuals--border--surface--primary);
+  border-top: var(--c--components--share-modal--border-width) solid var(--c--contextuals--border--surface--primary);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -56,24 +56,21 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
 .c__share-modal__search-field {
   display: flex;
   align-items: flex-end;
-  gap: var(--c--globals--spacings--xs, 8px);
-  padding: var(--c--globals--spacings--xs, 8px)
-    var(--c--globals--spacings--base, 16px)
-    var(--c--globals--spacings--3xs, 4px);
+  gap: var(--c--globals--spacings--xs);
+  padding: var(--c--globals--spacings--xs)
+    var(--c--globals--spacings--base)
+    var(--c--globals--spacings--3xs);
 
   &__icon {
     display: flex;
     align-self: flex-start;
     align-items: flex-start;
     justify-content: center;
-    width: 24px;
-    min-height: 32px;
-    padding-top: 7px;
+    width: var(--c--components--share-modal--search-field--icon-width);
+    min-height: var(--c--components--share-modal--search-field--icon-min-height);
+    padding-top: var(--c--components--share-modal--search-field--icon-padding-top);
     flex-shrink: 0;
-    color: var(
-      --c--contextuals--content--semantic--neutral--secondary,
-      #555e74
-    );
+    color: var(--c--contextuals--content--semantic--neutral--secondary);
   }
 
   &__content {
@@ -83,19 +80,19 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
     align-content: flex-start;
     align-items: flex-start;
     box-sizing: border-box;
-    gap: var(--c--globals--spacings--xxs, 6px);
+    gap: var(--c--globals--spacings--xxs);
     min-width: 0;
-    min-height: 40px;
-    padding-top: var(--c--globals--spacings--xs, 8px);
+    min-height: var(--c--components--share-modal--search-field--content-min-height);
+    padding-top: var(--c--globals--spacings--xs);
   }
 
   &__main-space {
     display: flex;
-    flex: 1 0 130px;
+    flex: 1 0 var(--c--components--share-modal--search-field--main-space-min-width);
     align-items: flex-start;
     justify-content: center;
-    gap: var(--c--globals--spacings--xs, 8px);
-    min-width: 130px;
+    gap: var(--c--globals--spacings--xs);
+    min-width: var(--c--components--share-modal--search-field--main-space-min-width);
   }
 
   &__input {
@@ -105,8 +102,8 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
     outline: none;
     background: transparent;
     font: inherit;
-    font-size: var(--c--globals--font--sizes--md, 1rem);
-    line-height: 22px;
+    font-size: var(--c--globals--font--sizes--md);
+    line-height: var(--c--components--share-modal--search-field--input-line-height);
     color: var(--c--contextuals--content--semantic--neutral--primary);
 
     &::placeholder {
@@ -119,29 +116,29 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
     flex-shrink: 0;
     align-items: center;
     justify-content: flex-end;
-    min-height: 40px;
+    min-height: var(--c--components--share-modal--search-field--actions-min-height);
   }
 }
 
 .c__share-modal__footer {
-  border-top: 1px solid var(--c--contextuals--border--surface--primary);
+  border-top: var(--c--components--share-modal--border-width) solid var(--c--contextuals--border--surface--primary);
 }
 
 .c__share-modal__link-settings {
   padding: var(--c--globals--spacings--sm) var(--c--globals--spacings--base);
-  gap: 8px;
+  gap: var(--c--components--share-modal--link-settings--gap);
   display: flex;
   flex-direction: column;
 
   &__content {
     display: flex;
-    gap: 8px;
+    gap: var(--c--components--share-modal--link-settings--gap);
     align-items: center;
     justify-content: space-between;
 
     &__description {
       flex: 1;
-      font-size: 12px;
+      font-size: var(--c--components--share-modal--link-settings--description-font-size);
       color: var(--c--contextuals--content--semantic--neutral--secondary);
 
       &.desktop {
@@ -168,7 +165,7 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
     align-items: center;
     gap: var(--c--globals--spacings--t);
     padding: 0 var(--c--globals--spacings--t) 0 var(--c--globals--spacings--t);
-    height: 40px;
+    height: var(--c--components--share-modal--link-settings--select-height);
 
     &.disabled {
       color: var(--c--contextuals--content--semantic--neutral--tertiary);
@@ -176,7 +173,7 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
   }
 
   .c__share-modal__link-settings__content__select-role__value {
-    font-size: 13px;
+    font-size: var(--c--components--share-modal--link-settings--role-font-size);
   }
 }
 
@@ -211,7 +208,7 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
     padding: var(--c--globals--spacings--sm);
     font-size: var(--c--globals--font--sizes--sm);
     color: var(--c--contextuals--content--semantic--neutral--secondary);
-    max-width: 320px;
+    max-width: var(--c--components--share-modal--cannot-view--max-width);
     text-align: center;
     padding: var(--c--globals--spacings--sm);
     margin: 0;
@@ -221,7 +218,7 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
 .c__share-modal__restricted {
   font-size: var(--c--globals--font--sizes--xs);
   color: var(--c--contextuals--content--semantic--neutral--tertiary);
-  padding: 8px var(--c--globals--spacings--sm);
+  padding: var(--c--components--share-modal--restricted--padding-block) var(--c--globals--spacings--sm);
   margin: 0;
   display: flex;
   align-items: center;
@@ -230,7 +227,7 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
 }
 
 .c__modal:has(.c__share-access-confirmation-modal) {
-  --c--components--modal--width-small: 350px;
+  --c--components--modal--width-small: var(--c--components--share-modal--confirmation--width);
 
   .c__modal__title {
     margin-bottom: var(--c--globals--spacings--3xs);
@@ -247,7 +244,7 @@ $md: map.get($themes, "default", "globals", "breakpoints", "md");
 
 .c__share-access-confirmation-modal {
   color: var(--c--contextuals--content--semantic--neutral--secondary);
-  line-height: 18px;
+  line-height: var(--c--components--share-modal--confirmation--line-height);
 
   p {
     margin: 0;

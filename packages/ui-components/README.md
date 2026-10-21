@@ -12,28 +12,56 @@ as `@barthgve/ui-components`, with versions `x.y.z-fork.N`: `x.y.z` is the
 upstream version it is based on, `N` the fork release (for example
 `1.4.0-fork.1`). Only `ui-components` is distributed by the fork:
 `@gouvfr-lasuite/ui-tokens` and `@gouvfr-lasuite/ui-codemod` remain the
-upstream packages. The repository is public and, once published, the built
-package is public on npm, with npm provenance (see
+upstream packages. The repository is public and the built package is public on
+npm. Versions published by the GitHub workflow carry npm provenance; the first,
+`1.4.0-fork.1`, was published by hand and does not (see
 [ADR 005](https://github.com/BarthGve/ui-kit-augmente/blob/next/docs/decisions/005-publish-the-fork-on-npm.md)).
 
-> **Not published yet.** The first npm publish of `@barthgve/ui-components` is
-> pending. Until then the alias install below fails (the package does not exist
-> on npm): install from the archive instead.
+The number `x.y.z-fork.N` identifies the package on npm, the repository tag
+`fork@x.y.z-fork.N` and, from the first version published after Releases were
+set up, the
+[GitHub Release](https://github.com/BarthGve/ui-kit-augmente/releases) of the
+same name; earlier versions have none. The product version (`VERSION`,
+`CHANGELOG.md`, `fork-v…` tags), the version in
+`packages/ui-components/package.json` and the one in the root `package.json`
+are other numbers: none of them names a published version of the package.
 
-### Alias install (available after the first publish)
+### Alias install
 
 Install the fork under the upstream name, so the imports of your application
 stay `@gouvfr-lasuite/ui-components`. Replace `<version>` with a published fork
-version:
+version (for example `1.4.0-fork.6`), or use `latest` for the newest one:
 
 ```bash
 # Yarn
 yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version> @tanstack/react-query
 # npm
 npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version> @tanstack/react-query
+
+# Latest published version
+yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @tanstack/react-query
+npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @tanstack/react-query
 ```
 
-### Archive install (until the first publish)
+`latest` installs the newest published fork version. `-fork.N` versions are
+semver prereleases: a range such as `^1.4.0` or `*` does not select them.
+
+### Release archive install
+
+Each Release has the package's `.tgz` archive attached, the one the workflow
+checked before publishing. Copy the URL of that asset from the Release page and
+install it under the upstream name, without going through npm:
+
+```bash
+# Yarn
+yarn add "@gouvfr-lasuite/ui-components@<archive-url>" @tanstack/react-query
+# npm
+npm install "@gouvfr-lasuite/ui-components@<archive-url>" @tanstack/react-query
+```
+
+The application's `package.json` and lockfile then pin that URL.
+
+### Local archive install (to test a local change)
 
 From the root of a checkout of
 [the repository](https://github.com/BarthGve/ui-kit-augmente) (dependencies
@@ -58,7 +86,7 @@ npm install "@gouvfr-lasuite/ui-components@file:/path/to/fork-archive/barthgve-u
 
 The application's `package.json` and lockfile then pin the archive path (Yarn
 writes it absolute, npm relative): keep the archive where the application can
-reach it, and switch to the alias install after the first publish.
+reach it, and switch to the alias install once your change is published.
 
 ### Peers and styles
 

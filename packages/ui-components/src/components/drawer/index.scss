@@ -1,0 +1,31 @@
+.c__drawer {
+  border-top-left-radius: var(--c--components--drawer--border-radius);
+  border-top-right-radius: var(--c--components--drawer--border-radius);
+  box-shadow: var(--c--components--drawer--box-shadow);
+  transition: height var(--c--components--drawer--duration) ease-out;
+
+  // A long body scrolls inside the drawer, not the page behind it.
+  .c__sheet__body {
+    overscroll-behavior: contain;
+  }
+
+  &__handle-area {
+    display: flex;
+    justify-content: center;
+    padding: var(--c--components--drawer--handle-padding);
+    cursor: grab;
+    // Vertical drags are ours, not the browser's scroll.
+    touch-action: none;
+  }
+
+  &__handle {
+    width: var(--c--components--drawer--handle-width);
+    height: var(--c--components--drawer--handle-height);
+    border-radius: var(--c--components--drawer--handle-height);
+    background-color: var(--c--components--drawer--handle-color);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}

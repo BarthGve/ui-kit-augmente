@@ -81,12 +81,26 @@ const toRows = (rawRows: string[][]): ShareImportParseResult => {
   return { rows };
 };
 
-const parseCsv = async (file: File): Promise<ShareImportParseResult> => {
+/**
+ * Reads the cells of a CSV or XLSX file, one array of strings per row, or
+ * `undefined` when the file cannot be read.
+ */
+export const readRawRows = async (file: File): Promise<string[][] | undefined> => {
+  if (file.name.toLowerCase().endsWith(".xlsx")) {
+    try {
+      const cells = await readSheet(file);
+      return cells.map((row) =>
+        row.map((cell) => (cell === null ? "" : String(cell))),
+      );
+    } catch {
+      return undefined;
+    }
+  }
   let text: string;
   try {
     text = await file.text();
   } catch {
-    return { error: { type: "unreadable" } };
+    return undefined;
   }
   if (text.charCodeAt(0) === 0xfeff) {
     text = text.slice(1);
@@ -95,18 +109,12 @@ const parseCsv = async (file: File): Promise<ShareImportParseResult> => {
   // French Excel/Calc exports CSV with ";" as delimiter.
   const firstLine = lines.find((line) => line.trim() !== "");
   const delimiter = firstLine?.includes(";") ? ";" : ",";
-  return toRows(lines.map((line) => parseCsvLine(line, delimiter)));
+  return lines.map((line) => parseCsvLine(line, delimiter));
 };
 
-const parseXlsx = async (file: File): Promise<ShareImportParseResult> => {
-  try {
-    const cells = await readSheet(file);
-    return toRows(
-      cells.map((row) => row.map((cell) => (cell === null ? "" : String(cell)))),
-    );
-  } catch {
-    return { error: { type: "unreadable" } };
-  }
+const parseRaw = async (file: File): Promise<ShareImportParseResult> => {
+  const raw = await readRawRows(file);
+  return raw ? toRows(raw) : { error: { type: "unreadable" } };
 };
 
 export const parseShareImportFile = async (
@@ -116,9 +124,7 @@ export const parseShareImportFile = async (
   if (file.size > MAX_IMPORT_FILE_SIZE) {
     return { error: { type: "file_too_large" } };
   }
-  const result = file.name.toLowerCase().endsWith(".xlsx")
-    ? await parseXlsx(file)
-    : await parseCsv(file);
+  const result = await parseRaw(file);
   const maxRows = options?.maxRows ?? DEFAULT_MAX_IMPORT_ROWS;
   if (result.rows && result.rows.length > maxRows) {
     return { error: { type: "too_many_rows", max: maxRows } };

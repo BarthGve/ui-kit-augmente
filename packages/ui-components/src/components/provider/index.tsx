@@ -11,6 +11,7 @@ import { PartialNested } from ":/types";
 import { Locales } from ":/components/provider/Locales";
 import { ToastProvider } from ":/components/toast/ToastProvider";
 import { ModalProvider } from ":/components/modal/ModalProvider";
+import { Direction, DirectionProvider } from ":/components/direction";
 
 type TranslationSet = PartialNested<typeof enUS>;
 
@@ -34,6 +35,8 @@ interface Props extends PropsWithChildren {
   customLocales?: Record<string, TranslationSet>;
   currentLocale?: string;
   theme?: string;
+  /** Reading direction of the whole app. Without it, nothing is imposed. */
+  direction?: Direction;
   modalParentSelector?: () => HTMLElement;
 }
 
@@ -58,6 +61,7 @@ export const CunninghamProvider = ({
   currentLocale = DEFAULT_LOCALE,
   customLocales,
   theme = DEFAULT_THEME,
+  direction,
   modalParentSelector,
   children,
 }: Props) => {
@@ -106,13 +110,17 @@ export const CunninghamProvider = ({
     root.classList.add(THEME_CLASSNAME_PREFIX + theme);
   }, [theme]);
 
+  const app = (
+    <ModalProvider modalParentSelector={modalParentSelector}>
+      <div className="c__app">
+        <ToastProvider>{children}</ToastProvider>
+      </div>
+    </ModalProvider>
+  );
+
   return (
     <CunninghamContext.Provider value={context}>
-      <ModalProvider modalParentSelector={modalParentSelector}>
-        <div className="c__app">
-          <ToastProvider>{children}</ToastProvider>
-        </div>
-      </ModalProvider>
+      {direction ? <DirectionProvider direction={direction}>{app}</DirectionProvider> : app}
     </CunninghamContext.Provider>
   );
 };

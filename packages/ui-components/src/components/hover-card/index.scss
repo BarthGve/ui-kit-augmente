@@ -1,0 +1,22 @@
+.c__hover-card {
+  display: inline-block;
+
+  &__popover {
+    z-index: 1000;
+    outline: none;
+  }
+
+  &__card {
+    box-sizing: border-box;
+    width: var(--c--components--hover-card--width);
+    max-width: calc(100vw - var(--c--components--hover-card--viewport-margin));
+    padding: var(--c--components--hover-card--padding);
+    border: var(--c--components--hover-card--border-width) solid
+      var(--c--components--hover-card--border-color);
+    border-radius: var(--c--components--hover-card--border-radius);
+    background-color: var(--c--components--hover-card--background-color);
+    box-shadow: var(--c--components--hover-card--box-shadow);
+    color: var(--c--components--hover-card--color);
+    font-size: var(--c--components--hover-card--font-size);
+  }
+}

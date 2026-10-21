@@ -6,7 +6,7 @@ const titleOf = (page: Page) =>
   page.locator(".c__storage-gauge__information__title");
 const labelOf = (page: Page) =>
   page.locator(".c__storage-gauge__information__label");
-const fillOf = (page: Page) => page.locator(".c__storage-gauge__bar__fill");
+const fillOf = (page: Page) => page.locator(".c__gauge__fill");
 const moreInfoOf = (page: Page) =>
   page.locator(".c__storage-gauge__information__more-info");
 

@@ -1,0 +1,67 @@
+.c__input-group {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: var(--c--components--input-group--min-height);
+  gap: var(--c--components--input-group--addon-gap);
+  padding-inline: var(--c--components--input-group--addon-padding);
+  border: var(--c--components--input-group--border-width) solid
+    var(--c--components--input-group--border-color);
+  border-radius: var(--c--components--input-group--border-radius);
+  background-color: var(--c--components--input-group--background-color);
+  cursor: text;
+
+  &--multiline {
+    align-items: flex-start;
+    padding-block: var(--c--components--input-group--addon-gap);
+  }
+
+  // One focus ring for the group, not one per field.
+  &:focus-within {
+    border-color: var(--c--components--input-group--focus-border-color);
+    box-shadow: 0 0 0 var(--c--components--input-group--focus-ring-width)
+      var(--c--components--input-group--focus-border-color);
+  }
+
+  &--error,
+  &--error:focus-within {
+    border-color: var(--c--components--input-group--error-border-color);
+  }
+
+  &--success,
+  &--success:focus-within {
+    border-color: var(--c--components--input-group--success-border-color);
+  }
+
+  &--disabled {
+    background-color: var(
+      --c--components--input-group--disabled-background-color
+    );
+    color: var(--c--components--input-group--disabled-color);
+    cursor: default;
+  }
+
+  &__control {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--c--components--input-group--control-color);
+    font: inherit;
+    font-size: var(--c--components--input-group--font-size);
+    resize: vertical;
+
+    &:disabled {
+      color: var(--c--components--input-group--disabled-color);
+    }
+  }
+
+  &__addon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    color: var(--c--components--input-group--addon-color);
+    font-size: var(--c--components--input-group--font-size);
+  }
+}

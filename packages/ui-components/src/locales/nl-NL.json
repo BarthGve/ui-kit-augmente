@@ -1,5 +1,8 @@
 {
   "components": {
+    "breadcrumb": {
+      "expand_aria": "Volledig pad tonen"
+    },
     "menu": {
       "newWindowLabelSuffix": " (nieuw venster)"
     },
@@ -133,7 +136,15 @@
       "uploading": "Uploaden",
       "cancel": "Uploaden annuleren",
       "remove": "Verwijderen",
-      "genericError": "Er is een fout opgetreden"
+      "genericError": "Er is een fout opgetreden",
+      "retry": "Opnieuw proberen",
+      "too_large": "Bestand overschrijdt {size}",
+      "type_not_accepted": "Bestandstype niet toegestaan",
+      "announce_uploading": "{name} wordt geüpload",
+      "announce_done": "{name} geüpload",
+      "announce_failed": "{name}: upload mislukt",
+      "announce_rejected": "{name} geweigerd: {reason}",
+      "announce_cancelled": "Upload van {name} geannuleerd"
     },
     "treeView": {
       "viewMore": "Meer elementen laden"
@@ -367,6 +378,89 @@
         "current": "Huidig",
         "upcoming": "Gepland"
       }
+    },
+    "stepper": {
+      "completed": "voltooid",
+      "upcoming": "komend"
+    },
+    "moveModal": {
+      "title": "Verplaatsen naar",
+      "move": "Verplaatsen",
+      "cancel": "Annuleren"
+    },
+    "combobox": {
+      "toggle_aria": "Opties tonen",
+      "loading": "Laden…",
+      "no_results": "Geen resultaten"
+    },
+    "contactImport": {
+      "table_label": "Te importeren contacten",
+      "column_email": "E-mail",
+      "column_name": "Naam",
+      "column_status": "Status",
+      "column_actions": "Acties",
+      "status_valid": "Geldig",
+      "status_invalid": "Ongeldig e-mailadres",
+      "status_duplicate": "Dubbel",
+      "summary": "{valid} geldig, {fix} te herstellen",
+      "import_none": "Importeren",
+      "import_one": "1 contact importeren",
+      "import_many": "{count} contacten importeren",
+      "email_aria": "E-mail van rij {row}",
+      "remove_aria": "{email} verwijderen",
+      "error_type": "Alleen .csv- en .xlsx-bestanden worden geaccepteerd",
+      "error_empty": "Het bestand bevat geen contacten",
+      "error_unreadable": "Het bestand kon niet worden gelezen",
+      "error_too_many": "Het bestand bevat meer dan {max} contacten"
+    },
+    "sheet": {
+      "close": "Sluiten"
+    },
+    "kbd": {
+      "command": "Command"
+    },
+    "carousel": {
+      "previous": "Vorige dia",
+      "next": "Volgende dia",
+      "slides": "Dia's",
+      "slide_label": "{current} van {total}",
+      "go_to": "Ga naar dia {current}",
+      "pause": "Automatische diavoorstelling pauzeren",
+      "play": "Automatische diavoorstelling starten"
+    },
+    "navigationMenu": {
+      "toggle": "Menu"
+    },
+    "sidebar": {
+      "collapse": "Zijbalk invouwen",
+      "expand": "Zijbalk uitvouwen"
+    },
+    "bubble": {
+      "error": "Verzenden mislukt",
+      "reactions": "Reacties"
+    },
+    "message": {
+      "you": "U"
+    },
+    "messageScroller": {
+      "jump": "Naar het laatste bericht"
+    },
+    "resizable": {
+      "handle": "Formaat wijzigen"
+    },
+    "questionnaire": {
+      "progress": "Voortgang",
+      "progress_text": "Vraag {current} van {total}",
+      "previous": "Vorige",
+      "next": "Volgende",
+      "skip": "Overslaan",
+      "submit": "Verzenden",
+      "required": "Beantwoord deze vraag"
+    },
+    "chart": {
+      "view_table": "Gegevens als tabel bekijken",
+      "view_chart": "Terug naar de grafiek",
+      "explore": "Gebruik de pijltjestoetsen om de waarden te verkennen"
     }
   }
 }

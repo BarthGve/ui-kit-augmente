@@ -16,7 +16,7 @@
 .c__dropdown-menu {
   background-color: var(--c--contextuals--background--surface--primary);
   z-index: 1000;
-  max-width: min(320px, calc(100vw - 32px));
+  max-width: min(300px, calc(100vw - 32px));
   max-height: inherit;
   min-width: 150px;
   box-sizing: border-box;
@@ -89,10 +89,15 @@ button.c__dropdown-menu-item {
     display: flex;
     flex: 1;
     flex-direction: column;
+    // Without this the column never shrinks below its longest word.
+    min-width: 0;
   }
 
   &__label {
     flex: 1;
+    // Let a long label wrap inside the menu instead of widening it.
+    min-width: 0;
+    overflow-wrap: anywhere;
 
     &-subtext {
       font-size: var(--c--globals--font--sizes--xs, 0.75rem);
@@ -106,6 +111,13 @@ button.c__dropdown-menu-item {
     background: var(
       --c--contextuals--background--semantic--contextual--primary
     );
+  }
+
+  // The background alone is too faint (1.1:1): ring the focused row too. Shared
+  // with ContextMenu and Filter rows, which use the same class.
+  &[data-focused] {
+    box-shadow: inset 0 0 0 2px
+      var(--c--contextuals--border--semantic--brand--primary);
   }
 
   &[data-disabled] {
@@ -140,6 +152,8 @@ button.c__dropdown-menu-item {
     background: var(
       --c--contextuals--background--semantic--contextual--primary
     );
+    box-shadow: inset 0 0 0 2px
+      var(--c--contextuals--border--semantic--brand--primary);
   }
 }
 
@@ -159,6 +173,14 @@ button.c__dropdown-menu-item {
       width: 16px;
       height: 16px;
       font-size: 16px;
+    }
+
+    // The row is a fixed 16px: a longer label is cut with an ellipsis. Its
+    // full text stays in the DOM, so it stays in the accessible name.
+    &__label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 }

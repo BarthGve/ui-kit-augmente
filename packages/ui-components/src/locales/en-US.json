@@ -1,5 +1,8 @@
 {
   "components": {
+    "breadcrumb": {
+      "expand_aria": "Show full path"
+    },
     "menu": {
       "newWindowLabelSuffix": " (new window)"
     },
@@ -133,7 +136,15 @@
       "uploading": "Uploading",
       "cancel": "Cancel upload",
       "remove": "Delete",
-      "genericError": "An error occurred"
+      "genericError": "An error occurred",
+      "retry": "Retry",
+      "too_large": "File exceeds {size}",
+      "type_not_accepted": "File type not accepted",
+      "announce_uploading": "Uploading {name}",
+      "announce_done": "{name} uploaded",
+      "announce_failed": "{name}: upload failed",
+      "announce_rejected": "{name} rejected: {reason}",
+      "announce_cancelled": "Upload of {name} cancelled"
     },
     "treeView": {
       "viewMore": "Load more elements"
@@ -367,6 +378,89 @@
         "current": "Current",
         "upcoming": "Upcoming"
       }
+    },
+    "stepper": {
+      "completed": "completed",
+      "upcoming": "upcoming"
+    },
+    "moveModal": {
+      "title": "Move to",
+      "move": "Move",
+      "cancel": "Cancel"
+    },
+    "combobox": {
+      "toggle_aria": "Show options",
+      "loading": "Loading…",
+      "no_results": "No results"
+    },
+    "contactImport": {
+      "table_label": "Contacts to import",
+      "column_email": "E-mail",
+      "column_name": "Name",
+      "column_status": "Status",
+      "column_actions": "Actions",
+      "status_valid": "Valid",
+      "status_invalid": "Invalid e-mail address",
+      "status_duplicate": "Duplicate",
+      "summary": "{valid} valid, {fix} to fix",
+      "import_none": "Import",
+      "import_one": "Import 1 contact",
+      "import_many": "Import {count} contacts",
+      "email_aria": "Email of row {row}",
+      "remove_aria": "Remove {email}",
+      "error_type": "Only .csv and .xlsx files are accepted",
+      "error_empty": "The file has no contact",
+      "error_unreadable": "The file could not be read",
+      "error_too_many": "The file has more than {max} contacts"
+    },
+    "sheet": {
+      "close": "Close"
+    },
+    "kbd": {
+      "command": "Command"
+    },
+    "carousel": {
+      "previous": "Previous slide",
+      "next": "Next slide",
+      "slides": "Slides",
+      "slide_label": "{current} of {total}",
+      "go_to": "Go to slide {current}",
+      "pause": "Pause automatic slide show",
+      "play": "Start automatic slide show"
+    },
+    "navigationMenu": {
+      "toggle": "Menu"
+    },
+    "sidebar": {
+      "collapse": "Collapse sidebar",
+      "expand": "Expand sidebar"
+    },
+    "bubble": {
+      "error": "Failed to send",
+      "reactions": "Reactions"
+    },
+    "message": {
+      "you": "You"
+    },
+    "messageScroller": {
+      "jump": "Jump to latest"
+    },
+    "resizable": {
+      "handle": "Resize"
+    },
+    "questionnaire": {
+      "progress": "Progress",
+      "progress_text": "Question {current} of {total}",
+      "previous": "Previous",
+      "next": "Next",
+      "skip": "Skip",
+      "submit": "Submit",
+      "required": "Please answer this question"
+    },
+    "chart": {
+      "view_table": "View data as a table",
+      "view_chart": "Back to the chart",
+      "explore": "Use the arrow keys to explore the values"
     }
   }
 }

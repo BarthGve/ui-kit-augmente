@@ -1,5 +1,8 @@
 {
   "components": {
+    "breadcrumb": {
+      "expand_aria": "Afficher le chemin complet"
+    },
     "menu": {
       "newWindowLabelSuffix": " (nouvelle fenêtre)"
     },
@@ -133,7 +136,15 @@
       "uploading": "Téléversement",
       "cancel": "Annuler le téléversement",
       "remove": "Supprimer",
-      "genericError": "Une erreur est survenue"
+      "genericError": "Une erreur est survenue",
+      "retry": "Réessayer",
+      "too_large": "Le fichier dépasse {size}",
+      "type_not_accepted": "Type de fichier refusé",
+      "announce_uploading": "Envoi de {name}",
+      "announce_done": "{name} envoyé",
+      "announce_failed": "{name} : échec de l'envoi",
+      "announce_rejected": "{name} refusé : {reason}",
+      "announce_cancelled": "Envoi de {name} annulé"
     },
     "treeView": {
       "viewMore": "Charger plus d'éléments"
@@ -367,6 +378,89 @@
         "current": "En cours",
         "upcoming": "À venir"
       }
+    },
+    "stepper": {
+      "completed": "terminée",
+      "upcoming": "à venir"
+    },
+    "moveModal": {
+      "title": "Déplacer vers",
+      "move": "Déplacer",
+      "cancel": "Annuler"
+    },
+    "combobox": {
+      "toggle_aria": "Afficher les options",
+      "loading": "Chargement…",
+      "no_results": "Aucun résultat"
+    },
+    "contactImport": {
+      "table_label": "Contacts à importer",
+      "column_email": "E-mail",
+      "column_name": "Nom",
+      "column_status": "Statut",
+      "column_actions": "Actions",
+      "status_valid": "Valide",
+      "status_invalid": "Adresse e-mail invalide",
+      "status_duplicate": "Doublon",
+      "summary": "{valid} valides, {fix} à corriger",
+      "import_none": "Importer",
+      "import_one": "Importer 1 contact",
+      "import_many": "Importer {count} contacts",
+      "email_aria": "E-mail de la ligne {row}",
+      "remove_aria": "Retirer {email}",
+      "error_type": "Seuls les fichiers .csv et .xlsx sont acceptés",
+      "error_empty": "Le fichier ne contient aucun contact",
+      "error_unreadable": "Le fichier est illisible",
+      "error_too_many": "Le fichier contient plus de {max} contacts"
+    },
+    "sheet": {
+      "close": "Fermer"
+    },
+    "kbd": {
+      "command": "Commande"
+    },
+    "carousel": {
+      "previous": "Diapositive précédente",
+      "next": "Diapositive suivante",
+      "slides": "Diapositives",
+      "slide_label": "{current} sur {total}",
+      "go_to": "Aller à la diapositive {current}",
+      "pause": "Mettre en pause le défilement automatique",
+      "play": "Lancer le défilement automatique"
+    },
+    "navigationMenu": {
+      "toggle": "Menu"
+    },
+    "sidebar": {
+      "collapse": "Réduire la barre latérale",
+      "expand": "Déplier la barre latérale"
+    },
+    "bubble": {
+      "error": "Échec de l'envoi",
+      "reactions": "Réactions"
+    },
+    "message": {
+      "you": "Vous"
+    },
+    "messageScroller": {
+      "jump": "Aller au dernier message"
+    },
+    "resizable": {
+      "handle": "Redimensionner"
+    },
+    "questionnaire": {
+      "progress": "Progression",
+      "progress_text": "Question {current} sur {total}",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "skip": "Passer",
+      "submit": "Envoyer",
+      "required": "Veuillez répondre à cette question"
+    },
+    "chart": {
+      "view_table": "Voir les données sous forme de tableau",
+      "view_chart": "Retour au graphique",
+      "explore": "Utilisez les flèches pour parcourir les valeurs"
     }
   }
 }
