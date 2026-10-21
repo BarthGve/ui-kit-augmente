@@ -1,4 +1,6 @@
+import React, { ReactNode, useState } from "react";
 import type { Meta } from "@storybook/react";
+import { DndContext, useDraggable } from "@dnd-kit/core";
 import databaseCars from "./resources/databaseCars.json";
 
 import { Button, DataGrid, SimpleDataGrid } from ":/cunningham";
@@ -84,3 +86,71 @@ export const ClientSideWithPagination = () => {
     </>
   );
 };
+
+const people = [
+  { id: "1", name: "Alice", role: "Admin" },
+  { id: "2", name: "Bob", role: "Editor" },
+  { id: "3", name: "Chloé", role: "Viewer" },
+];
+const personColumns = [
+  { field: "name", headerName: "Name", highlight: true },
+  { field: "role", headerName: "Role" },
+];
+
+/** Click, Enter or Space on a row; open one with a detail row (`colSpan`). */
+export const ActivableRowsWithDetail = () => {
+  const [openId, setOpenId] = useState<string | null>(null);
+  return (
+    <DataGrid
+      columns={personColumns}
+      rows={people}
+      onRowActivate={(row) => setOpenId(openId === row.id ? null : row.id)}
+      getRowClassName={(row) => (row.id === openId ? "is-open" : undefined)}
+      renderRowDetail={(row) =>
+        row.id === openId ? <p>More about {row.name}…</p> : null
+      }
+    />
+  );
+};
+
+const DraggableRow = ({
+  id,
+  rowProps,
+  children,
+}: {
+  id: string;
+  rowProps: React.HTMLAttributes<HTMLTableRowElement>;
+  children: ReactNode;
+}) => {
+  const { setNodeRef, listeners, attributes, transform } = useDraggable({ id });
+  return (
+    <tr
+      {...rowProps}
+      {...attributes}
+      {...listeners}
+      ref={setNodeRef}
+      style={{
+        transform: transform
+          ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+          : undefined,
+      }}
+    >
+      {children}
+    </tr>
+  );
+};
+
+/** `renderRow` lets the consumer own the `<tr>` (here a dnd-kit draggable). */
+export const DraggableRows = () => (
+  <DndContext>
+    <DataGrid
+      columns={personColumns}
+      rows={people}
+      renderRow={({ row, rowProps, children }) => (
+        <DraggableRow id={row.id} rowProps={rowProps}>
+          {children}
+        </DraggableRow>
+      )}
+    />
+  </DndContext>
+);
