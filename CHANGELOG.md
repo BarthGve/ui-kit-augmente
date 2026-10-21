@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 - 2026-10-21
+
+Stories delivered: s08 (share modal guards and tokens), s09, s12 to s16, s18 to s21, s25, s27 to s29, s31 to s54, s60 (GitHub Release for each fork publication). Also brings back to `next` the DataGrid row activation (#264) and the uncontrolled Input/TextArea fix shipped on `main`.
+
+New components: Skeleton, Breadcrumb, Selector, Toolbar, Gauge, Stepper, MoveModal, Combobox, UploadModule, ContactImport, Slider, Sheet, Drawer, InputOTP, ButtonGroup, InputGroup, Toggle, HoverCard, Kbd, Collapsible, Carousel, AspectRatio, Menubar, NavigationMenu, Sidebar, ScrollArea, Resizable, Item, Typography, Chart, Bubble, Message, MessageScroller, Marker, Questionnaire, Direction, NativeSelect. DropdownMenu: long labels, readable focus, announced trigger.
+
+`@barthgve/ui-components` 1.4.0-fork.9.
+
 ## 0.3.0 - 2026-10-13
 
 Stories delivered: s57 (consume the fork), s58 (CI basics), s59 (component tests green on Chromium, Firefox and WebKit).
