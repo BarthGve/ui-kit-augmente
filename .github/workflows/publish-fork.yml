@@ -65,7 +65,7 @@ jobs:
           archive="$(node scripts/stage-fork-package.mjs "$version" --out "$RUNNER_TEMP/fork-package" | tail -n 1)"
           node scripts/check-fork-package.mjs "$archive" "$version"
       - name: Upload the archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fork-package
           path: ${{ runner.temp }}/fork-package/*.tgz
@@ -90,7 +90,7 @@ jobs:
         with:
           node-version: "24.x"
       - name: Download the archive
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: fork-package
           path: ${{ runner.temp }}/fork-package
@@ -111,7 +111,7 @@ jobs:
       contents: write
     steps:
       - name: Download the archive
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: fork-package
           path: ${{ runner.temp }}/fork-package

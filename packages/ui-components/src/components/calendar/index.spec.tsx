@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import React, { useState } from "react";
 import { expect, vi } from "vitest";
 import { CalendarDate, DateValue } from "@internationalized/date";
+import { I18nProvider } from "@react-aria/i18n";
 import { CunninghamProvider } from ":/components/provider";
 import { Calendar, CalendarRange } from ":/components/calendar";
 
@@ -134,6 +135,22 @@ describe("<Calendar/>", () => {
     const janOption = screen.getByText("January");
     expect(janOption).toBeDefined();
     await user.click(janOption);
+  });
+
+  it("relabels the month options when the locale changes", async () => {
+    const user = userEvent.setup();
+    const renderIn = (locale: string) => (
+      <I18nProvider locale={locale}>
+        <CunninghamProvider>
+          <Calendar defaultValue={new CalendarDate(2024, 6, 15)} />
+        </CunninghamProvider>
+      </I18nProvider>
+    );
+    const { rerender } = render(renderIn("en-US"));
+    rerender(renderIn("fr-FR"));
+
+    await user.click(screen.getByRole("combobox", { name: "Select a month" }));
+    expect(screen.getByText("janvier")).toBeDefined();
   });
 
   it("navigates months via prev/next buttons", async () => {

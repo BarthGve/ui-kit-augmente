@@ -172,6 +172,7 @@ export const FullServerSide = () => {
   const [rowSelection, setRowSelection] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const pagination = usePagination({ defaultPage: 10 });
+  const { page, pageSize, setPagesCount } = pagination;
   const [sortModel, setSortModel] = useState<SortModel>([
     {
       field: "lastName",
@@ -199,19 +200,12 @@ export const FullServerSide = () => {
     // Simulate HTTP request.
     setTimeout(() => {
       // Set the pagination length.
-      pagination.setPagesCount(
-        Math.ceil(sortedDatabase.length / pagination.pageSize),
-      );
+      setPagesCount(Math.ceil(sortedDatabase.length / pageSize));
       // Select the rows to display on the current page.
-      setRows(
-        sortedDatabase.slice(
-          (pagination.page - 1) * pagination.pageSize,
-          pagination.page * pagination.pageSize,
-        ),
-      );
+      setRows(sortedDatabase.slice((page - 1) * pageSize, page * pageSize));
       setIsLoading(false);
     }, 1000);
-  }, [pagination.page, sortModel]);
+  }, [database, page, pageSize, setPagesCount, sortModel]);
 
   return (
     <DataGrid
