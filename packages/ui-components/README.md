@@ -8,8 +8,8 @@ enhanced `CunninghamProvider` that includes the UI Kit locales.
 
 This package is published on npm as `@barthgve/ui-components` by the
 repository [BarthGve/ui-kit-augmente](https://github.com/BarthGve/ui-kit-augmente).
-The project started as a fork of `suitenumerique/ui-kit` and is independent
-since version 2.0.0: it no longer follows the upstream releases (see
+The project is derived from `suitenumerique/ui-kit` and is independent since
+version 2.0.0: it no longer follows the upstream releases (see
 [ADR 008](https://github.com/BarthGve/ui-kit-augmente/blob/next/docs/decisions/008-independent-project.md)). Only `ui-components` is published here:
 `@gouvfr-lasuite/ui-tokens` and `@gouvfr-lasuite/ui-codemod` remain the
 upstream packages. The repository and the package are public, and versions
@@ -18,8 +18,8 @@ published by the GitHub workflow carry npm provenance.
 Versions follow semver (`x.y.z`). The version identifies the package on npm,
 the repository tag `ui-components@x.y.z` and the
 [GitHub Release](https://github.com/BarthGve/ui-kit-augmente/releases) of the
-same name. Earlier versions, up to `1.4.0-fork.9`, were published as
-`x.y.z-fork.N` prereleases with `fork@x.y.z-fork.N` tags. The product version
+same name. Versions before 2.0.0 (`1.4.0-fork.1` to `1.4.0-fork.9`) remain
+installable. The product version
 (`VERSION`, `CHANGELOG.md`, `v…` tags) is another number: it never names a
 published version of the package.
 
@@ -41,9 +41,9 @@ npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @ta
 ```
 
 `latest` installs the newest published version. A range such as `^2.0.0`
-follows the later minor and patch versions. An application on a
-`1.4.0-fork.N` version moves to 2.x by changing only the version: the alias
-and the imports stay the same.
+follows the later minor and patch versions. An application on a version
+before 2.0.0 moves to 2.x by changing only the version: the alias and the
+imports stay the same.
 
 ### Release archive install
 

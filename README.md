@@ -19,8 +19,8 @@ version React `4.3.1`.
 | [`@gouvfr-lasuite/ui-tokens`](./packages/ui-tokens)   | Moteur de tokens Cunningham, CLI, tokens par défaut, utilitaires de thème et générateurs CSS/SCSS/JS/TS                  |
 | [`@gouvfr-lasuite/ui-codemod`](./packages/ui-codemod) | CLI de migration à usage unique (npx) pour les anciens noms de paquets et de sous-chemins publics                        |
 
-`@barthgve/ui-components` est né d'un fork de `@gouvfr-lasuite/ui-components`
-et en est indépendant depuis la version 2.0.0 (voir
+`@barthgve/ui-components` est dérivé de `@gouvfr-lasuite/ui-components` et en
+est indépendant depuis la version 2.0.0 (voir
 l'[ADR 008](./docs/decisions/008-independent-project.md)). Il s'installe sous le
 nom d'origine grâce à un alias
 (`yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version>`,
@@ -42,7 +42,7 @@ ni le `node_modules` du projet cible.
 ## Installer le paquet
 
 `ui-components` est publié sur npm sous le nom `@barthgve/ui-components` par ce
-dépôt. Le projet a commencé comme un fork de `suitenumerique/ui-kit` ; il en est
+dépôt. Le projet est dérivé de `suitenumerique/ui-kit` ; il en est
 indépendant depuis la version 2.0.0 et ne suit plus les versions amont (voir
 l'[ADR 008](./docs/decisions/008-independent-project.md)). Seul `ui-components`
 est publié ici : `@gouvfr-lasuite/ui-tokens` et `@gouvfr-lasuite/ui-codemod`
@@ -52,8 +52,8 @@ publiées depuis le workflow GitHub portent la provenance npm.
 Les versions suivent semver (`x.y.z`). Le numéro identifie le paquet sur npm, le
 tag `ui-components@x.y.z` du dépôt et la
 [Release GitHub](https://github.com/BarthGve/ui-kit-augmente/releases) du même
-nom. Les versions précédentes, jusqu'à `1.4.0-fork.9`, ont été publiées comme
-préversions `x.y.z-fork.N` avec des tags `fork@x.y.z-fork.N`. La version du
+nom. Les versions antérieures à 2.0.0 (`1.4.0-fork.1` à `1.4.0-fork.9`) restent
+installables. La version du
 produit (`VERSION`, `CHANGELOG.md`, tags `v…`) est un autre numéro : elle ne
 désigne jamais une version publiée du paquet.
 
@@ -76,8 +76,8 @@ npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @ta
 ```
 
 `@latest` installe la dernière version publiée. Une plage comme `^2.0.0` suit
-les versions mineures et correctives suivantes. Une application en
-`1.4.0-fork.N` passe en 2.x en changeant seulement la version : l'alias et les
+les versions mineures et correctives suivantes. Une application sur une version
+antérieure à 2.0.0 passe en 2.x en changeant seulement la version : l'alias et les
 imports restent les mêmes.
 
 ### Installation depuis une archive de Release
