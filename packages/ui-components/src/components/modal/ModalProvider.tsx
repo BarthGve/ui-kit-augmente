@@ -18,6 +18,7 @@ import {
 } from ":/components/modal/DeleteConfirmationModal";
 import { randomString } from ":/utils";
 import { ModalDefaultVariantProps, useModal } from ":/components/modal/index";
+import { useLatest } from ":/hooks/useLatest";
 import {
   ConfirmationModal,
   ConfirmationModalProps,
@@ -124,55 +125,59 @@ export const ModalProvider = ({
     ReactModal.setAppElement(".c__app");
   }, []);
 
-  const addModal = (
-    component: FunctionComponent<DecisionModalProps>,
-    props: Partial<DecisionModalProps>,
-  ) => {
-    const key = randomString(32);
-    const container = (
-      <ModalContainer
-        component={component}
-        props={props}
-        onClose={() => {
-          setModals((modals_) => {
-            // @ts-ignore
-            delete modals_[key];
-            return modals_;
-          });
-        }}
-      />
-    );
-    setModals((modals_) => ({
-      ...modals_,
-      [key]: container,
-    }));
-  };
+  // Read through a ref so an inline selector does not recreate the context.
+  const modalParentSelectorRef = useLatest(modalParentSelector);
 
-  const ModalHelper = (component: DecisionModalComponent) => {
-    return (props: Partial<DecisionModalProps> = {}) => {
-      return new Promise<Decision>((resolve) => {
-        addModal(component, {
-          onDecide: (decision) => {
-            resolve(decision);
-          },
-          ...props,
-        });
-      });
+  const context: ModalContextType = useMemo(() => {
+    const addModal = (
+      component: FunctionComponent<DecisionModalProps>,
+      props: Partial<DecisionModalProps>,
+    ) => {
+      const key = randomString(32);
+      const container = (
+        <ModalContainer
+          component={component}
+          props={props}
+          onClose={() => {
+            setModals((modals_) => {
+              // @ts-ignore
+              delete modals_[key];
+              return modals_;
+            });
+          }}
+        />
+      );
+      setModals((modals_) => ({
+        ...modals_,
+        [key]: container,
+      }));
     };
-  };
 
-  const context: ModalContextType = useMemo(
-    () => ({
+    const ModalHelper = (component: DecisionModalComponent) => {
+      return (props: Partial<DecisionModalProps> = {}) => {
+        return new Promise<Decision>((resolve) => {
+          addModal(component, {
+            onDecide: (decision) => {
+              resolve(decision);
+            },
+            ...props,
+          });
+        });
+      };
+    };
+
+    return {
       deleteConfirmationModal: ModalHelper(DeleteConfirmationModal),
       confirmationModal: ModalHelper(ConfirmationModal),
       messageModal: ModalHelper(MessageModal),
       modalParentSelector: () => {
-        if (modalParentSelector) return modalParentSelector();
+        if (modalParentSelectorRef.current) {
+          return modalParentSelectorRef.current();
+        }
         return document.getElementById(modalParentId)!;
       },
-    }),
-    [],
-  );
+    };
+  }, [modalParentId, modalParentSelectorRef]);
 
   return (
     <ModalContext.Provider value={context}>

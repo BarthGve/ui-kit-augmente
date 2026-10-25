@@ -47,6 +47,8 @@ export const ToastProvider = ({ children }: PropsWithChildren) => {
   const container = useRef<HTMLDivElement>(null);
   const previousContainerHeight = useRef(0);
   const [list, setList] = React.useState<ToastInterface[]>([]);
+  // Bumped on each added toast: the container animates on additions only, not removals.
+  const [addedCount, setAddedCount] = React.useState(0);
   const queue = useRef(new Queue());
 
   const context: ToastProviderContext = useMemo(
@@ -73,6 +75,7 @@ export const ToastProvider = ({ children }: PropsWithChildren) => {
                   },
                 ];
               });
+              setAddedCount((count) => count + 1);
 
               setTimeout(() => {
                 // We consider that the toast is added when its animation is done.
@@ -82,10 +85,11 @@ export const ToastProvider = ({ children }: PropsWithChildren) => {
         );
       },
     }),
-    [container, previousContainerHeight, list],
+    [],
   );
 
-  const animateContainer = async () => {
+  // FLIP animation of the container when a toast gets ADDED to the list.
+  React.useEffect(() => {
     if (!container.current) {
       return;
     }
@@ -113,14 +117,7 @@ export const ToastProvider = ({ children }: PropsWithChildren) => {
         },
       );
     }
-  };
-
-  // We only want this to be triggered when an item gets ADDED to the list, not when
-  // it gets removed, that's why we use toastsCounter as a dependency and not only
-  // list.
-  React.useEffect(() => {
-    animateContainer();
-  }, [toastsCounter]);
+  }, [addedCount]);
 
   return (
     <ToastContext.Provider value={context}>

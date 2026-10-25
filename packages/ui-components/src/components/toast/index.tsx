@@ -9,6 +9,7 @@ import classNames from "classnames";
 import isChromatic from "chromatic/isChromatic";
 import { Button, ButtonProps } from ":/components/button";
 import { iconFromType, VariantType } from ":/utils/VariantUtils";
+import { useLatest } from ":/hooks/useLatest";
 
 export interface ToastProps extends PropsWithChildren {
   duration: number;
@@ -26,36 +27,40 @@ export const Toast = (props: ToastProps) => {
   const [animateDisappear, setAnimateDisappear] = React.useState(false);
   const container = useRef<HTMLDivElement>(null);
   const disappearTimeout = useRef<NodeJS.Timeout>(null);
+  const { duration, disableAnimate } = props;
+  const onDeleteRef = useLatest(props.onDelete);
 
   // Register a timeout to remove the toast after the duration.
   useEffect(() => {
-    if (props.disableAnimate) {
+    if (disableAnimate) {
       return;
     }
     disappearTimeout.current = setTimeout(async () => {
       setAnimateDisappear(true);
       disappearTimeout.current = null;
-    }, props.duration);
+    }, duration);
     return () => {
       if (disappearTimeout.current) {
         clearTimeout(disappearTimeout.current);
       }
     };
-  }, []);
-
-  const removeAfterAnimation = async () => {
-    await Promise.allSettled(
-      container.current!.getAnimations().map((animation) => animation.finished),
-    );
-    props.onDelete?.();
-  };
+  }, [duration, disableAnimate]);
 
   // Remove the toast after the animation finishes.
   useEffect(() => {
-    if (animateDisappear) {
-      removeAfterAnimation();
+    if (!animateDisappear) {
+      return;
     }
-  }, [animateDisappear]);
+    const removeAfterAnimation = async () => {
+      await Promise.allSettled(
+        container
+          .current!.getAnimations()
+          .map((animation) => animation.finished),
+      );
+      onDeleteRef.current?.();
+    };
+    removeAfterAnimation();
+  }, [animateDisappear, onDeleteRef]);
 
   return (
     <div
@@ -116,7 +121,7 @@ export const ProgressBar = ({ duration }: { duration: number }) => {
       duration,
       easing: "linear",
     });
-  }, []);
+  }, [duration]);
 
   return (
     <div className="c__progress-bar">
