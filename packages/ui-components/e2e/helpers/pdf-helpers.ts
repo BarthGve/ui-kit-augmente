@@ -2,9 +2,19 @@ import type { Page, Locator } from "@playwright/test";
 import { expect } from "@playwright/experimental-ct-react";
 
 export async function waitForPdfReady(page: Page) {
-  await expect(page.locator(".react-pdf__Page").first()).toBeVisible({
-    timeout: 10000,
-  });
+  const first = page.locator(".react-pdf__Page").first();
+  await expect(first).toBeVisible({ timeout: 10000 });
+  // Visible is not rendered: until then the page box can be the 300px default
+  // canvas, so a width read now is wrong. Wait for the text layer, then for
+  // two equal widths in a row.
+  await expect(first.locator(".textLayer")).toBeAttached({ timeout: 10000 });
+  let last = -1;
+  await expect(async () => {
+    const width = (await first.boundingBox())!.width;
+    const previous = last;
+    last = width;
+    expect(width).toBe(previous);
+  }).toPass({ timeout: 10000, intervals: [200] });
 }
 
 export async function openSidebar(page: Page) {
