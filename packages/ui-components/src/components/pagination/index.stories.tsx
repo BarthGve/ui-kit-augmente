@@ -21,27 +21,22 @@ export const List = () => {
   // Items to display on the current page.
   const [items, setItems] = useState<number[]>([]);
   const pagination = usePagination({ pageSize: 10 });
+  // The pagination object is recreated on each render: depend on its stable fields.
+  const { page, pageSize, setPagesCount } = pagination;
 
   // On page change.
   useEffect(() => {
     // Simulate a HTTP request delay.
     const timeout = setTimeout(() => {
       // Sets the number of pages based on the number of items in the database.
-      pagination.setPagesCount(
-        Math.ceil(database.length / pagination.pageSize),
-      );
+      setPagesCount(Math.ceil(database.length / pageSize));
       // Sets the items to display on the current page.
-      setItems(
-        database.slice(
-          (pagination.page - 1) * pagination.pageSize,
-          pagination.page * pagination.pageSize,
-        ),
-      );
+      setItems(database.slice((page - 1) * pageSize, page * pageSize));
     }, 500);
     return () => {
       clearTimeout(timeout);
     };
-  }, [pagination.page]);
+  }, [database, page, pageSize, setPagesCount]);
 
   return (
     <div>
@@ -61,14 +56,15 @@ export const ForcePage = () => {
   const pagination = usePagination({
     defaultPagesCount: 10,
   });
+  const { setPage } = pagination;
   useEffect(() => {
     const timeout = setTimeout(() => {
-      pagination.setPage(5);
+      setPage(5);
     }, 500);
     return () => {
       clearTimeout(timeout);
     };
-  }, []);
+  }, [setPage]);
   return <Pagination {...pagination} />;
 };
 

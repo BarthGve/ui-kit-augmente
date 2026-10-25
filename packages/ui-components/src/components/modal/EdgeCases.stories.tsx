@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Meta } from "@storybook/react";
 import { Button } from ":/components/button";
 import { Modal, ModalSize, useModal } from ":/components/modal/index";
@@ -23,19 +23,23 @@ export const StackedModals = {
     const modal2 = useModal();
     const modal3 = useModal();
 
-    const openModals = () => {
-      modal1.open();
+    const { open: open1 } = modal1;
+    const { open: open2 } = modal2;
+    const { open: open3 } = modal3;
+
+    const openModals = useCallback(() => {
+      open1();
       setTimeout(() => {
-        modal2.open();
+        open2();
         setTimeout(() => {
-          modal3.open();
+          open3();
         }, 100);
       }, 100);
-    };
+    }, [open1, open2, open3]);
 
     useEffect(() => {
       openModals();
-    }, []);
+    }, [openModals]);
 
     const array = Array.from({ length: 1000 }, (_, i) => i);
 

@@ -21,17 +21,16 @@ export const useModal = ({
   isOpenDefault,
 }: { isOpenDefault?: boolean } = {}) => {
   const [isOpen, setIsOpen] = React.useState(!!isOpenDefault);
-  const onClose = () => {
+  // Stable, so callers can list them as effect dependencies.
+  const onClose = React.useCallback(() => {
     setIsOpen(false);
-  };
+  }, []);
 
-  const open = () => {
+  const open = React.useCallback(() => {
     setIsOpen(true);
-  };
+  }, []);
 
-  const close = () => {
-    onClose();
-  };
+  const close = onClose;
 
   return {
     isOpen,

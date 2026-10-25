@@ -317,7 +317,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     if (zoom <= imageDimensions.originalZoom) {
       setPosition({ x: 0, y: 0 });
     } else {
-      setPosition(getConstrainedPosition(position));
+      setPosition((prev) => getConstrainedPosition(prev));
     }
   }, [zoom, getConstrainedPosition, imageDimensions.originalZoom]);
 

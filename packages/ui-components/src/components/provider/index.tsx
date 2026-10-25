@@ -97,7 +97,7 @@ export const CunninghamProvider = ({
       },
       currentLocale: locale,
     }),
-    [currentLocale, locales],
+    [locale, locales],
   );
 
   useEffect(() => {
@@ -120,7 +120,11 @@ export const CunninghamProvider = ({
 
   return (
     <CunninghamContext.Provider value={context}>
-      {direction ? <DirectionProvider direction={direction}>{app}</DirectionProvider> : app}
+      {direction ? (
+        <DirectionProvider direction={direction}>{app}</DirectionProvider>
+      ) : (
+        app
+      )}
     </CunninghamContext.Provider>
   );
 };

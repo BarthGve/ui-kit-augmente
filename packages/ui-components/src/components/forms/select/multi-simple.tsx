@@ -17,15 +17,18 @@ export const SelectMultiSimple = ({ ref, ...props }: SubProps) => {
       optionsEqual(selectedItem, option),
     );
 
+  const { options: allOptions, selectedItems, monoline } = props;
   const options = React.useMemo(() => {
-    if (props.monoline) {
-      return props.options.map((option) => ({
+    if (monoline) {
+      return allOptions.map((option) => ({
         ...option,
-        highlighted: isSelected(option),
+        highlighted: selectedItems.some((selectedItem) =>
+          optionsEqual(selectedItem, option),
+        ),
       }));
     }
-    return props.options.filter(getMultiOptionsFilter(props.selectedItems, ""));
-  }, [props.selectedItems]);
+    return allOptions.filter(getMultiOptionsFilter(selectedItems, ""));
+  }, [allOptions, selectedItems, monoline]);
 
   const useMultipleSelectionReturn = useMultipleSelection({
     selectedItems: props.selectedItems,

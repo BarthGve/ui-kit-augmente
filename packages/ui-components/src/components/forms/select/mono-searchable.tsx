@@ -10,6 +10,7 @@ import {
   SubProps,
 } from ":/components/forms/select/mono-common";
 import { isOptionWithRender } from ":/components/forms/select/utils";
+import { useLatest } from ":/hooks/useLatest";
 
 export const SelectMonoSearchable = ({
   showLabelWhenSelected = true,
@@ -32,6 +33,9 @@ export const SelectMonoSearchable = ({
       }
     },
   });
+  // Stable across renders (useCallback on downshift's dispatch).
+  const { selectItem } = downshiftReturn;
+  const { options, value, onSearchInputChange } = props;
   const [labelAsPlaceholder, setLabelAsPlaceholder] = useState(
     !downshiftReturn.selectedItem,
   );
@@ -55,24 +59,22 @@ export const SelectMonoSearchable = ({
     if (inputFilter) {
       return;
     }
-    const optionToSelect = props.options.find(
-      (option) => optionToValue(option) === props.value,
+    const optionToSelect = options.find(
+      (option) => optionToValue(option) === value,
     );
-    downshiftReturn.selectItem(optionToSelect ?? null);
-  }, [props.value, props.options, inputFilter]);
+    selectItem(optionToSelect ?? null);
+  }, [selectItem, value, options, inputFilter]);
 
   // Even there is already a value selected, when opening the combobox menu we want to display all available choices.
   useEffect(() => {
     if (downshiftReturn.isOpen) {
       setOptionsToDisplay(
-        inputFilter
-          ? props.options.filter(getOptionsFilter(inputFilter))
-          : props.options,
+        inputFilter ? options.filter(getOptionsFilter(inputFilter)) : options,
       );
     } else {
       setInputFilter(undefined);
     }
-  }, [downshiftReturn.isOpen, props.options, inputFilter]);
+  }, [downshiftReturn.isOpen, options, inputFilter]);
 
   useImperativeHandle(ref, () => ({
     blur: () => {
@@ -81,9 +83,10 @@ export const SelectMonoSearchable = ({
     },
   }));
 
+  const onSearchInputChangeRef = useLatest(onSearchInputChange);
   useEffect(() => {
-    props.onSearchInputChange?.({ target: { value: inputFilter } });
-  }, [inputFilter]);
+    onSearchInputChangeRef.current?.({ target: { value: inputFilter } });
+  }, [inputFilter, onSearchInputChangeRef]);
 
   const onInputBlur = () => {
     setHasInputFocused(false);

@@ -12,19 +12,19 @@ import { SelectedOption } from ":/components/forms/select/utils";
 /**
  * Here we ensure that the selected item is always in sync with the options.
  * Ex: If the selected options changes label we want to reflect that.
- * @param downshiftReturn
+ * @param selectItem downshift's selectItem, stable across renders
  * @param props
  */
 const useKeepSelectedItemInSyncWithOptions = (
-  downshiftReturn: UseSelectReturnValue<Option>,
-  props: Pick<SelectProps, "value" | "options">,
+  selectItem: UseSelectReturnValue<Option>["selectItem"],
+  { value, options }: Pick<SelectProps, "value" | "options">,
 ) => {
   useEffect(() => {
-    const optionToSelect = props.options.find(
-      (option) => optionToValue(option) === props.value,
+    const optionToSelect = options.find(
+      (option) => optionToValue(option) === value,
     );
-    downshiftReturn.selectItem(optionToSelect ?? null);
-  }, [props.value, props.options]);
+    selectItem(optionToSelect ?? null);
+  }, [selectItem, value, options]);
 };
 
 export const SelectMonoSimple = ({ ref, ...props }: SubProps) => {
@@ -34,7 +34,7 @@ export const SelectMonoSimple = ({ ref, ...props }: SubProps) => {
     itemToString: optionToString,
   });
 
-  useKeepSelectedItemInSyncWithOptions(downshiftReturn, props);
+  useKeepSelectedItemInSyncWithOptions(downshiftReturn.selectItem, props);
 
   const wrapperRef = useRef<HTMLElement>(null);
 

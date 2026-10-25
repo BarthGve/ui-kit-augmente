@@ -1,6 +1,7 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useCombobox, useMultipleSelection } from "downshift";
 import { optionToString } from ":/components/forms/select/mono-common";
+import { useLatest } from ":/hooks/useLatest";
 import {
   getMultiOptionsFilter,
   SelectMultiAux,
@@ -10,12 +11,10 @@ import {
 export const SelectMultiSearchable = ({ ref, ...props }: SubProps) => {
   const [inputValue, setInputValue] = React.useState<string>();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { options: allOptions, selectedItems, onSearchInputChange } = props;
   const options = React.useMemo(
-    () =>
-      props.options.filter(
-        getMultiOptionsFilter(props.selectedItems, inputValue),
-      ),
-    [props.selectedItems, inputValue],
+    () => allOptions.filter(getMultiOptionsFilter(selectedItems, inputValue)),
+    [allOptions, selectedItems, inputValue],
   );
   const [hasInputFocused, setHasInputFocused] = useState(false);
   const useMultipleSelectionReturn = useMultipleSelection({
@@ -134,9 +133,10 @@ export const SelectMultiSearchable = ({ ref, ...props }: SubProps) => {
     },
   }));
 
+  const onSearchInputChangeRef = useLatest(onSearchInputChange);
   useEffect(() => {
-    props.onSearchInputChange?.({ target: { value: inputValue } });
-  }, [inputValue]);
+    onSearchInputChangeRef.current?.({ target: { value: inputValue } });
+  }, [inputValue, onSearchInputChangeRef]);
 
   return (
     <SelectMultiAux

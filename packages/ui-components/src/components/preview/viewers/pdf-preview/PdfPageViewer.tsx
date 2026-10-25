@@ -9,6 +9,7 @@ import {
 import { Page } from "react-pdf";
 import { AutoSizer, List } from "react-virtualized";
 import type { ListRowRenderer, Index } from "react-virtualized";
+import { useLatest } from ":/hooks/useLatest";
 import { useDebouncedResize } from "./useDebouncedResize";
 import { FALLBACK_RATIO, type PageDimensionsMap } from "./usePdfPageDimensions";
 
@@ -89,17 +90,19 @@ export function PdfPageViewer({
   // recalculated because react-virtualized caches them internally.
   // On zoom change we also scale scrollTop proportionally so the user stays
   // on the same part of the document (e.g. 2x zoom → 2x scroll offset).
+  // scrollTop is read, not tracked: scrolling alone must not recompute row heights.
+  const scrollTopRef = useLatest(scrollTop);
   useEffect(() => {
     listRef.current?.recomputeRowHeights();
 
     if (prevZoomRef.current !== zoom && listRef.current) {
       const ratio = zoom / prevZoomRef.current;
-      const newScrollTop = Math.round(scrollTop * ratio);
+      const newScrollTop = Math.round(scrollTopRef.current * ratio);
 
       listRef.current.scrollToPosition(newScrollTop);
       prevZoomRef.current = zoom;
     }
-  }, [zoom, width, pageDimensions, numPages]);
+  }, [zoom, width, pageDimensions, numPages, scrollTopRef]);
 
   // Find which page contains the vertical center of the viewport by walking
   // cumulative row heights until we pass the midpoint.
@@ -120,9 +123,10 @@ export function PdfPageViewer({
     return numPages;
   }, [scrollTop, numPages, rowHeightForIndex]);
 
+  const onCurrentPageChangeRef = useLatest(onCurrentPageChange);
   useEffect(() => {
-    onCurrentPageChange(currentPage);
-  }, [currentPage]);
+    onCurrentPageChangeRef.current(currentPage);
+  }, [currentPage, onCurrentPageChangeRef]);
 
   const scrollToPage = useCallback(
     (page: number) => {

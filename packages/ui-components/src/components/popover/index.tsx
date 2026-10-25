@@ -56,7 +56,7 @@ export const Popover = ({
       window.removeEventListener("resize", handleWindowResize);
       if (timeout.current) clearTimeout(timeout.current);
     };
-  }, []);
+  }, [parentRef]);
 
   return (
     <div
