@@ -51,7 +51,7 @@ export const PlayerPreviewControls = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [togglePlay]);
+  }, [togglePlay, isFullscreen]);
   return (
     <div
       className={clsx("file-preview__controls", {

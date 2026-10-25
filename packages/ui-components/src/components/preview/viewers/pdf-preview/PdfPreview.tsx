@@ -62,12 +62,11 @@ export function PdfPreview({
   const zoomReset = useCallback(() => {
     setZoom(1);
   }, []);
+  // The callback stays out of the state updater, which StrictMode runs twice.
   const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen((prev) => {
-      onThumbailSidebarOpen?.(!prev);
-      return !prev;
-    });
-  }, []);
+    setIsSidebarOpen(!isSidebarOpen);
+    onThumbailSidebarOpen?.(!isSidebarOpen);
+  }, [isSidebarOpen, onThumbailSidebarOpen]);
 
   const scrollToPage = useCallback((page: number) => {
     viewerRef.current?.scrollToPage(page);
