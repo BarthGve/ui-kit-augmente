@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 - 2026-10-25
+
+The project is independent of `suitenumerique/ui-kit` (ADR 008): no upstream remote or merges, `ui-components` named `@barthgve/ui-components` in the source, plain semver versions, publication from `ui-components@<version>` tags. Also: CI without Node 20 warnings and zero `exhaustive-deps` warnings in `ui-components` (#311, #312).
+
+`@barthgve/ui-components` 2.0.0. Applications on `1.4.0-fork.N` change only the version (`^2.0.0`); the alias and the imports stay the same.
+
 ## 0.4.0 - 2026-10-21
 
 Stories delivered: s08 (share modal guards and tokens), s09, s12 to s16, s18 to s21, s25, s27 to s29, s31 to s54, s60 (GitHub Release for each fork publication). Also brings back to `next` the DataGrid row activation (#264) and the uncontrolled Input/TextArea fix shipped on `main`.
