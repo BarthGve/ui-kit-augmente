@@ -1,8 +1,13 @@
 {
-  "name": "@gouvfr-lasuite/ui-components",
+  "name": "@barthgve/ui-components",
   "version": "1.4.0",
   "private": false,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BarthGve/ui-kit-augmente.git",
+    "directory": "packages/ui-components"
+  },
   "type": "module",
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,6 @@
 # ADR 007 — A GitHub Release for each fork publication
 
-- Status: accepted
+- Status: accepted, partly superseded by ADR 008 (tags, prerelease, product tags)
 - Date: 2026-10-15
 - Scope: story s60-fork-release
 

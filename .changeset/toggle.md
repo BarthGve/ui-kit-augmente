@@ -1,5 +1,5 @@
 ---
-"@gouvfr-lasuite/ui-components": minor
+"@barthgve/ui-components": minor
 ---
 
 ✨(Toggle) add a toggle button with aria-pressed

@@ -161,7 +161,7 @@ jobs:
       # The PDF viewer loads pdfjs's worker from /pdf.worker.mjs at runtime;
       # copy it from the installed pdfjs-dist so the served public/ has it.
       - name: Provision PDF worker
-        run: yarn workspace @gouvfr-lasuite/ui-components copy-pdf-worker
+        run: yarn workspace @barthgve/ui-components copy-pdf-worker
       - name: Generate test PDFs
         run: yarn generate-test-pdfs
       - name: Run component tests
