@@ -1,5 +1,5 @@
 ---
-"@gouvfr-lasuite/ui-components": minor
+"@barthgve/ui-components": minor
 ---
 
 ✨(Menubar) add a menubar of grouped commands with shortcuts

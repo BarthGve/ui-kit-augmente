@@ -1,6 +1,6 @@
 # ADR 005 — Publish the fork on npm
 
-- Status: accepted
+- Status: accepted, partly superseded by ADR 008 (no rename, versions)
 - Date: 2026-10-13
 - Scope: framing
 - Supersedes: ADR 004 (distribute the fork to consuming apps)

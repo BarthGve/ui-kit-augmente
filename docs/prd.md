@@ -1,10 +1,10 @@
-# PRD — ui-kit fork: new components and upgrades
+# PRD — ui-kit-augmente: new components and upgrades
 
 ## Mode
 brownfield
 
 ## Target SaaS
-n/a — existing product (fork of <https://github.com/suitenumerique/ui-kit>, see docs/onboarding.md)
+n/a — existing product (derived from <https://github.com/suitenumerique/ui-kit>, independent since ADR 008, see docs/onboarding.md)
 
 ## Kill mode
 n/a
@@ -13,7 +13,7 @@ n/a
 n/a — brownfield. Why this phase: ui-kit, the canonical La Suite numérique design system (which absorbed Cunningham), lacks components and upgrades that its own issue tracker already lists with an approved design, and has no timeline or Gantt component.
 
 ## Problem
-The teams of La Suite applications compose their screens from shared components. Several components are missing (toolbar, selector, stepper, generic gauge, move modal, contact import, upload module, timeline, Gantt, and common building blocks), several existing ones need approved upgrades, and known bugs and accessibility defects remain. This fork adds and fixes them while respecting every constraint of the existing product, so that the work can be proposed upstream.
+The teams of La Suite applications compose their screens from shared components. Several components are missing (toolbar, selector, stepper, generic gauge, move modal, contact import, upload module, timeline, Gantt, and common building blocks), several existing ones need approved upgrades, and known bugs and accessibility defects remain. This library adds and fixes them while respecting every constraint of the existing product, so that the work can be proposed upstream.
 
 ## Target users
 Development and design teams of La Suite numérique applications (Docs, Drive, Meet, etc.), who install `@gouvfr-lasuite/ui-components` and `@gouvfr-lasuite/ui-tokens`, theme through tokens and compose screens from shared components.
@@ -68,7 +68,7 @@ Strict respect of the existing product's constraints (tokens, RGAA accessibility
 - Detailed conventions are owned by `/dm-architect`.
 
 ## Success criteria
-- Each in-scope component is published in `@gouvfr-lasuite/ui-components` (for the fork, `@barthgve/ui-components`, see ADR 005) with its story and tests.
+- Each in-scope component is published in `@barthgve/ui-components` (ADR 008) with its story and tests.
 - Zero violations on automated accessibility tests, full keyboard navigation, compliant contrasts.
 - The ui-kit issues named in the perimeter are closed: #184, #183, #213, #309, #244, #269, #245, #231, #259, #203, #278, #241, #217, #232, #188, #220, #198, #187, #186.
 - The Gantt is usable in editing mode (move, resize, dependencies) on a demonstration data set.

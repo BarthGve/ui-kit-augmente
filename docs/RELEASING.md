@@ -1,10 +1,45 @@
 # Manual package releases
 
-> This file describes the release of the **upstream** packages
-> (`@gouvfr-lasuite/*`). The fork publishes only `ui-components`, as
-> `@barthgve/ui-components`, from a `fork@<version>` tag on `main` through
-> `.github/workflows/publish-fork.yml`: see
-> [ADR 005](decisions/005-publish-the-fork-on-npm.md).
+> **This repository publishes only `@barthgve/ui-components`**, see
+> [Publish `@barthgve/ui-components`](#publish-barthgveui-components) just
+> below and [ADR 008](decisions/008-independent-project.md). The rest of this
+> file is the upstream procedure for the `@gouvfr-lasuite/*` packages, kept for
+> reference: this repository does not publish them.
+
+## Publish `@barthgve/ui-components`
+
+Versions follow semver; the npm version, the tag `ui-components@<version>` and
+the GitHub Release always carry the same number.
+
+1. Version from a branch of `next`, ignoring the two upstream packages:
+
+   ```bash
+   yarn changeset version \
+     --ignore @gouvfr-lasuite/ui-tokens \
+     --ignore @gouvfr-lasuite/ui-codemod
+   ```
+
+   Review the new version in `packages/ui-components/package.json` and its
+   `CHANGELOG.md`, then merge through a pull request, and `next` into `main`.
+2. Tag the merged commit of `main` with the version of `package.json`:
+
+   ```bash
+   git switch main && git pull --ff-only
+   VERSION="$(node -p "require('./packages/ui-components/package.json').version")"
+   git tag "ui-components@$VERSION"
+   git push origin "ui-components@$VERSION"
+   ```
+
+3. `.github/workflows/publish-fork.yml` lints, tests, builds, packs the
+   package (it refuses a tag that differs from `package.json`), checks the
+   archive, publishes it with npm provenance (trusted publishing, ADR 006),
+   then creates the GitHub Release. If only the Release fails, rerun the
+   `release` job alone (`gh run rerun --job`).
+
+A published npm version is immutable: fix a bad release with a new patch
+version. The workflow file keeps the name `publish-fork.yml` because the npm
+trusted publisher is bound to it; rename it only after updating that
+configuration on npmjs.com (`npm trust`).
 
 The packages in this repository have independent versions and are published
 manually. There is no publication workflow in GitHub Actions. Changesets is
