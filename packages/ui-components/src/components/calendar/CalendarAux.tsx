@@ -171,7 +171,13 @@ const CalendarAux = ({
           (!!state.maxValue && state.maxValue.month < monthNumber),
       };
     });
-  }, [state.maxValue, state.minValue, state.focusedDate.year]);
+  }, [
+    state.maxValue,
+    state.minValue,
+    state.focusedDate,
+    state.timeZone,
+    monthFormatter,
+  ]);
 
   const yearItems: Array<Option> = useMemo(() => {
     const calendarCurrentUser = createCalendar(
@@ -196,7 +202,15 @@ const CalendarAux = ({
           (!!state.maxValue && state.maxValue.year < yearNumber),
       };
     });
-  }, [state.focusedDate.year, state.timeZone, state.maxValue, state.minValue]);
+  }, [
+    state.focusedDate,
+    state.timeZone,
+    state.maxValue,
+    state.minValue,
+    minYear,
+    maxYear,
+    yearItemsFormatter,
+  ]);
 
   const useDownshiftSelect = (
     key: string,

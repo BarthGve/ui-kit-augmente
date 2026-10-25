@@ -45,7 +45,7 @@ export const CalendarGrid = ({
       const dateDay = weekStart.add({ days: index }).toDate(state.timeZone);
       return formatter.format(dateDay);
     });
-  }, [locale, state.timeZone]);
+  }, [locale, state.timeZone, defaultDaysInWeek]);
 
   return (
     <table {...gridProps} className="c__calendar__wrapper__grid">

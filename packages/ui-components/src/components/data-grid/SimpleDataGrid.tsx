@@ -33,9 +33,15 @@ export const SimpleDataGrid = <T extends Row>({
   const paginationState = usePagination(realPaginationParams ?? {});
   const pagination = realPaginationParams ? paginationState : undefined;
 
+  const page = pagination?.page;
+  const pageSize = pagination?.pageSize;
+  const setPagesCount = pagination?.setPagesCount;
+
   useEffect(() => {
-    pagination?.setPagesCount(Math.ceil(rows.length / pagination.pageSize));
-  }, [rows]);
+    if (pageSize) {
+      setPagesCount?.(Math.ceil(rows.length / pageSize));
+    }
+  }, [rows, pageSize, setPagesCount]);
 
   useEffect(() => {
     const sortKey = sortModel.length > 0 ? sortModel[0].field : "id";
@@ -49,17 +55,12 @@ export const SimpleDataGrid = <T extends Row>({
       return 0;
     });
 
-    if (pagination) {
-      setRealRows(
-        sortedRows.slice(
-          (pagination.page - 1) * pagination.pageSize,
-          pagination.page * pagination.pageSize,
-        ),
-      );
+    if (page !== undefined && pageSize) {
+      setRealRows(sortedRows.slice((page - 1) * pageSize, page * pageSize));
     } else {
       setRealRows(sortedRows);
     }
-  }, [pagination?.page, sortModel, rows]);
+  }, [page, pageSize, sortModel, rows]);
 
   return (
     <DataGrid
