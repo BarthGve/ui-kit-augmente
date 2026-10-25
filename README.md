@@ -19,10 +19,12 @@ version React `4.3.1`.
 | [`@gouvfr-lasuite/ui-tokens`](./packages/ui-tokens)   | Moteur de tokens Cunningham, CLI, tokens par défaut, utilitaires de thème et générateurs CSS/SCSS/JS/TS                  |
 | [`@gouvfr-lasuite/ui-codemod`](./packages/ui-codemod) | CLI de migration à usage unique (npx) pour les anciens noms de paquets et de sous-chemins publics                        |
 
-`@barthgve/ui-components` est le fork de `@gouvfr-lasuite/ui-components`. Il
-s'installe sous le nom d'origine grâce à un alias
+`@barthgve/ui-components` est né d'un fork de `@gouvfr-lasuite/ui-components`
+et en est indépendant depuis la version 2.0.0 (voir
+l'[ADR 008](./docs/decisions/008-independent-project.md)). Il s'installe sous le
+nom d'origine grâce à un alias
 (`yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version>`,
-voir [Installer le fork](#installer-le-fork)).
+voir [Installer le paquet](#installer-le-paquet)).
 
 Le paquet de composants dépend du paquet de tokens par sa plage semver
 publiée. Les versions des paquets sont indépendantes et gérées par Changesets.
@@ -37,33 +39,30 @@ npx télécharge la version exacte de la CLI dans le cache npm après
 confirmation, et ne modifie ni le `package.json`, ni le fichier de verrouillage,
 ni le `node_modules` du projet cible.
 
-## Installer le fork
+## Installer le paquet
 
-`ui-components` est distribué par ce fork sur npm sous le nom
-`@barthgve/ui-components`, avec des versions `x.y.z-fork.N` : `x.y.z` est la
-version amont dont il dérive, `N` le numéro de publication du fork (par exemple
-`1.4.0-fork.1`). Seul `ui-components` est distribué par le fork :
-`@gouvfr-lasuite/ui-tokens` et `@gouvfr-lasuite/ui-codemod` restent les paquets
-amont. Le dépôt est public et le paquet construit est public sur npm (voir
-l'[ADR 005](./docs/decisions/005-publish-the-fork-on-npm.md)). Les publications
-faites depuis le workflow GitHub portent la provenance npm ; la première
-version, `1.4.0-fork.1`, a été publiée à la main et n'en porte pas.
+`ui-components` est publié sur npm sous le nom `@barthgve/ui-components` par ce
+dépôt. Le projet a commencé comme un fork de `suitenumerique/ui-kit` ; il en est
+indépendant depuis la version 2.0.0 et ne suit plus les versions amont (voir
+l'[ADR 008](./docs/decisions/008-independent-project.md)). Seul `ui-components`
+est publié ici : `@gouvfr-lasuite/ui-tokens` et `@gouvfr-lasuite/ui-codemod`
+restent les paquets amont. Le dépôt et le paquet sont publics, et les versions
+publiées depuis le workflow GitHub portent la provenance npm.
 
-Le numéro `x.y.z-fork.N` identifie le paquet sur npm, le tag
-`fork@x.y.z-fork.N` du dépôt et, à partir de la première version publiée après
-la mise en place des Releases, la
+Les versions suivent semver (`x.y.z`). Le numéro identifie le paquet sur npm, le
+tag `ui-components@x.y.z` du dépôt et la
 [Release GitHub](https://github.com/BarthGve/ui-kit-augmente/releases) du même
-nom ; les versions antérieures n'en ont pas. La version du produit (`VERSION`,
-`CHANGELOG.md`, tags `fork-v…`), la version de
-`packages/ui-components/package.json` et celle du `package.json` racine sont
-d'autres numéros : aucun ne désigne une version publiée du paquet.
+nom. Les versions précédentes, jusqu'à `1.4.0-fork.9`, ont été publiées comme
+préversions `x.y.z-fork.N` avec des tags `fork@x.y.z-fork.N`. La version du
+produit (`VERSION`, `CHANGELOG.md`, tags `v…`) est un autre numéro : elle ne
+désigne jamais une version publiée du paquet.
 
 ### Installation par alias
 
-Installez le fork sous le nom d'origine, pour que les imports de votre
-application restent `@gouvfr-lasuite/ui-components`. Remplacez `<version>` par
-une version publiée du fork (par exemple `1.4.0-fork.6`), ou utilisez
-`latest` pour la plus récente :
+Installez le paquet sous le nom `@gouvfr-lasuite/ui-components`, pour que les
+imports de votre application correspondent aux exemples de la documentation.
+Remplacez `<version>` par une version publiée, ou utilisez `latest` pour la plus
+récente :
 
 ```bash
 # Yarn
@@ -76,9 +75,10 @@ yarn add @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @tanst
 npm install @gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@latest @tanstack/react-query
 ```
 
-`@latest` installe la dernière version publiée du fork. Les versions
-`-fork.N` sont des préversions semver : une plage comme `^1.4.0` ou `*` ne les
-sélectionne pas.
+`@latest` installe la dernière version publiée. Une plage comme `^2.0.0` suit
+les versions mineures et correctives suivantes. Une application en
+`1.4.0-fork.N` passe en 2.x en changeant seulement la version : l'alias et les
+imports restent les mêmes.
 
 ### Installation depuis une archive de Release
 
@@ -101,23 +101,22 @@ cette URL.
 
 Utile pour tester une modification locale avant de la publier. Depuis la racine
 de ce dépôt (dépendances installées, voir [Développement](#développement)),
-construisez les paquets puis empaquetez `ui-components` sous le nom du fork. La
-base de la version doit être la version actuelle de
-`packages/ui-components/package.json` ; la dernière ligne affichée est le chemin
-de l'archive :
+construisez les paquets puis empaquetez `ui-components`. La version doit être
+la version actuelle de `packages/ui-components/package.json` ; la dernière ligne
+affichée est le chemin de l'archive :
 
 ```bash
 yarn build
-yarn fork:stage 1.4.0-fork.1 --out /chemin/vers/fork-archive
+yarn package:pack 2.0.0 --out /chemin/vers/archive
 ```
 
 Puis, dans l'application, installez l'archive sous le nom d'origine :
 
 ```bash
 # Yarn
-yarn add "@gouvfr-lasuite/ui-components@file:/chemin/vers/fork-archive/barthgve-ui-components-1.4.0-fork.1.tgz" @tanstack/react-query
+yarn add "@gouvfr-lasuite/ui-components@file:/chemin/vers/archive/barthgve-ui-components-2.0.0.tgz" @tanstack/react-query
 # npm
-npm install "@gouvfr-lasuite/ui-components@file:/chemin/vers/fork-archive/barthgve-ui-components-1.4.0-fork.1.tgz" @tanstack/react-query
+npm install "@gouvfr-lasuite/ui-components@file:/chemin/vers/archive/barthgve-ui-components-2.0.0.tgz" @tanstack/react-query
 ```
 
 Le `package.json` et le fichier de verrouillage de l'application figent alors
@@ -158,9 +157,9 @@ yarn build-storybook
 
 Lancez la documentation unifiée en local avec `yarn storybook`. Ajoutez une note
 de version avec `yarn changeset`. Les paquets amont sont versionnés et publiés
-manuellement : suivez [`RELEASING.md`](./docs/RELEASING.md) pour la procédure
-complète. Le fork, lui, est publié en posant un tag `fork@<version>` sur un
-commit de `main` (voir l'[ADR 005](./docs/decisions/005-publish-the-fork-on-npm.md)).
+manuellement. `@barthgve/ui-components` est publié en posant un tag
+`ui-components@<version>` sur un commit de `main` : suivez
+[`RELEASING.md`](./docs/RELEASING.md).
 
 Consultez [`MIGRATION.md`](./docs/MIGRATION.md) pour les instructions de
 migration côté consommateurs, et [`CONTRIBUTING.md`](./docs/CONTRIBUTING.md)

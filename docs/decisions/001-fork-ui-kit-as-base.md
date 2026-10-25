@@ -1,6 +1,6 @@
 # ADR 001 — Fork suitenumerique/ui-kit rather than Cunningham
 
-- Status: accepted
+- Status: superseded by ADR 008
 - Date: 2026-10-09
 - Scope: framing
 

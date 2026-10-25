@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Pack-and-install check of a staged fork archive (ADR 005).
+// Pack-and-install check of the ui-components archive (ADR 005, ADR 008).
 // Installs the archive in a throwaway project under the upstream key
-// (@gouvfr-lasuite/ui-components), as consuming applications do with the alias,
+// (@gouvfr-lasuite/ui-components), as existing applications do with the alias,
 // then checks the manifest, every exports entry and the ui-tokens dependency.
 // Needs the npm registry (the archive's dependencies are installed).
 //
-// Usage: node scripts/check-fork-package.mjs <archive.tgz> <version>
+// Usage: node scripts/check-package.mjs <archive.tgz> <version>
 import { execFileSync } from "node:child_process";
 import {
   existsSync,
@@ -19,16 +19,16 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const KEY = "@gouvfr-lasuite/ui-components";
-const FORK_NAME = "@barthgve/ui-components";
+const NAME = "@barthgve/ui-components";
 const TOKENS = "@gouvfr-lasuite/ui-tokens";
 
 const [archive, version] = process.argv.slice(2);
 if (!archive || !version) {
-  console.error("usage: check-fork-package.mjs <archive.tgz> <version>");
+  console.error("usage: check-package.mjs <archive.tgz> <version>");
   process.exit(1);
 }
 
-const project = mkdtempSync(join(tmpdir(), "fork-check-"));
+const project = mkdtempSync(join(tmpdir(), "package-check-"));
 const finish = (code) => {
   rmSync(project, { recursive: true, force: true });
   process.exit(code);
@@ -41,7 +41,7 @@ const check = (ok, label) => {
 writeFileSync(
   join(project, "package.json"),
   JSON.stringify({
-    name: "fork-check",
+    name: "package-check",
     private: true,
     type: "module",
     dependencies: { [KEY]: `file:${resolve(archive)}` },
@@ -64,8 +64,8 @@ const installed = JSON.parse(
   readFileSync(join(project, "node_modules", KEY, "package.json"), "utf8"),
 );
 check(
-  installed.name === FORK_NAME,
-  `manifest name ${installed.name} (expected ${FORK_NAME})`,
+  installed.name === NAME,
+  `manifest name ${installed.name} (expected ${NAME})`,
 );
 check(
   installed.version === version,

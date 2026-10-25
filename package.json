@@ -1,5 +1,5 @@
 {
-  "name": "gouvfr-lasuite-ui",
+  "name": "ui-kit-augmente",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,16 +17,16 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "test:ct": "turbo run test:ct",
-    "storybook": "turbo run storybook --filter=@gouvfr-lasuite/ui-components",
-    "build-storybook": "turbo run build-storybook --filter=@gouvfr-lasuite/ui-components",
+    "storybook": "turbo run storybook --filter=@barthgve/ui-components",
+    "build-storybook": "turbo run build-storybook --filter=@barthgve/ui-components",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "check-locales": "yarn workspace @gouvfr-lasuite/ui-components check-locales",
-    "generate-icons": "yarn workspace @gouvfr-lasuite/ui-components generate-icons",
-    "generate-test-pdfs": "yarn workspace @gouvfr-lasuite/ui-components generate-test-pdfs",
+    "check-locales": "yarn workspace @barthgve/ui-components check-locales",
+    "generate-icons": "yarn workspace @barthgve/ui-components generate-icons",
+    "generate-test-pdfs": "yarn workspace @barthgve/ui-components generate-test-pdfs",
     "scalingo-postbuild": "yarn build && yarn build-storybook",
-    "fork:stage": "node scripts/stage-fork-package.mjs",
-    "fork:check": "node scripts/check-fork-package.mjs"
+    "package:pack": "node scripts/pack-package.mjs",
+    "package:check": "node scripts/check-package.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "2.31.1",

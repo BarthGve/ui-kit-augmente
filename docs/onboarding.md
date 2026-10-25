@@ -1,5 +1,7 @@
 # Onboarding — ui-kit fork
 
+> Since 2026-10-25 the project is independent (ADR 008): the `upstream` and `cunningham` remotes are removed and upstream is no longer merged. The lines below describe the state at onboarding.
+
 Fork of <https://github.com/suitenumerique/ui-kit> (remote `upstream`; no `origin` yet). ui-kit is the canonical home of the La Suite numérique design system and absorbed Cunningham (snapshot of react 4.3.1). The former Cunningham history is kept on branch `cunningham-main` / remote `cunningham`, for reference only.
 
 ## What the app does
