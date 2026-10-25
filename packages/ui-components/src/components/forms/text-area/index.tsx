@@ -68,6 +68,9 @@ export const TextArea = ({
   // Controlled: mirror props.value. Uncontrolled (react-hook-form register(), defaultValue):
   // the DOM owns the value, so mirror it after each render to catch reset()/setValue(),
   // which write to the element without firing onChange.
+  // No dependency list on purpose: reset() changes neither props nor state, so only
+  // running after every render catches it. setValue bails out on an unchanged value.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (props.value !== undefined) {
       setValue(props.value);

@@ -2044,4 +2044,55 @@ describe("<Select multi={true} />", () => {
       );
     });
   });
+
+  describe("options updates", () => {
+    it.each([
+      ["simple", false],
+      ["searchable", true],
+    ])("%s: shows options received after mount", async (_, searchable) => {
+      const user = userEvent.setup();
+      const { rerender } = render(
+        <CunninghamProvider>
+          <Select
+            label="Cities"
+            options={[{ label: "Paris" }]}
+            multi={true}
+            searchable={searchable}
+          />
+        </CunninghamProvider>,
+      );
+      rerender(
+        <CunninghamProvider>
+          <Select
+            label="Cities"
+            options={[{ label: "Paris" }, { label: "London" }]}
+            multi={true}
+            searchable={searchable}
+          />
+        </CunninghamProvider>,
+      );
+      await user.click(screen.getByRole("combobox", { name: "Cities" }));
+      expectOptions(["Paris", "London"]);
+    });
+
+    it("selects a controlled value whose option arrives later", async () => {
+      const { rerender } = render(
+        <CunninghamProvider>
+          <Select label="Cities" options={[]} value={["london"]} multi={true} />
+        </CunninghamProvider>,
+      );
+      expectSelectedOptions([]);
+      rerender(
+        <CunninghamProvider>
+          <Select
+            label="Cities"
+            options={[{ label: "London", value: "london" }]}
+            value={["london"]}
+            multi={true}
+          />
+        </CunninghamProvider>,
+      );
+      expectSelectedOptions(["London"]);
+    });
+  });
 });
