@@ -2094,5 +2094,55 @@ describe("<Select multi={true} />", () => {
       );
       expectSelectedOptions(["London"]);
     });
+
+    it("keeps an uncontrolled selection when options are rebuilt on each render", async () => {
+      const user = userEvent.setup();
+      const Wrapper = () => {
+        const [, setValues] = useState<string[]>([]);
+        const cities = ["Paris", "London"];
+        return (
+          <CunninghamProvider>
+            <Select
+              label="Cities"
+              options={cities.map((label) => ({ label }))}
+              multi={true}
+              onChange={(e) => setValues(e.target.value as string[])}
+            />
+          </CunninghamProvider>
+        );
+      };
+      render(<Wrapper />);
+      await user.click(screen.getByRole("combobox", { name: "Cities" }));
+      await user.click(screen.getByRole("option", { name: "Paris" }));
+      expectSelectedOptions(["Paris"]);
+    });
+
+    it("keeps a controlled selection missing from new options", async () => {
+      const { rerender } = render(
+        <CunninghamProvider>
+          <Select
+            label="Cities"
+            options={[
+              { label: "Paris", value: "paris" },
+              { label: "London", value: "london" },
+            ]}
+            value={["paris"]}
+            multi={true}
+          />
+        </CunninghamProvider>,
+      );
+      expectSelectedOptions(["Paris"]);
+      rerender(
+        <CunninghamProvider>
+          <Select
+            label="Cities"
+            options={[{ label: "London", value: "london" }]}
+            value={["paris"]}
+            multi={true}
+          />
+        </CunninghamProvider>,
+      );
+      expectSelectedOptions(["Paris"]);
+    });
   });
 });
