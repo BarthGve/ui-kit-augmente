@@ -250,8 +250,9 @@ test.describe("SearchFilter — focus ring", () => {
   test("a pointer-focused trigger draws none", async ({ mount, page }) => {
     await mount(<TestSearchFilter />);
     const trigger = page.getByRole("button", { name: /Category/ });
-    const box = (await trigger.boundingBox())!;
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    // `hover` waits for the trigger to be rendered and stable: a bounding box
+    // read right after `mount` can be stale, the press then misses it.
+    await trigger.hover();
     await page.mouse.down();
     await expect(trigger).toBeFocused();
     expect((await outline(trigger)).style).toBe("none");
