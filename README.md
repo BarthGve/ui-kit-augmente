@@ -5,7 +5,7 @@ anciens dépôts UI Kit et Cunningham dans un espace de travail Yarn 1 et
 Turborepo privé.
 
 Consultez la documentation unifiée des composants dans le
-[Storybook](https://suitenumerique.github.io/ui-kit/) public.
+[Storybook](https://barthgve.github.io/ui-kit-augmente/) public.
 
 Les sources de Cunningham sont un instantané sans historique du commit
 [`3c13c21`](https://github.com/suitenumerique/cunningham/tree/3c13c21726d632a2a6ca41d2e7a4bbe28334c90b),
