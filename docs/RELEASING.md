@@ -11,13 +11,16 @@
 Versions follow semver; the npm version, the tag `ui-components@<version>` and
 the GitHub Release always carry the same number.
 
-1. Version from a branch of `next`, ignoring the two upstream packages:
+1. Version from a branch of `next`:
 
    ```bash
-   yarn changeset version \
-     --ignore @gouvfr-lasuite/ui-tokens \
-     --ignore @gouvfr-lasuite/ui-codemod
+   yarn changeset status   # only @barthgve/ui-components must be listed
+   yarn changeset version
    ```
+
+   Do not pass `--ignore @gouvfr-lasuite/ui-tokens`: Changesets refuses it,
+   because `ui-components` depends on `ui-tokens`. Changesets must name only
+   `@barthgve/ui-components`, so the upstream packages are never bumped.
 
    Review the new version in `packages/ui-components/package.json` and its
    `CHANGELOG.md`, then merge through a pull request, and `next` into `main`.

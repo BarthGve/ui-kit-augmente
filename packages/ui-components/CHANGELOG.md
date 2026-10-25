@@ -1,4 +1,57 @@
-# @gouvfr-lasuite/ui-components
+# @barthgve/ui-components
+
+## 2.0.0
+
+### Major Changes
+
+- 7a31b89: 💥 the package is independent of `@gouvfr-lasuite/ui-components`: versions follow plain semver (`x.y.z`, no `-fork.N`) and the repository no longer tracks upstream. The API is unchanged; applications installed through the `@gouvfr-lasuite/ui-components@npm:@barthgve/ui-components@<version>` alias only change the version.
+
+### Minor Changes
+
+- 8b5340c: ✨(AspectRatio) add a fixed aspect-ratio container
+- 79600ad: ✨(Breadcrumb) add a breadcrumb trail that collapses long paths
+- d1767d8: ✨(Bubble) add chat bubbles, a bubble group and a reactions row
+- 0081fc3: ✨(ButtonGroup) add a wrapper that joins adjacent buttons into one control
+- e8e5de0: ✨(Carousel) add a scroll-snap carousel with controls, indicators and optional autoplay
+- 18b2d2e: ✨(Chart) add bar, line and area charts in SVG with a text alternative, without a charting library
+- ff688fc: ✨(Collapsible) add a single collapsible region
+- 2c055fe: ✨(Combobox) add a combobox to type, filter and pick an option, with custom value and asynchronous options
+- f7519f3: ✨(ContactImport) add a contact import with a review table; `DataGrid` headers get `scope="col"`, the table an `aria-label` prop, and cell renderers keep their identity between renders
+- f369344: ✨(Direction) add a direction provider and hook, a `direction` prop on `CunninghamProvider`, a Storybook switch and an RTL audit report
+- 19aaeb7: ✨(Drawer) add a bottom drawer closed by dragging; `Sheet` gains `handle` and `style`
+- e075ccb: ✨(Gauge) add a generic gauge, now used by the StorageGauge bar
+- 17c9276: ✨(DataGrid) add `onRowActivate`, `renderRowDetail`, `getRowClassName` and `renderRow`, and sort from the keyboard (Enter, Space) on sortable headers
+- 6036f1c: ✨(HoverCard) add a card shown on hover or focus of its trigger
+- ae1816d: ✨(InputGroup) add an input with prefix, suffix and inline action addons
+- d7114bb: ✨(InputOTP) add a one-time-code input with slots, groups and paste
+- 8db947b: ✨(Item) add a generic list item with media, text and actions, and an item group
+- 61dfb71: ✨(Kbd) add a keyboard key, a key group and a platform-aware modifier key
+- 5ad2d96: ✨(Marker) add an inline note and divider for conversations and timelines
+- 4250062: ✨(Menubar) add a menubar of grouped commands with shortcuts
+- 9d3e23e: ✨(MessageScroller) add a conversation scroller that follows only at the end, with a jump button
+- 0d7641a: ✨(Message) add a conversation message with avatar, author, time and actions
+- 00faa80: ✨(MoveModal) add a modal to choose the destination of a move, and an `onActivate` prop on `TreeView`
+- 35d1c3d: ✨(NativeSelect) add a native select with the Field look; `Field` accepts a `textId`
+- 408bc35: ✨(NavigationMenu) add a site navigation with fly-out panels
+- f426a63: ✨(Questionnaire) add a step-by-step questionnaire with required validation
+- cc4287b: ✨(Resizable) add resizable panels with accessible handles, on react-resizable-panels
+- 6691530: ✨(ScrollArea) add a scrollable region with thin, token-styled scrollbars
+- 25aebf1: ✨(Selector) add a segmented selector to choose one option among a few
+- a6d72e7: ✨(Sheet) add a side panel that slides over the page
+- b870c40: ✨(Sidebar) add a collapsible application sidebar, off-canvas on narrow screens
+- d9a604e: ✨(Skeleton) add a loading placeholder with line, block and circle shapes
+- 2b125d3: ✨(Slider) add a slider for a single value or a range
+- 8ad88f7: ✨(Stepper) add a stepper and a `stepper` slot in the Modal header
+- 081d372: ✨(Toggle) add a toggle button with aria-pressed
+- 7d65704: ✨(Toolbar) add a toolbar of actions with a single tab stop and arrow key navigation
+- efa7cc4: ✨(Typography) add heading, text, quote, code and list components on the token scale
+- 6d4d2e3: ✨(UploadModule) add an upload module with validation, progress, cancel, retry and announcements; `FileUploader` gains `onRetryFile`
+
+### Patch Changes
+
+- 90e490b: 🐛(DropdownMenu) wrap long labels (300px max), truncate them in the tiny variant, show a visible focus ring, and announce `aria-haspopup` / `aria-expanded` on the trigger
+- 906dace: 🐛(Gantt) no extra Tab stop on the scroll box in Firefox, no text selected while dragging a bar in Safari
+- d8904ac: ♻️(ShareModal) move the stylesheet literals to `share-modal` component tokens, values unchanged
 
 ## 1.4.0
 
