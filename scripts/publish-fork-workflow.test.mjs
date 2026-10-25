@@ -144,7 +144,7 @@ test("only release writes contents, publish keeps read and id-token", () => {
 
 test("the release job attaches the checked archive to an idempotent prerelease", () => {
   const job = jobText("release");
-  assert.match(job, /actions\/download-artifact@v4/);
+  assert.match(job, /actions\/download-artifact@v8/);
   assert.match(job, /name: fork-package/);
   assert.match(job, /GH_TOKEN: \$\{\{ github\.token \}\}/);
   assert.match(job, /\$GITHUB_REF_NAME/);
