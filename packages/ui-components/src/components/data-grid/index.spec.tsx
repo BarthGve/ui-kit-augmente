@@ -25,6 +25,7 @@ describe("<DataGrid/>", () => {
     const Component = () => {
       const [isLoading, setIsLoading] = useState(true);
       const pagination = usePagination({});
+      const { page, pageSize, setPagesCount } = pagination;
       const [sortModel, setSortModel] = useState<SortModel>([
         {
           field: "lastName",
@@ -38,7 +39,7 @@ describe("<DataGrid/>", () => {
 
         const fetchData = async () => {
           const query: Record<string, string> = {
-            page: String(pagination.page),
+            page: String(page),
           };
           if (sortModel.length > 0) {
             query.sort = String(sortModel[0].field);
@@ -51,13 +52,13 @@ describe("<DataGrid/>", () => {
           const data = await response.json();
 
           // Set the pagination length.
-          pagination.setPagesCount(Math.ceil(data.count / pagination.pageSize));
+          setPagesCount(Math.ceil(data.count / pageSize));
           // Select the rows to display on the current page.
           setRows(data.rows);
           setIsLoading(false);
         };
         fetchData();
-      }, [pagination.page, sortModel]);
+      }, [page, pageSize, setPagesCount, sortModel]);
 
       return (
         <CunninghamProvider>

@@ -49,13 +49,15 @@ const SportsBase = ({ values }: SportProps) => {
     resolver: yupResolver(sportsSchema),
   });
 
-  useEffect(() => {
-    methods.reset(values);
-  }, [values]);
+  const { reset, setFocus } = methods;
 
   useEffect(() => {
-    methods.setFocus("competition");
-  }, [methods.setFocus]);
+    reset(values);
+  }, [reset, values]);
+
+  useEffect(() => {
+    setFocus("competition");
+  }, [setFocus]);
 
   return (
     <FormProvider {...methods}>
