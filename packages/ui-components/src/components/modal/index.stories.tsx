@@ -21,10 +21,11 @@ const meta: Meta<typeof Modal> = {
   decorators: [
     (Story, context) => {
       const modal = useModal();
+      const { open } = modal;
 
       useEffect(() => {
-        modal.open();
-      }, []);
+        open();
+      }, [open]);
 
       return (
         <>
@@ -437,10 +438,11 @@ export const TabVariantControlled: Story = {
   render: () => {
     const modal = useModal();
     const [activeTab, setActiveTab] = useState("tab1");
+    const { open } = modal;
 
     useEffect(() => {
-      modal.open();
-    }, []);
+      open();
+    }, [open]);
 
     return (
       <>

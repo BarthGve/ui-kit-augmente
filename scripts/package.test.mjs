@@ -1,5 +1,5 @@
-// Tests for the fork publishing scripts (ADR 005, story s56-publish-fork).
-// Run: node --test scripts/fork-package.test.mjs
+// Tests for the publishing scripts (ADR 005, ADR 008).
+// Run: node --test scripts/package.test.mjs
 import { test, describe, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -16,10 +16,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const STAGE = join(here, "stage-fork-package.mjs");
-const CHECK = join(here, "check-fork-package.mjs");
+const PACK = join(here, "pack-package.mjs");
+const CHECK = join(here, "check-package.mjs");
 
-const root = mkdtempSync(join(tmpdir(), "fork-package-test-"));
+const root = mkdtempSync(join(tmpdir(), "package-test-"));
 after(() => rmSync(root, { recursive: true, force: true }));
 let n = 0;
 const fresh = (name) => join(root, `${name}-${n++}`);
@@ -32,7 +32,7 @@ function fakePackage({ dist = true, exports } = {}) {
   const dir = fresh("pkg");
   mkdirSync(join(dir, "src"), { recursive: true });
   const manifest = {
-    name: "@gouvfr-lasuite/ui-components",
+    name: "@barthgve/ui-components",
     version: "1.3.0",
     license: "MIT",
     type: "module",
@@ -71,22 +71,25 @@ function fakePackage({ dist = true, exports } = {}) {
   return { dir, manifest };
 }
 
-const stage = (pkgDir, version, out) =>
-  run(STAGE, [version, "--package-dir", pkgDir, "--out", out]);
+const pack = (pkgDir, version, out) =>
+  run(PACK, [version, "--package-dir", pkgDir, "--out", out]);
 
-describe("stage-fork-package", () => {
+describe("pack-package", () => {
   const { dir, manifest } = fakePackage();
   const sourceBytes = readFileSync(join(dir, "package.json"));
   const out = fresh("out");
-  const result = stage(dir, "1.3.0-fork.1", out);
+  const result = pack(dir, "1.3.0", out);
 
-  test("stages the package with the fork name and version", () => {
+  test("packs the source manifest unchanged", () => {
     assert.equal(result.status, 0, result.stderr);
-    const staged = JSON.parse(readFileSync(join(out, "package.json"), "utf8"));
+    const archive = result.stdout.trim().split("\n").at(-1);
+    const staged = JSON.parse(
+      spawnSync("tar", ["-xzOf", archive, "package/package.json"], {
+        encoding: "utf8",
+      }).stdout,
+    );
     assert.equal(staged.name, "@barthgve/ui-components");
-    assert.equal(staged.version, "1.3.0-fork.1");
-    assert.equal(typeof staged.repository, "object");
-    assert.equal(staged.repository.directory, "packages/ui-components");
+    assert.equal(staged.version, "1.3.0");
     for (const key of [
       "exports",
       "files",
@@ -119,16 +122,11 @@ describe("stage-fork-package", () => {
     assert.deepEqual(outside, []);
   });
 
-  for (const bad of [
-    "1.3.0",
-    "1.3.0-fork.0",
-    "1.3.0-fork.x",
-    "1.4.0-fork.1",
-    "abc",
-  ]) {
+  // Not semver, or not the package.json version (1.3.0).
+  for (const bad of ["1.3.1", "1.3.0-fork.1", "2.0.0", "1.3", "abc"]) {
     test(`refuses version ${bad} and writes nothing`, () => {
       const refusedOut = fresh("refused");
-      const r = stage(dir, bad, refusedOut);
+      const r = pack(dir, bad, refusedOut);
       assert.notEqual(r.status, 0);
       assert.match(r.stderr, /version/i);
       assert.equal(existsSync(refusedOut), false);
@@ -139,7 +137,7 @@ describe("stage-fork-package", () => {
   test("refuses when dist is missing and writes nothing", () => {
     const noDist = fakePackage({ dist: false });
     const refusedOut = fresh("refused");
-    const r = stage(noDist.dir, "1.3.0-fork.1", refusedOut);
+    const r = pack(noDist.dir, "1.3.0", refusedOut);
     assert.notEqual(r.status, 0);
     assert.match(r.stderr, /dist/);
     assert.equal(existsSync(refusedOut), false);
@@ -151,15 +149,15 @@ const offline =
   !online &&
   "skipped: npm ping failed, the install check needs the npm registry";
 
-describe("check-fork-package", { skip: offline }, () => {
+describe("check-package", { skip: offline }, () => {
   const archiveOf = (pkg) => {
-    const r = stage(pkg.dir, "1.3.0-fork.1", fresh("out"));
+    const r = pack(pkg.dir, "1.3.0", fresh("out"));
     assert.equal(r.status, 0, r.stderr);
     return r.stdout.trim().split("\n").at(-1);
   };
 
   test("passes on a well-formed archive", () => {
-    const r = run(CHECK, [archiveOf(fakePackage()), "1.3.0-fork.1"]);
+    const r = run(CHECK, [archiveOf(fakePackage()), "1.3.0"]);
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 
@@ -170,13 +168,13 @@ describe("check-fork-package", { skip: offline }, () => {
         "./style": "./dist/missing.css",
       },
     });
-    const r = run(CHECK, [archiveOf(broken), "1.3.0-fork.1"]);
+    const r = run(CHECK, [archiveOf(broken), "1.3.0"]);
     assert.notEqual(r.status, 0);
     assert.match(r.stdout + r.stderr, /\.\/style/);
   });
 
   test("fails when the version differs from the installed manifest", () => {
-    const r = run(CHECK, [archiveOf(fakePackage()), "1.3.0-fork.2"]);
+    const r = run(CHECK, [archiveOf(fakePackage()), "1.3.1"]);
     assert.notEqual(r.status, 0);
   });
 });

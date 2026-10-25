@@ -10,6 +10,10 @@ import { SimpleDataGrid } from ":/components/data-grid/SimpleDataGrid";
 import { sleep } from ":/utils";
 import { Row } from ":/components/data-grid/index";
 
+// Same comparison as SimpleDataGrid; DESC is a sort, not a reverse, so ties keep the
+// input order like the component does.
+const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
 describe("<SimpleDataGrid/>", () => {
   it("should render a grid without pagination", async () => {
     const rows = Array.from(Array(23)).map(() => ({
@@ -73,7 +77,7 @@ describe("<SimpleDataGrid/>", () => {
         email: faker.internet.email(),
         address: faker.location.streetAddress(),
       }))
-      .sort((a, b) => a.firstName.localeCompare(b.firstName));
+      .sort((a, b) => compare(a.firstName, b.firstName));
     render(
       <CunninghamProvider>
         <SimpleDataGrid
@@ -193,7 +197,7 @@ describe("<SimpleDataGrid/>", () => {
         email: faker.internet.email(),
         address: faker.location.streetAddress(),
       }))
-      .sort((a, b) => a.firstName.localeCompare(b.firstName));
+      .sort((a, b) => compare(a.firstName, b.firstName));
 
     let lastRowSelection: Record<string, boolean>;
 
@@ -276,7 +280,7 @@ describe("<SimpleDataGrid/>", () => {
         email: faker.internet.email(),
         address: faker.location.streetAddress(),
       }))
-      .sort((a, b) => a.firstName.localeCompare(b.firstName));
+      .sort((a, b) => compare(a.firstName, b.firstName));
     render(
       <CunninghamProvider>
         <SimpleDataGrid
@@ -356,7 +360,7 @@ describe("<SimpleDataGrid/>", () => {
     await waitFor(() => {
       expect(ths[0].textContent).toContain("arrow_drop_down");
       [...rows]
-        .reverse()
+        .sort((a, b) => compare(b.firstName, a.firstName))
         .slice(0, 10)
         .forEach((row) => {
           const element = screen.getByTestId(row.id);
@@ -373,7 +377,7 @@ describe("<SimpleDataGrid/>", () => {
     user.click(page3Button);
     await waitFor(() => {
       [...rows]
-        .reverse()
+        .sort((a, b) => compare(b.firstName, a.firstName))
         .slice(20, 23)
         .forEach((row) => {
           const element = screen.getByTestId(row.id);
@@ -405,7 +409,7 @@ describe("<SimpleDataGrid/>", () => {
     user.click(page1Button);
     await waitFor(() => {
       [...rows]
-        .sort((a, b) => a.email.localeCompare(b.email))
+        .sort((a, b) => compare(a.email, b.email))
         .slice(0, 10)
         .forEach((row) => {
           const element = screen.getByTestId(row.id);
@@ -425,7 +429,7 @@ describe("<SimpleDataGrid/>", () => {
         firstName: faker.person.firstName(),
         country: faker.location.country(),
       }))
-      .sort((a, b) => a.firstName.localeCompare(b.firstName));
+      .sort((a, b) => compare(a.firstName, b.firstName));
     render(
       <CunninghamProvider>
         <SimpleDataGrid
@@ -478,7 +482,7 @@ describe("<SimpleDataGrid/>", () => {
     await waitFor(() => {
       expect(ths[1].textContent).toContain("arrow_drop_up");
       [...rows]
-        .sort((a, b) => a.country.localeCompare(b.country))
+        .sort((a, b) => compare(a.country, b.country))
         .slice(0, 10)
         .forEach((row) => {
           const element = screen.getByTestId(row.id);
@@ -499,8 +503,7 @@ describe("<SimpleDataGrid/>", () => {
     await waitFor(() => {
       expect(ths[1].textContent).toContain("arrow_drop_down");
       [...rows]
-        .sort((a, b) => a.country.localeCompare(b.country))
-        .reverse()
+        .sort((a, b) => compare(b.country, a.country))
         .slice(0, 10)
         .forEach((row) => {
           const element = screen.getByTestId(row.id);
@@ -520,7 +523,7 @@ describe("<SimpleDataGrid/>", () => {
         email: faker.internet.email(),
         address: faker.location.streetAddress(),
       }))
-      .sort((a, b) => a.firstName.localeCompare(b.firstName));
+      .sort((a, b) => compare(a.firstName, b.firstName));
     render(
       <CunninghamProvider>
         <SimpleDataGrid
@@ -688,7 +691,7 @@ describe("<SimpleDataGrid/>", () => {
         email: faker.internet.email(),
         address: faker.location.streetAddress(),
       }))
-      .sort((a, b) => a.firstName.localeCompare(b.firstName));
+      .sort((a, b) => compare(a.firstName, b.firstName));
 
     const Wrapper = ({ enableSorting }: { enableSorting: boolean }) => {
       return (

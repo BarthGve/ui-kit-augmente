@@ -1,14 +1,17 @@
-import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import {
-  Button,
-  ButtonProps,
-  Modal,
-  ModalSize,
-} from ":/cunningham";
+import React, {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Button, ButtonProps, Modal, ModalSize } from ":/cunningham";
 import clsx from "clsx";
 import { Icon, IconSize, IconType } from ":/components/icon";
 import { DropdownMenu } from ":/components/dropdown-menu";
 import { useCustomTranslations } from ":/hooks/useCustomTranslations";
+import { useLatest } from ":/hooks/useLatest";
 
 import { FilePreviewType } from "./types";
 import {
@@ -125,13 +128,13 @@ export const FilePreview = ({
   const canGoNext = currentIndex < data.length - 1;
   const canGoPrevious = currentIndex > 0;
 
-  const goToNext = () => {
+  const goToNext = useCallback(() => {
     if (canGoNext) setCurrentIndex(currentIndex + 1);
-  };
+  }, [canGoNext, currentIndex]);
 
-  const goToPrevious = () => {
+  const goToPrevious = useCallback(() => {
     if (canGoPrevious) setCurrentIndex(currentIndex - 1);
-  };
+  }, [canGoPrevious, currentIndex]);
 
   const handleDownload = async () => {
     handleDownloadFile?.(currentFile);
@@ -296,12 +299,15 @@ export const FilePreview = ({
     }
   }, [openedFileId, data]);
 
+  // Callbacks read through refs: inline props must not re-notify on every render.
+  const onChangeFileRef = useLatest(onChangeFile);
+  const onFileOpenRef = useLatest(onFileOpen);
   useEffect(() => {
-    onChangeFile?.(currentFile);
+    onChangeFileRef.current?.(currentFile);
     if (currentFile) {
-      onFileOpen?.(currentFile);
+      onFileOpenRef.current?.(currentFile);
     }
-  }, [currentFile]);
+  }, [currentFile, onChangeFileRef, onFileOpenRef]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -321,7 +327,7 @@ export const FilePreview = ({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex, data.length, currentFile?.category]);
+  }, [goToNext, goToPrevious]);
 
   useEffect(() => {
     if (!isOpen || !currentFile) return;

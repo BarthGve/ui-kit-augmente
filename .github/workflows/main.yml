@@ -161,14 +161,14 @@ jobs:
       # The PDF viewer loads pdfjs's worker from /pdf.worker.mjs at runtime;
       # copy it from the installed pdfjs-dist so the served public/ has it.
       - name: Provision PDF worker
-        run: yarn workspace @gouvfr-lasuite/ui-components copy-pdf-worker
+        run: yarn workspace @barthgve/ui-components copy-pdf-worker
       - name: Generate test PDFs
         run: yarn generate-test-pdfs
       - name: Run component tests
         run: yarn test:ct
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
@@ -201,14 +201,14 @@ jobs:
       - name: Configure GitHub Pages
         id: pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Build Storybook
         run: yarn build-storybook
         env:
           STORYBOOK_BASE_PATH: ${{ steps.pages.outputs.base_path }}
       - name: Upload GitHub Pages artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: storybook-static
 
@@ -234,4 +234,4 @@ jobs:
     steps:
       - name: Deploy Storybook to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

@@ -23,9 +23,10 @@ type DemoProps = Omit<AlertModalProps, "isOpen" | "onClose">;
 /** Opens on mount and from its button, so focus return is visible. */
 const Demo = (props: DemoProps) => {
   const modal = useModal();
+  const { open } = modal;
   useEffect(() => {
-    modal.open();
-  }, []);
+    open();
+  }, [open]);
   return (
     <>
       <Button onClick={modal.open}>Open alert</Button>
@@ -41,10 +42,7 @@ const action = (label: string) => ({
 
 export const Neutral = {
   render: () => (
-    <Demo
-      title="Are you absolutely sure?"
-      primaryAction={action("Continue")}
-    >
+    <Demo title="Are you absolutely sure?" primaryAction={action("Continue")}>
       This action cannot be undone. This will permanently delete your account
       from our servers.
     </Demo>

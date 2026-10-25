@@ -1,6 +1,7 @@
-// Text checks of the fork publishing workflow (ADR 005, story s56-publish-fork).
+// Text checks of the publishing workflow (ADR 005, 007, 008).
+// The file keeps the name publish-fork.yml: npm trusted publishing is bound to it.
 // No YAML dependency: the workflow is split into jobs by indentation.
-// Run: node --test scripts/publish-fork-workflow.test.mjs
+// Run: node --test scripts/publish-workflow.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -29,22 +30,22 @@ test("the workflow exists and has jobs", () => {
   assert.ok(jobsAt > 0, `${WORKFLOW} missing or without jobs`);
 });
 
-test("triggers on fork@* tags only, and on pull requests", () => {
+test("triggers on ui-components@* tags only, and on pull requests", () => {
   const on = header.slice(header.indexOf("\non:"));
   const push = /\n {2}push:\n((?: {4}.*\n)+)/.exec(on)?.[1] ?? "";
   const tags = [...push.matchAll(/^ {6}- ["']?([^"'\n]+)["']?$/gm)].map(
     (m) => m[1],
   );
-  assert.deepEqual(tags, ["fork@*"]);
+  assert.deepEqual(tags, ["ui-components@*"]);
   assert.doesNotMatch(push, /branches/);
   assert.match(on, /\n {2}pull_request:/);
 });
 
-test("the publish job runs only on a fork@ tag ref", () => {
+test("the publish job runs only on a ui-components@ tag ref", () => {
   const name = publishJob();
   assert.ok(name, "no job runs npm publish");
   const condition = /^ {4}if: (.*)$/m.exec(jobText(name))?.[1] ?? "";
-  assert.match(condition, /refs\/tags\/fork@/);
+  assert.match(condition, /refs\/tags\/ui-components@/);
   assert.doesNotMatch(condition, /\|\||pull_request/);
   assert.match(jobText(name), /^ {4}needs: verify$/m);
 });
@@ -81,26 +82,26 @@ test("npm publish carries provenance, public access and the latest tag", () => {
   const publish = /npm publish .*/.exec(jobText(publishJob()))?.[0] ?? "";
   assert.match(publish, /--provenance/);
   assert.match(publish, /--access public/);
-  // X.Y.Z-fork.N is a prerelease: npm refuses it without --tag (ADR 005: latest).
+  // Explicit, so a prerelease version would also be published as latest (ADR 005).
   assert.match(publish, /--tag latest(\s|$)/);
 });
 
-test("verify lints, tests the scripts, builds, stages the tag version, checks and uploads", () => {
+test("verify lints, tests the scripts, builds, packs the tag version, checks and uploads", () => {
   const job = jobText("verify");
   for (const step of [
     "yarn lint",
     "yarn test",
-    "node --test scripts/fork-package.test.mjs",
-    "node --test scripts/publish-fork-workflow.test.mjs",
+    "node --test scripts/package.test.mjs",
+    "node --test scripts/publish-workflow.test.mjs",
     "yarn build",
-    "scripts/check-fork-package.mjs",
+    "scripts/check-package.mjs",
     "actions/upload-artifact@",
   ]) {
     assert.ok(job.includes(step), `verify lacks ${step}`);
   }
-  // The tag version reaches the stage script through env, never inline.
-  assert.match(job, /\$\{TAG#fork@\}/);
-  assert.match(job, /scripts\/stage-fork-package\.mjs "\$version"/);
+  // The tag version reaches the pack script through env, never inline.
+  assert.match(job, /\$\{TAG#ui-components@\}/);
+  assert.match(job, /scripts\/pack-package\.mjs "\$version"/);
   assert.doesNotMatch(
     job,
     /^ {4}if:/m,
@@ -127,7 +128,7 @@ test("the release job runs after publish, on the same tag condition (ADR 007)", 
   const job = jobText("release");
   assert.ok(jobs.release, "no release job");
   assert.match(job, /^ {4}needs: publish$/m);
-  assert.match(conditionOf("release"), /refs\/tags\/fork@/);
+  assert.match(conditionOf("release"), /refs\/tags\/ui-components@/);
   assert.doesNotMatch(conditionOf("release"), /\|\||pull_request/);
   assert.equal(conditionOf("release"), conditionOf(publishJob()));
 });
@@ -142,10 +143,10 @@ test("only release writes contents, publish keeps read and id-token", () => {
   assert.doesNotMatch(jobText("release"), /npm publish|id-token/);
 });
 
-test("the release job attaches the checked archive to an idempotent prerelease", () => {
+test("the release job attaches the checked archive to an idempotent release", () => {
   const job = jobText("release");
-  assert.match(job, /actions\/download-artifact@v4/);
-  assert.match(job, /name: fork-package/);
+  assert.match(job, /actions\/download-artifact@v8/);
+  assert.match(job, /name: package/);
   assert.match(job, /GH_TOKEN: \$\{\{ github\.token \}\}/);
   assert.match(job, /\$GITHUB_REF_NAME/);
   const create = job.search(/gh release create/);
@@ -157,7 +158,6 @@ test("the release job attaches the checked archive to an idempotent prerelease",
   );
   assert.match(job, /gh release upload .*--clobber/);
   for (const flag of [
-    "--prerelease",
     "--latest=false",
     "--verify-tag",
     "--generate-notes",
@@ -166,8 +166,12 @@ test("the release job attaches the checked archive to an idempotent prerelease",
   ]) {
     assert.ok(job.includes(flag), `release lacks ${flag}`);
   }
-  // Notes start: the fork@ tag just before this one, from the tag list, sort -V.
-  assert.match(job, /gh api .*git\/matching-refs\/tags\/fork@/);
+  // Plain semver versions are not prereleases (ADR 008).
+  assert.doesNotMatch(job, /--prerelease/);
+  // Notes start: the previous ui-components@ tag (sort -V), else the last fork@ tag.
+  assert.match(job, /gh api .*git\/matching-refs\/tags\/\$1/);
+  assert.match(job, /tags ui-components@;/);
+  assert.match(job, /tags fork@ \| sort -V \| tail -n 1/);
   assert.match(job, /sort -V/);
 });
 

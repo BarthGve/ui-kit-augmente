@@ -1,6 +1,6 @@
 # Architecture — ui-kit-augmente
 
-Base: fork of `suitenumerique/ui-kit` (see docs/decisions/001-fork-ui-kit-as-base.md). The stack is imposed by the boilerplate; this document maps it and does not change it. Every claim below was read in the code on 2026-10-09 (ui-components 1.3.0, ui-tokens 3.2.0).
+Base: derived from `suitenumerique/ui-kit` (ADR 001), independent since 2026-10-25: no upstream remote, no upstream merges, `ui-components` named `@barthgve/ui-components` in the source (ADR 008). The stack is imposed by the boilerplate; this document maps it and does not change it. Every claim below was read in the code on 2026-10-09 (ui-components 1.3.0, ui-tokens 3.2.0).
 
 ## Stack
 - TypeScript 5 (strict), React 19 (types pinned `@types/react` 19.1.8), React Aria Components (`react-aria-components`, `@react-aria/*`, `@react-stately/*`) as the accessible primitives.
@@ -21,7 +21,7 @@ Base: fork of `suitenumerique/ui-kit` (see docs/decisions/001-fork-ui-kit-as-bas
   - `src/index.ts` (public exports), `src/cunningham.ts` (re-exports of the legacy Cunningham components), `src/library.scss` (every component stylesheet), `src/index.scss`.
   - `e2e/` — Playwright component tests; `.storybook/` — Storybook config.
 - `packages/ui-tokens/` — token engine, CLI and default tokens (`src/lib/cunningham-tokens.ts`).
-- `packages/ui-codemod/` — one-off migration CLI. Out of scope for this fork (PRD graveyard).
+- `packages/ui-codemod/` — one-off migration CLI. Out of scope for this project (PRD graveyard).
 - `docs/` — driven pipeline documents; `.changeset/` — pending release notes.
 
 ## Patterns & conventions
@@ -42,7 +42,7 @@ Traps found while reading:
 - Legacy Cunningham components are exported through `src/cunningham.ts`; recent components are exported straight from `src/index.ts`.
 - `components/forms/radio/tokens.ts` returns an empty object (radio reuses checkbox tokens).
 - Two `FileUploader` locations exist (`components/form/file-uploader`, and the legacy one under `forms/`): check which is current before reusing.
-- `.changeset/config.json` has `baseBranch: "next"` (the fork's integration branch, corrected in s56); upstream's documentation assumes `main`.
+- `.changeset/config.json` has `baseBranch: "next"` (the project's integration branch, corrected in s56); upstream's documentation assumes `main`.
 
 ## Data model
 None. The library holds no persistent data; components are controlled by props and callbacks. Components that fetch (waffle widget, file preview PDF worker) receive their URLs through props.
@@ -50,7 +50,7 @@ None. The library holds no persistent data; components are controlled by props a
 ## Integration points
 - Consumers: La Suite applications (Docs, Drive, Meet…) through npm: `@gouvfr-lasuite/ui-components` and `@gouvfr-lasuite/ui-tokens`.
 - External services: none required by the library itself (the waffle loads a remote widget through `widgetPath`).
-- Build and release: Changesets and GitHub Actions, active on this fork. `.github/workflows/main.yml` runs `lint-git` (gitlint, configured by `.gitlint`: squash and release commits titled `(#<pr>)` are exempt), `lint`, `check-locales`, `test`, `build`, `e2e` (Playwright on chromium, webkit and firefox, Linux `ubuntu-latest`) and `storybook`; a local macOS WebKit run is not the CI (Tab skips native buttons, so keyboard specs fail there): reproduce keyboard and flake claims in `mcr.microsoft.com/playwright:v1.61.1-noble` (recipe in `docs/research/s59-cross-browser-e2e.md`); the two Gantt touch tests are Chromium-only (`test.skip`, no touch move/cancel input outside CDP, follow-up #225), each with a neutral pointer test on all engines; `publish-fork.yml` runs the publish-fork dry run. On a `fork@` tag push, a separate `release` job (ADR 007) runs after `publish` (`needs: publish`, same tag condition) with `contents: write` only and no `id-token`: with the `gh` CLI and the job token it creates the GitHub Release of the tag, titled with the version, marked prerelease and not latest, its body an npm link placed before the notes generated from the previous `fork@` tag in version order (`sort -V`), with the `fork-package` archive checked by `verify` as asset; if the Release exists it only re-uploads the archive (`--clobber`), so the job is rerun alone (`gh run rerun --job`), never the whole run. In Turborepo, `test` waits for the dependencies' `build` (`^build`) and `ui-tokens#test` for its own `build`, so no `test` rewrites a `dist` another package reads. The same checks (`yarn lint`, `yarn check-locales`, `TZ=UTC yarn test`, `yarn build`, `node --test scripts/*.test.mjs`) can still be run locally before a PR.
+- Build and release: Changesets and GitHub Actions, active on this repository. `.github/workflows/main.yml` runs `lint-git` (gitlint, configured by `.gitlint`: squash and release commits titled `(#<pr>)` are exempt), `lint`, `check-locales`, `test`, `build`, `e2e` (Playwright on chromium, webkit and firefox, Linux `ubuntu-latest`) and `storybook`; a local macOS WebKit run is not the CI (Tab skips native buttons, so keyboard specs fail there): reproduce keyboard and flake claims in `mcr.microsoft.com/playwright:v1.61.1-noble` (recipe in `docs/research/s59-cross-browser-e2e.md`); the two Gantt touch tests are Chromium-only (`test.skip`, no touch move/cancel input outside CDP, follow-up #225), each with a neutral pointer test on all engines; `publish-fork.yml` (file name kept for npm trusted publishing, ADR 008) runs the publish dry run: `scripts/pack-package.mjs` packs `ui-components` as it is and refuses a version other than the `package.json` one, `scripts/check-package.mjs` installs the archive under the alias key. On a `ui-components@<version>` tag push, a separate `release` job (ADR 007) runs after `publish` (`needs: publish`, same tag condition) with `contents: write` only and no `id-token`: with the `gh` CLI and the job token it creates the GitHub Release of the tag, titled with the version, not marked latest, its body an npm link placed before the notes generated from the previous `ui-components@` tag in version order (`sort -V`, else the last `fork@` tag), with the `package` archive checked by `verify` as asset; if the Release exists it only re-uploads the archive (`--clobber`), so the job is rerun alone (`gh run rerun --job`), never the whole run. In Turborepo, `test` waits for the dependencies' `build` (`^build`) and `ui-tokens#test` for its own `build`, so no `test` rewrites a `dist` another package reads. The same checks (`yarn lint`, `yarn check-locales`, `TZ=UTC yarn test`, `yarn build`, `node --test scripts/*.test.mjs`) can still be run locally before a PR.
 - Design reference outside the repo: the design-system artifact (https://claude.ai/artifact/XF7u4R6KevkT1uErAcxGfP), updated per ticket (PRD amendment 2026-10-09).
 
 ## Design / UX

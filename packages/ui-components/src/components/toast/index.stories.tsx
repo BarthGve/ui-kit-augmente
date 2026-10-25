@@ -37,7 +37,7 @@ export const Demo: Story = {
           alert("Clicked here !");
         },
       });
-    }, []);
+    }, [toast]);
 
     return (
       <div style={{ height: "300px" }}>

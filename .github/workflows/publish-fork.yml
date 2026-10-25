@@ -1,12 +1,13 @@
-# Publishes ui-components under the fork's npm scope (ADR 005).
-# Pull request: dry-run (stage, install check, archive uploaded), no secret.
-# Tag fork@<version> on a commit of main: the same checks, then npm publish.
-name: Publish fork
+# Publishes @barthgve/ui-components on npm (ADR 005, 006, 008).
+# Pull request: dry-run (pack, install check, archive uploaded), no secret.
+# Tag ui-components@<version> on a commit of main: the same checks, then npm publish.
+# The file keeps its name: npm trusted publishing is bound to publish-fork.yml.
+name: Publish ui-components
 
 on:
   push:
     tags:
-      - "fork@*"
+      - "ui-components@*"
   pull_request:
     branches:
       - "*"
@@ -46,33 +47,33 @@ jobs:
         run: yarn lint
       - name: Test
         run: yarn test
-      - name: Test the fork scripts and this workflow
+      - name: Test the publishing scripts and this workflow
         run: |
-          node --test scripts/fork-package.test.mjs
-          node --test scripts/publish-fork-workflow.test.mjs
+          node --test scripts/package.test.mjs
+          node --test scripts/publish-workflow.test.mjs
       - name: Build
         run: yarn build
-      - name: Stage and check the fork package
+      - name: Pack and check the package
         env:
           TAG: ${{ github.ref_name }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then
-            version="${TAG#fork@}"
+            version="${TAG#ui-components@}"
           else
-            # Dry-run: any accepted version, nothing is published.
-            version="$(node -p "require('./packages/ui-components/package.json').version")-fork.1"
+            # Dry-run: the package.json version, nothing is published.
+            version="$(node -p "require('./packages/ui-components/package.json').version")"
           fi
-          archive="$(node scripts/stage-fork-package.mjs "$version" --out "$RUNNER_TEMP/fork-package" | tail -n 1)"
-          node scripts/check-fork-package.mjs "$archive" "$version"
+          archive="$(node scripts/pack-package.mjs "$version" --out "$RUNNER_TEMP/package" | tail -n 1)"
+          node scripts/check-package.mjs "$archive" "$version"
       - name: Upload the archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: fork-package
-          path: ${{ runner.temp }}/fork-package/*.tgz
+          name: package
+          path: ${{ runner.temp }}/package/*.tgz
           if-no-files-found: error
 
   publish:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/fork@')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/ui-components@')
     runs-on: ubuntu-latest
     needs: verify
     permissions:
@@ -90,53 +91,58 @@ jobs:
         with:
           node-version: "24.x"
       - name: Download the archive
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: fork-package
-          path: ${{ runner.temp }}/fork-package
+          name: package
+          path: ${{ runner.temp }}/package
       # Trusted publishing (ADR 006): npm authenticates the job through OIDC,
       # no token or secret is involved. setup-node is kept free of its registry
       # option: it injects a placeholder auth token that npm would send
       # instead of the OIDC credential.
       - name: Publish
-        run: npm publish "$RUNNER_TEMP"/fork-package/*.tgz --provenance --access public --tag latest
+        run: npm publish "$RUNNER_TEMP"/package/*.tgz --provenance --access public --tag latest
 
   release:
     # GitHub Release of the published version (ADR 007): its own job, the only
     # one with contents: write. Rerun this job alone, never the whole run.
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/fork@')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/ui-components@')
     runs-on: ubuntu-latest
     needs: publish
     permissions:
       contents: write
     steps:
       - name: Download the archive
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: fork-package
-          path: ${{ runner.temp }}/fork-package
+          name: package
+          path: ${{ runner.temp }}/package
       - name: Create or update the Release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
           tag="$GITHUB_REF_NAME"
-          version="${tag#fork@}"
-          archive=("$RUNNER_TEMP"/fork-package/*.tgz)
+          version="${tag#ui-components@}"
+          archive=("$RUNNER_TEMP"/package/*.tgz)
           if gh release view "$tag" > /dev/null 2>&1; then
             gh release upload "$tag" "${archive[@]}" --clobber
             exit 0
           fi
-          # Notes start at the fork@ tag just before this one, in version order.
+          tags() {
+            gh api --paginate "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$1" \
+              --jq '.[].ref | ltrimstr("refs/tags/")'
+          }
+          # Notes start at the ui-components@ tag just before this one, in
+          # version order; the first one starts at the last fork@ tag (ADR 008).
           previous="$(
-            { gh api --paginate "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/fork@" \
-                --jq '.[].ref | ltrimstr("refs/tags/")'; echo "$tag"; } |
+            { tags ui-components@; echo "$tag"; } |
               sort -V | awk -v t="$tag" '$0 == t && !d { print p; d = 1 } { p = $0 }'
           )"
+          if [ -z "$previous" ]; then previous="$(tags fork@ | sort -V | tail -n 1)"; fi
           start=()
           if [ -n "$previous" ]; then start=(--notes-start-tag "$previous"); fi
           gh release create "$tag" "${archive[@]}" \
             --title "$version" \
             --notes "npm: https://www.npmjs.com/package/@barthgve/ui-components/v/$version" \
             --generate-notes "${start[@]}" \
-            --prerelease --latest=false --verify-tag
+            --latest=false --verify-tag

@@ -1,4 +1,4 @@
-// Commit-lint rule of the fork (story s58-ci-green-basics): squash and release
+// Commit-lint rule of the repository (story s58-ci-green-basics): squash and release
 // commits, whose title ends with `(#<pr>)`, are exempt; every other commit keeps
 // gitlint's default rules (B1: body lines of at most 80 characters).
 // Needs `gitlint` on the PATH (the `lint-git` CI job installs it with pip).

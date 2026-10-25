@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/react";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Button } from ":/components/button";
 import { useModals } from ":/components/modal/ModalProvider";
 import { VariantType } from ":/utils/VariantUtils";
@@ -19,16 +19,16 @@ export default meta;
 
 export const DeleteConfirmationModal = {
   render: () => {
-    const modals = useModals();
+    const { deleteConfirmationModal } = useModals();
 
-    const ask = async () => {
-      const decision = await modals.deleteConfirmationModal();
+    const ask = useCallback(async () => {
+      const decision = await deleteConfirmationModal();
       alert(`You decided ${decision}`);
-    };
+    }, [deleteConfirmationModal]);
 
     useEffect(() => {
       ask();
-    }, []);
+    }, [ask]);
 
     return <Button onClick={ask}>Open</Button>;
   },
@@ -36,36 +36,36 @@ export const DeleteConfirmationModal = {
 
 export const ConfirmationModal = {
   render: () => {
-    const modals = useModals();
+    const { confirmationModal } = useModals();
 
-    const ask = async () => {
-      const decision = await modals.confirmationModal();
+    const ask = useCallback(async () => {
+      const decision = await confirmationModal();
       alert(`You decided ${decision}`);
-    };
+    }, [confirmationModal]);
 
     useEffect(() => {
       ask();
-    }, []);
+    }, [ask]);
 
     return <Button onClick={ask}>Open</Button>;
   },
 };
 
 const MessageWrapper = (type: VariantType) => () => {
-  const modals = useModals();
+  const { messageModal } = useModals();
 
-  const ask = async () => {
-    const decision = await modals.messageModal({
+  const ask = useCallback(async () => {
+    const decision = await messageModal({
       title: "Watch out!",
       children: "This is a custom message!",
       messageType: type,
     });
     alert(`You decided ${decision}`);
-  };
+  }, [messageModal]);
 
   useEffect(() => {
     ask();
-  }, []);
+  }, [ask]);
 
   return <Button onClick={ask}>Open</Button>;
 };
